@@ -13,11 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+      - name: Debug npm config
+        run: |
+          npm config list
+          echo "Repo .npmrc:"; [ -f .npmrc ] && cat .npmrc || echo "(none)"
+      
+      - name: Force public registry
+        run: |
+          echo "registry=https://registry.npmjs.org/" > .npmrc
+          cat .npmrc
 
       - name: Install
         run: npm ci
