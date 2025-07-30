@@ -1,13 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { makeSearchController } from "../api/nyt";
-import ArticleCard from "../components/ArticleCard"; 
+import ArticleCard from "../components/ArticleCard";
 import { debounce } from "../utils/debounce";
 import { useSearchStore } from "../store/searchStore";
 import "../styles/search.css";
+import Spinner from "../components/Spinner";
 
 function waitImages(selector: string, timeoutMs = 1500): Promise<void> {
-  const imgs = Array.from(document.querySelectorAll<HTMLImageElement>(selector));
+  const imgs = Array.from(
+    document.querySelectorAll<HTMLImageElement>(selector)
+  );
   const waits = imgs.map((img) =>
     img.complete
       ? Promise.resolve()
@@ -64,10 +67,10 @@ const SearchPage: React.FC = () => {
       }, 350),
     [runSearch, setArticles, setHasSearched]
   );
- 
+
   useEffect(() => {
     if (location.state?.fromHome) {
-      reset(); 
+      reset();
       navigate(".", { replace: true, state: null });
     }
   }, [location.state, reset, navigate]);
@@ -77,7 +80,7 @@ const SearchPage: React.FC = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [setScrollY]);
- 
+
   useEffect(() => {
     if (!articles || articles.length === 0) return;
     if (!scrollY || scrollY <= 0) return;
@@ -127,10 +130,11 @@ const SearchPage: React.FC = () => {
           onChange={handleChange}
           aria-label="Search input"
         />
-        <button type="submit" className="button">Search</button>
+        <button type="submit" className="button">
+          Search
+        </button>
       </form>
-
-      {loading && <div className="panel" style={{ padding: "1rem" }}>Loading...</div>}
+      {loading && <Spinner />}
 
       {!loading && hasSearched && articles.length === 0 && (
         <div className="panel empty">No results</div>
