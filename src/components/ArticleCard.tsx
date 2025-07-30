@@ -6,8 +6,8 @@ import { useSearchStore } from "../store/searchStore";
 
 function getImageUrl(article: NytArticle): string {
   const mm = article.multimedia;
-  if (Array.isArray(mm) && mm.length > 0 && mm[0].url) {
-    return `https://static01.nyt.com/${mm[0].url}`;
+  if (mm && mm.default && mm.default.url) {
+    return mm.default.url;
   }
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }

@@ -1,11 +1,15 @@
 export interface NytMultimedia {
   url: string;
-  subtype?: string;
-  type?: string;
-  width?: number;
-  height?: number;
+  credit?: string;
+  default?: NytMultimediaImage; 
+  thumbnail?: NytMultimediaImage; 
 }
 
+export interface NytMultimediaImage {
+  width: number;
+  height: number;
+  url: string;
+}
 export interface NytHeadline {
   main: string;
 }
@@ -15,7 +19,7 @@ export interface NytArticle {
   web_url: string;
   snippet: string;
   lead_paragraph?: string;
-  multimedia: NytMultimedia[];
+  multimedia: NytMultimedia;
   headline: NytHeadline;
   pub_date: string;
   section_name?: string;

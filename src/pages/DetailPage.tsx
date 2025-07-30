@@ -11,9 +11,9 @@ import { formatDate } from "../utils/format";
 import "../styles/detail.css";
 
 function getImageUrl(article: NytArticle | null): string {
-  const mm = article?.multimedia;
-  if (mm && Array.isArray(mm) && mm.length > 0 && mm[0].url) {
-    return `https://static01.nyt.com/${mm[0].url}`;
+  const mm = article?.multimedia; 
+  if (mm && mm.default && mm.default.url) {
+    return mm.default.url;
   }
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
