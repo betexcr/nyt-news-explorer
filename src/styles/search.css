@@ -1,0 +1,14 @@
+.searchbar {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.results {
+  margin-top: 1rem;
+}
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}

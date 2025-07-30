@@ -1,0 +1,28 @@
+.detail-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+.detail-hero {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+  max-height: 420px;
+}
+.detail-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.detail-body {
+  line-height: 1.7;
+  font-size: 1rem;
+}
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
