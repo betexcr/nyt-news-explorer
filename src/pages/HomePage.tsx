@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
             sizes="100vw"
           />
           <img
-            src="/home-hero.jpg" /* fallback */
+            src="/home-hero.jpg"  
             srcSet="/home-hero-800.jpg 800w,
             /home-hero-1200.jpg 1200w,
             /home-hero-1600.jpg 1600w,
@@ -39,8 +39,7 @@ const HomePage: React.FC = () => {
             alt="Home hero"
             className="home-hero"
             fetchPriority="high"
-            decoding="sync"
-            /* Don't use loading="lazy" for the hero */
+            decoding="sync" 
           />
         </picture>
       </section>
