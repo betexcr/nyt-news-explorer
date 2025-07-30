@@ -1,4 +1,4 @@
-name: Build & Deploy CRA to Hostinger
+name: Build & Deploy to Hostinger
 
 on:
   push:
@@ -32,14 +32,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          protocol: ftps
+          protocol: ftp
           local-dir: build/
           server-dir: ${{ env.SERVER_DIR }}
           exclude: |
