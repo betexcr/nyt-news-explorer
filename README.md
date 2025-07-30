@@ -1,8 +1,12 @@
-## How to Use 
+## Install
+
+Set your NYT API Key to REACT_APP_NYT_API_KEY in the env file
 
 npm install
 
 npm start
+
+## How to Use 
 
 -On the Home page, click the entry panel to access Search.
 
