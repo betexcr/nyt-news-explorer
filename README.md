@@ -18,7 +18,7 @@ A React + TypeScript web application that allows users to explore and search art
 ```bash
 git clone https://github.com/betexcr/nyt-news-explorer.git
 cd nyt-news-explorer
-npm install
+bun install
 ```
 
 ---
@@ -38,7 +38,7 @@ You can obtain your API key from [NYT Developer Portal](https://developer.nytime
 ## **Usage**
 
 ```bash
-npm start
+bun start
 ```
 Runs the app in development mode.  
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
@@ -50,7 +50,7 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 Run the test suite with coverage:
 
 ```bash
-npm run test:cov:strict
+bun test:cov:strict
 ```
 
 This will run all Jest tests and enforce coverage thresholds.
