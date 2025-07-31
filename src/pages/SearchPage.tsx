@@ -82,7 +82,7 @@ const SearchPage: React.FC = () => {
   }, [setScrollY]);
 
   useEffect(() => {
-    if (!articles || articles.length === 0) return;
+    if (!articles?.length) return;
     if (!scrollY || scrollY <= 0) return;
     let cancelled = false;
     (async () => {
@@ -136,12 +136,12 @@ const SearchPage: React.FC = () => {
       </form>
       {loading && <Spinner />}
 
-      {!loading && hasSearched && articles.length === 0 && (
+      {!loading && hasSearched && (!articles || articles.length === 0) && (
         <div className="panel empty">No results</div>
       )}
 
       <div className="grid results">
-        {articles.map((a) => (
+        {(articles ?? []).map((a) => (
           <ArticleCard key={a._id} article={a} />
         ))}
       </div>
