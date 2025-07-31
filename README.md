@@ -60,8 +60,3 @@ This will run all Jest tests and enforce coverage thresholds.
 ## **CI/CD**
 
 This project includes a GitHub Actions workflow for automated testing on every push or pull request to the `master` branch.
-
----
-
-## **📜 License**
-MIT License
