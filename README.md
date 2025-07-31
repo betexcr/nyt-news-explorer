@@ -16,7 +16,7 @@ A React + TypeScript web application that allows users to explore and search art
 ## **Installation**
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/betexcr/nyt-news-explorer.git
 cd nyt-news-explorer
 npm install
 ```
