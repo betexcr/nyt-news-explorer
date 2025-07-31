@@ -1,26 +1,67 @@
-## Install
+# New York Times News Explorer
 
-Set your NYT API Key to REACT_APP_NYT_API_KEY in the env file
+A React + TypeScript web application that allows users to explore and search articles from the New York Times API. Built for performance, clean architecture, and easy navigation.
 
+---
+
+## **Features**
+- Search for articles using the New York Times API
+- Responsive and accessible UI
+- Theming (light/dark modes)
+- Jest test coverage with Bun
+- Continuous Integration with GitHub Actions
+
+---
+
+## **Installation**
+
+```bash
+git clone <your-repo-url>
+cd nyt-news-explorer
 npm install
+```
 
+---
+
+## **Setup Environment Variables**
+
+Create a `.env` file in the project root:
+
+```env
+REACT_APP_NYT_API_KEY=your_api_key_here
+```
+
+You can obtain your API key from [NYT Developer Portal](https://developer.nytimes.com/).
+
+---
+
+## **Usage**
+
+```bash
 npm start
+```
+Runs the app in development mode.  
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-## How to Use 
+---
 
--On the Home page, click the entry panel to access Search.
+## **Testing**
 
--Enter a query; results load with debounce to avoid redundant calls.
+Run the test suite with coverage:
 
--Click an article card for full details.
+```bash
+npm run test:cov:strict
+```
 
--Use “Back to search” or browser back button to return; state and scroll are preserved. Going back to home page resets state.
+This will run all Jest tests and enforce coverage thresholds.
 
--Toggle light/dark mode anytime from the header.
+---
 
+## **CI/CD**
 
-## Tests
+This project includes a GitHub Actions workflow for automated testing on every push or pull request to the `master` branch.
 
-npm run test:cov
+---
 
-npm run test:ci
+## **📜 License**
+MIT License
