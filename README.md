@@ -9,7 +9,7 @@ A React + TypeScript web application that allows users to explore and search art
 - Search for articles using the New York Times API
 - Responsive and accessible UI
 - Theming (light/dark modes)
-- Jest test coverage with Bun
+- Jest test coverage
 - Continuous Integration with GitHub Actions
 
 ---
