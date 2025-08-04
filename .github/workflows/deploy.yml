@@ -1,9 +1,10 @@
-name:  Deploy to Hostinger
+name: Deploy to Hostinger
 on:
+  pull_request:
+    branches: [master]
   push:
     branches:
-      - deploy-hostinger
-
+      - master
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
