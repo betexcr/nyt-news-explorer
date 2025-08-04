@@ -5,7 +5,7 @@
       <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml/badge.svg" alt="Tests" />
     </a>
     <a href="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml">
-      <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg" alt="Deploy" />
+      <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg" alt="Build and Deploy" />
     </a>
   </span>
 </h1>
