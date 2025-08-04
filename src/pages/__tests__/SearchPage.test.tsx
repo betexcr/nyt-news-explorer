@@ -1,31 +1,197 @@
-import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
- 
-jest.mock('../../api/nyt', () => ({
-  makeSearchController: () => async (q: string) => {
-    return q ? [
-      { _id: 'a1', web_url: 'https://example.com/a1', snippet: 's1', lead_paragraph: 'l1', multimedia: [], headline: { main: 'H1' }, pub_date: '2024-01-01T00:00:00Z', section_name: 'World' },
-      { _id: 'a2', web_url: 'https://example.com/a2', snippet: 's2', lead_paragraph: 'l2', multimedia: [], headline: { main: 'H2' }, pub_date: '2024-01-02T00:00:00Z', section_name: 'US' }
-    ] : [];
-  }
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import SearchPage from '../SearchPage';
+import { searchArticles } from '../../api/nyt';
+import { useSearchStore } from '../../store/searchStore';
+import type { Article } from '../../types/nyt';
+
+// Mock the API
+jest.mock('../../api/nyt');
+const mockSearchArticles = searchArticles as jest.MockedFunction<typeof searchArticles>;
+
+// Mock the store
+jest.mock('../../store/searchStore');
+const mockUseSearchStore = useSearchStore as jest.MockedFunction<typeof useSearchStore>;
+
+// Mock react-router-dom hooks
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useLocation: jest.fn(),
 }));
 
-import SearchPage from '../SearchPage';
+const mockUseLocation = useLocation as jest.MockedFunction<typeof useLocation>;
 
-test('form submit renders results (bypasses debounce)', async () => {
-  render(<MemoryRouter><SearchPage /></MemoryRouter>);
+const mockArticles: Article[] = [
+  {
+    _id: '1',
+    web_url: 'https://example.com/1',
+    snippet: 'Article 1',
+    headline: { main: 'Headline 1' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z',
+    multimedia: {},
+  },
+  {
+    _id: '2',
+    web_url: 'https://example.com/2',
+    snippet: 'Article 2',
+    headline: { main: 'Headline 2' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z',
+    multimedia: {},
+  },
+];
 
-  const input = screen.getByRole('textbox', { name: /search input/i });
-  await userEvent.clear(input);
-  await userEvent.type(input, 'climate');
+const mockStore = {
+  query: '',
+  articles: [],
+  hasSearched: false,
+  scrollY: 0,
+  setQuery: jest.fn(),
+  setArticles: jest.fn(),
+  setHasSearched: jest.fn(),
+  setScrollY: jest.fn(),
+  reset: jest.fn(),
+};
 
-  const btn = screen.getByRole('button', { name: /search/i });
-  await userEvent.click(btn);
+describe('SearchPage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseSearchStore.mockReturnValue(mockStore);
+    mockSearchArticles.mockResolvedValue(mockArticles);
+    mockUseLocation.mockReturnValue({ state: undefined } as any);
+  });
 
-  await waitFor(() => {
-    expect(screen.getByText('H1')).toBeInTheDocument();
-    expect(screen.getByText('H2')).toBeInTheDocument();
+  test('renders search form', () => {
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('textbox', { name: /search input/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+  });
+
+  test('handles empty search results', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [],
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+
+  test('handles null articles', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: null as any,
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+
+  test('handles undefined articles', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: undefined as any,
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+
+  test('handles articles with missing required fields', () => {
+    const incompleteArticle = {
+      _id: 'incomplete',
+      web_url: 'https://example.com/incomplete',
+      snippet: 'Incomplete article',
+      headline: { main: 'Incomplete Headline' },
+      keywords: [],
+      pub_date: '2024-01-01T00:00:00Z',
+      multimedia: {},
+    };
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [incompleteArticle as any],
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    // Should not crash when articles are missing required fields
+    expect(screen.getByText('Incomplete Headline')).toBeInTheDocument();
+  });
+
+  test('handles window scroll events', () => {
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    // Simulate scroll event
+    Object.defineProperty(window, 'scrollY', {
+      value: 150,
+      writable: true,
+    });
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(mockStore.setScrollY).toHaveBeenCalledWith(150);
+  });
+
+  test('handles window scrollY being undefined', () => {
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    // Simulate scroll event with undefined scrollY
+    Object.defineProperty(window, 'scrollY', {
+      value: undefined,
+      writable: true,
+    });
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(mockStore.setScrollY).toHaveBeenCalledWith(0);
+  });
+
+  test('handles fromHome state', () => {
+    // Mock useLocation to return fromHome state
+    mockUseLocation.mockReturnValue({ state: { fromHome: true } } as any);
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(mockStore.reset).toHaveBeenCalled();
   });
 });

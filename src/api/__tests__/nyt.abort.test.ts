@@ -43,8 +43,25 @@ test('second search aborts the first in-flight request', async () => {
     expect(first.signal.aborted).toBe(true);
   }
 
-  // Resolve second request
-  second.resolve({ data: { response: { docs: [{ _id: 'b' }] } } });
+  // Resolve second request with valid NYT API response
+  second.resolve({ 
+    data: { 
+      status: 'OK',
+      copyright: 'Copyright (c) 2024 The New York Times Company',
+      response: { 
+        docs: [{ 
+          _id: 'b',
+          web_url: 'https://example.com/b',
+          snippet: 'Test article',
+          multimedia: {},
+          headline: { main: 'Test Headline' },
+          keywords: [],
+          pub_date: '2024-01-01T00:00:00Z'
+        }],
+        meta: { hits: 1, offset: 0, time: 10 }
+      }
+    }
+  });
 
   await expect(p2).resolves.toBeDefined();
   await p1.catch(() => {}); // swallow AbortError

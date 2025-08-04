@@ -1,17 +1,15 @@
- 
+import { beforeEach, afterAll, test, expect, jest } from '@jest/globals';
+import axios from 'axios';
+
+// Mock axios
+jest.mock('axios');
+const mockAxios = axios as jest.Mocked<typeof axios>;
+
 const OLD_ENV = process.env;
 
-const makeAxios = (impl) => {
-  const get = jest.fn(impl);
-  const instance = { get };
-  const create = jest.fn(() => instance);
-  const axios = Object.assign(() => instance, { create, get });
-  return { __esModule: true, default: axios };
-};
-
 beforeEach(() => {
-  jest.resetModules();
   process.env = { ...OLD_ENV, REACT_APP_NYT_API_KEY: 'test-key' };
+  jest.clearAllMocks();
 });
 
 afterAll(() => {
@@ -19,58 +17,130 @@ afterAll(() => {
 });
 
 test('searchArticles: early return when query is blank (no axios call)', async () => {
-  const get = jest.fn();
-  jest.doMock('axios', () => {
-    const instance = { get };
-    const create = jest.fn(() => instance);
-    return { __esModule: true, default: Object.assign(() => instance, { create, get }) };
-  });
-
-  const api = await import('../nyt');
-  const r1 = await (api as any).searchArticles('');
-  const r2 = await (api as any).searchArticles('   ');
+  const { searchArticles } = await import('../nyt');
+  
+  const r1 = await searchArticles('');
+  const r2 = await searchArticles('   ');
   expect(r1).toEqual([]);
   expect(r2).toEqual([]);
-  expect(get).not.toHaveBeenCalled();
+  expect(mockAxios.get).not.toHaveBeenCalled();
 });
 
 test('searchArticles: success, includes api-key and trimmed query', async () => {
-  jest.doMock('axios', () =>
-    makeAxios((_url: string, { params, signal }: any) => {
-      expect(params['api-key']).toBe('test-key');
-      expect(params.q).toBe('climate'); 
-      expect(Number.isInteger(params.page) && params.page >= 0).toBe(true);
-      expect(signal).toBeUndefined();  
-      return Promise.resolve({
-        data: { response: { docs: [{ _id: 'A' }] } },
-      });
-    })
-  );
-  const api = await import('../nyt');
-  const res = await (api as any).searchArticles('  climate  ');
-  expect(res).toEqual([{ _id: 'A' }]);
+  const mockGet = jest.fn((_url: string, { params, signal }: any) => {
+    expect(params['api-key']).toBe('test-key');
+    expect(params.q).toBe('climate'); 
+    expect(Number.isInteger(params.page) && params.page >= 0).toBe(true);
+    expect(signal).toBeUndefined();  
+    return Promise.resolve({
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { 
+          docs: [{ 
+            _id: 'A',
+            web_url: 'https://example.com',
+            snippet: 'Test article',
+            multimedia: {},
+            headline: { main: 'Test Headline' },
+            keywords: [],
+            pub_date: '2024-01-01T00:00:00Z'
+          }],
+          meta: { hits: 1, offset: 0, time: 10 }
+        } 
+      },
+    });
+  });
+  
+  mockAxios.get.mockImplementation(mockGet);
+  
+  const { searchArticles } = await import('../nyt');
+  const res = await searchArticles('  climate  ');
+  expect(res).toEqual([{ 
+    _id: 'A',
+    web_url: 'https://example.com',
+    snippet: 'Test article',
+    multimedia: {},
+    headline: { main: 'Test Headline' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z'
+  }]);
+});
+
+test('searchArticles: handles empty response', async () => {
+  mockAxios.get.mockResolvedValue({
+    data: { 
+      status: 'OK',
+      response: { 
+        docs: [],
+        meta: { hits: 0, offset: 0, time: 10 }
+      } 
+    },
+  });
+  
+  const { searchArticles } = await import('../nyt');
+  const res = await searchArticles('test');
+  expect(res).toEqual([]);
+});
+
+test('searchArticles: handles malformed response', async () => {
+  mockAxios.get.mockResolvedValue({
+    data: { 
+      status: 'OK',
+      response: { 
+        // No docs field
+        meta: { hits: 0, offset: 0, time: 10 }
+      } 
+    },
+  });
+  
+  const { searchArticles } = await import('../nyt');
+  const res = await searchArticles('test');
+  expect(res).toEqual([]);
 });
 
 test('searchArticlesAdv: builds params (page default, sort, begin/end, section->fq with escaping)', async () => {
   const sectionWithQuotes = 'Opinions "and" Ideas';
-  jest.doMock('axios', () =>
-    makeAxios((_url: string, { params }: any) => {
- 
-      expect(params['api-key']).toBe('test-key')
-      expect(params.page).toBe(0);
-      expect(params.q).toBe('science');
-      expect(params.sort).toBe('newest');
-      expect(params.begin_date).toBe('20240101');
-      expect(params.end_date).toBe('20241231'); 
-      expect(params.fq).toBe('section_name:("Opinions \\"and\\" Ideas")');
-      return Promise.resolve({
-        data: { response: { docs: [{ _id: 'D1' }, { _id: 'D2' }] } },
-      });
-    })
-  );
+  const mockGet = jest.fn((_url: string, { params }: any) => {
+    expect(params['api-key']).toBe('test-key')
+    expect(params.page).toBe(0);
+    expect(params.q).toBe('science');
+    expect(params.sort).toBe('newest');
+    expect(params.begin_date).toBe('20240101');
+    expect(params.end_date).toBe('20241231'); 
+    expect(params.fq).toBe('section_name:("Opinions \\"and\\" Ideas")');
+    return Promise.resolve({
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { 
+          docs: [{ 
+            _id: 'D1',
+            web_url: 'https://example.com/1',
+            snippet: 'Test article 1',
+            multimedia: {},
+            headline: { main: 'Test Headline 1' },
+            keywords: [],
+            pub_date: '2024-01-01T00:00:00Z'
+          }, { 
+            _id: 'D2',
+            web_url: 'https://example.com/2',
+            snippet: 'Test article 2',
+            multimedia: {},
+            headline: { main: 'Test Headline 2' },
+            keywords: [],
+            pub_date: '2024-01-01T00:00:00Z'
+          }],
+          meta: { hits: 2, offset: 0, time: 10 }
+        } 
+      },
+    });
+  });
+  
+  mockAxios.get.mockImplementation(mockGet);
 
-  const api = await import('../nyt');
-  const res = await (api as any).searchArticlesAdv({
+  const { searchArticlesAdv } = await import('../nyt');
+  const res = await searchArticlesAdv({
     q: 'science',
     sort: 'newest',
     begin: '20240101',
@@ -81,56 +151,152 @@ test('searchArticlesAdv: builds params (page default, sort, begin/end, section->
 });
 
 test('searchArticlesAdv: no fq when section is blank/whitespace', async () => {
-  jest.doMock('axios', () =>
-    makeAxios((_url: string, { params }: any) => {
-      expect(params.q).toBe('tech');
-      expect(params.fq).toBeUndefined();
-      return Promise.resolve({ data: { response: { docs: [] } } });
-    })
-  );
+  const mockGet = jest.fn((_url: string, { params }: any) => {
+    expect(params.q).toBe('tech');
+    expect(params.fq).toBeUndefined();
+    return Promise.resolve({ 
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { docs: [], meta: { hits: 0, offset: 0, time: 10 } } 
+      } 
+    });
+  });
+  
+  mockAxios.get.mockImplementation(mockGet);
 
-  const api = await import('../nyt');
-  const res = await (api as any).searchArticlesAdv({ q: 'tech', section: '   ' });
+  const { searchArticlesAdv } = await import('../nyt');
+  const res = await searchArticlesAdv({ q: 'tech', section: '   ' });
   expect(res).toEqual([]);
 });
 
-test('getArticleByUrl: early return for blank URL (no axios call)', async () => {
-  const get = jest.fn();
-  jest.doMock('axios', () => {
-    const instance = { get };
-    const create = jest.fn(() => instance);
-    return { __esModule: true, default: Object.assign(() => instance, { create, get }) };
+test('searchArticlesAdv: handles signal parameter', async () => {
+  const signal = new AbortController().signal;
+  mockAxios.get.mockResolvedValue({
+    data: { 
+      status: 'OK',
+      response: { docs: [], meta: { hits: 0, offset: 0, time: 10 } } 
+    },
   });
 
-  const api = await import('../nyt');
-  const r1 = await (api as any).getArticleByUrl('');
-  const r2 = await (api as any).getArticleByUrl('   ');
+  const { searchArticlesAdv } = await import('../nyt');
+  const res = await searchArticlesAdv({ q: 'test', signal });
+  expect(res).toEqual([]);
+  expect(mockAxios.get).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({ params: expect.any(Object), signal })
+  );
+});
+
+test('getArticleByUrl: early return for blank URL (no axios call)', async () => {
+  const { getArticleByUrl } = await import('../nyt');
+  
+  const r1 = await getArticleByUrl('');
+  const r2 = await getArticleByUrl('   ');
   expect(r1).toBeNull();
   expect(r2).toBeNull();
-  expect(get).not.toHaveBeenCalled();
+  expect(mockAxios.get).not.toHaveBeenCalled();
 });
 
 test('getArticleByUrl: success returns first doc and escapes quotes in fq', async () => {
-  const urlWithQuotes = 'https://example.com/a?x="y"';
-  jest.doMock('axios', () =>
-    makeAxios((_url: string, { params }: any) => {
-      expect(params['api-key']).toBe('test-key'); 
-      expect(params.fq).toBe('web_url:("https://example.com/a?x=\\"y\\"")'); 
-      expect(params.page).toBe(0);
-      return Promise.resolve({
-        data: { response: { docs: [{ _id: 'FIRST' }, { _id: 'SECOND' }] } },
-      });
-    })
-  );
+  const urlWithQuotes = 'https://example.com/article "with" quotes';
+  const mockGet = jest.fn((_url: string, { params }: any) => {
+    expect(params['api-key']).toBe('test-key');
+    expect(params.fq).toBe('web_url:("https://example.com/article \\"with\\" quotes")');
+    return Promise.resolve({
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { 
+          docs: [{ 
+            _id: 'E',
+            web_url: 'https://example.com/article "with" quotes',
+            snippet: 'Test article',
+            multimedia: {},
+            headline: { main: 'Test Headline' },
+            keywords: [],
+            pub_date: '2024-01-01T00:00:00Z'
+          }],
+          meta: { hits: 1, offset: 0, time: 10 }
+        } 
+      },
+    });
+  });
+  
+  mockAxios.get.mockImplementation(mockGet);
 
-  const api = await import('../nyt');
-  const doc = await (api as any).getArticleByUrl(urlWithQuotes);
-  expect(doc._id).toBe('FIRST');
+  const { getArticleByUrl } = await import('../nyt');
+  const res = await getArticleByUrl(urlWithQuotes);
+  expect(res).toEqual({ 
+    _id: 'E',
+    web_url: 'https://example.com/article "with" quotes',
+    snippet: 'Test article',
+    multimedia: {},
+    headline: { main: 'Test Headline' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z'
+  });
 });
 
 test('getArticleByUrl: returns null when docs missing/empty', async () => {
-  jest.doMock('axios', () => makeAxios(() => Promise.resolve({ data: { response: { docs: [] } } })));
-  const api = await import('../nyt');
-  const doc = await (api as any).getArticleByUrl('https://example.com/nothing');
-  expect(doc).toBeNull();
+  const mockGet = jest.fn((_url: string, { params }: any) => {
+    expect(params['api-key']).toBe('test-key');
+    return Promise.resolve({
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { docs: [], meta: { hits: 0, offset: 0, time: 10 } } 
+      },
+    });
+  });
+  
+  mockAxios.get.mockImplementation(mockGet);
+
+  const { getArticleByUrl } = await import('../nyt');
+  const res = await getArticleByUrl('https://example.com/article');
+  expect(res).toBeNull();
+});
+
+test('getArticleByUrl: handles signal parameter', async () => {
+  const signal = new AbortController().signal;
+  mockAxios.get.mockResolvedValue({
+    data: { 
+      status: 'OK',
+      response: { docs: [], meta: { hits: 0, offset: 0, time: 10 } } 
+    },
+  });
+
+  const { getArticleByUrl } = await import('../nyt');
+  const res = await getArticleByUrl('https://example.com/article', signal);
+  expect(res).toBeNull();
+  expect(mockAxios.get).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({ params: expect.any(Object), signal })
+  );
+});
+
+test('makeSearchController: creates controller', async () => {
+  const { makeSearchController } = await import('../nyt');
+  const controller = makeSearchController();
+  
+  // Test that the controller is a function
+  expect(typeof controller).toBe('function');
+});
+
+test('searchArticles: handles signal parameter', async () => {
+  const signal = new AbortController().signal;
+  mockAxios.get.mockResolvedValue({
+    data: { 
+      status: 'OK',
+      response: { docs: [], meta: { hits: 0, offset: 0, time: 10 } } 
+    },
+  });
+
+  const { searchArticles } = await import('../nyt');
+  const res = await searchArticles('test', signal);
+  expect(res).toEqual([]);
+  expect(mockAxios.get).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({ params: expect.any(Object), signal })
+  );
 });

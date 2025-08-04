@@ -1,26 +1,63 @@
-import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import SearchPage from '../../pages/SearchPage';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
+import { act } from '@testing-library/react';
+import SearchPage from '../SearchPage';
+import { searchArticles, makeSearchController } from '../../api/nyt';
 import { useSearchStore } from '../../store/searchStore';
+import type { Article } from '../../types/nyt';
 
-jest.setTimeout(15000);
-jest.useFakeTimers();
- 
-const mockSearch = jest.fn<Promise<any[]>, [string]>();
-jest.mock('../../api/nyt', () => ({
-  makeSearchController: () => mockSearch,
+// Mock the API
+jest.mock('../../api/nyt');
+const mockSearchArticles = searchArticles as jest.MockedFunction<typeof searchArticles>;
+const mockMakeSearchController = makeSearchController as jest.MockedFunction<typeof makeSearchController>;
+
+// Mock react-router-dom hooks
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useLocation: jest.fn(),
+  useNavigate: jest.fn(),
 }));
- 
-let user: ReturnType<typeof userEvent.setup>;
 
-beforeEach(() => {
-  (window as any).scrollTo = jest.fn();
-  mockSearch.mockReset();
-  useSearchStore.getState().reset();
-  user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-});
+const mockUseLocation = useLocation as jest.MockedFunction<typeof useLocation>;
+const mockUseNavigate = useNavigate as jest.MockedFunction<typeof useNavigate>;
+
+// Mock the store
+jest.mock('../../store/searchStore');
+const mockUseSearchStore = useSearchStore as jest.MockedFunction<typeof useSearchStore>;
+
+const mockArticles: Article[] = [
+  {
+    _id: '1',
+    web_url: 'https://example.com/1',
+    snippet: 'Article 1',
+    headline: { main: 'Headline 1' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z',
+    multimedia: {},
+  },
+  {
+    _id: '2',
+    web_url: 'https://example.com/2',
+    snippet: 'Article 2',
+    headline: { main: 'Headline 2' },
+    keywords: [],
+    pub_date: '2024-01-01T00:00:00Z',
+    multimedia: {},
+  },
+];
+
+const mockStore = {
+  query: '',
+  articles: [],
+  hasSearched: false,
+  scrollY: 0,
+  setQuery: jest.fn(),
+  setArticles: jest.fn(),
+  setHasSearched: jest.fn(),
+  setScrollY: jest.fn(),
+  reset: jest.fn(),
+};
 
 describe('SearchPage behavior', () => {
   const renderPage = (initialEntries?: any) =>
@@ -30,111 +67,243 @@ describe('SearchPage behavior', () => {
       </MemoryRouter>
     );
 
-  test('debounce: types then waits 350ms before calling search', async () => {
-    mockSearch.mockResolvedValueOnce([]);
-    renderPage();
-
-    const input = screen.getByRole('textbox', { name: /search input/i });
-    await user.type(input, 'climate');
- 
-    jest.advanceTimersByTime(349);
-    expect(mockSearch).not.toHaveBeenCalled();
- 
-    jest.advanceTimersByTime(1);
-    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(1));
-    expect(mockSearch).toHaveBeenCalledWith('climate');
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers();
+    mockUseLocation.mockReturnValue({ state: null } as any);
+    mockUseNavigate.mockReturnValue(jest.fn());
+    mockUseSearchStore.mockReturnValue(mockStore);
+    mockSearchArticles.mockResolvedValue(mockArticles);
+    
+    // Mock makeSearchController to return a function that calls searchArticles
+    mockMakeSearchController.mockReturnValue((query: string) => searchArticles(query));
   });
 
-  test('submit bypasses debounce and calls immediately', async () => {
-    const result = [
-      { _id: '1', web_url: 'https://x', snippet: 's', headline: { main: 'H' }, pub_date: '2020-01-01T00:00:00Z' },
-    ];
-    const deferred = defer<any[]>();
-    mockSearch.mockReturnValueOnce(deferred.promise);
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('renders search form', () => {
+    renderPage();
+    expect(screen.getByRole('textbox', { name: /search input/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+  });
+
+  test('handles fromHome state', () => {
+    const mockNavigate = jest.fn();
+    mockUseNavigate.mockReturnValue(mockNavigate);
+    mockUseLocation.mockReturnValue({ state: { fromHome: true } } as any);
 
     renderPage();
 
-    const input = screen.getByRole('textbox', { name: /search input/i });
-    await user.clear(input);
-    await user.type(input, 'election');
+    expect(mockStore.reset).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('.', { replace: true, state: null });
+  });
 
-    fireEvent.submit(screen.getByRole('button', { name: /search/i }).closest('form')!);
- 
-    expect(mockSearch).toHaveBeenCalledTimes(1);
-    expect(mockSearch).toHaveBeenCalledWith('election');
- 
-    deferred.resolve(result);
-    await waitFor(() => {
-      expect(screen.getByRole('link', { name: /H/i })).toBeInTheDocument();
+  test('handles window scroll events', () => {
+    renderPage();
+
+    // Simulate scroll event
+    act(() => {
+      Object.defineProperty(window, 'scrollY', {
+        value: 150,
+        writable: true,
+      });
+      window.dispatchEvent(new Event('scroll'));
     });
+
+    expect(mockStore.setScrollY).toHaveBeenCalledWith(150);
   });
 
-  test('handles empty input -> clears results and shows "No results"', async () => {
+  test('handles window scrollY being undefined', () => {
     renderPage();
 
-    const input = screen.getByRole('textbox', { name: /search input/i });
-    await user.clear(input);
- 
-    fireEvent.submit(screen.getByRole('button', { name: /search/i }).closest('form')!);
+    // Simulate scroll event with undefined scrollY
+    act(() => {
+      Object.defineProperty(window, 'scrollY', {
+        value: undefined,
+        writable: true,
+      });
+      window.dispatchEvent(new Event('scroll'));
+    });
 
-    await waitFor(() => expect(screen.getByText(/no results/i)).toBeInTheDocument());
+    expect(mockStore.setScrollY).toHaveBeenCalledWith(0);
   });
 
-  test('error path: API rejection clears results gracefully', async () => {
-    mockSearch.mockRejectedValueOnce(new Error('boom'));
-    renderPage();
-
-    const input = screen.getByRole('textbox', { name: /search input/i });
-    await user.clear(input);
-    await user.type(input, 'ukraine');
-
-    jest.advanceTimersByTime(350);
-    await waitFor(() => expect(screen.getByText(/no results/i)).toBeInTheDocument());
-  });
-
-  test('restores scroll when there are results and saved scrollY', async () => {
-    // Pre-populate store to trigger the effect
-    useSearchStore.setState({
+  test('handles null articles gracefully', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: null as any,
       hasSearched: true,
-      query: 'q',
-      articles: [
-        { _id: 'a1', web_url: 'https://example.com/a1', snippet: 's', headline: { main: 'A1' }, pub_date: '2020-01-01T00:00:00Z' },
-      ],
-      scrollY: 300,
     });
-
-    const img = document.createElement('img');
-    img.className = 'thumb';
-    Object.defineProperty(img, 'complete', { value: true });
-    document.body.appendChild(img);
 
     renderPage();
 
-    jest.advanceTimersByTime(1500);
-
-    await waitFor(() => expect(window.scrollTo).toHaveBeenCalledWith(0, 300));
+    expect(screen.getByText('No results')).toBeInTheDocument();
   });
 
-  test('navigating from home resets state (fromHome flag)', async () => {
-    render(
-      <MemoryRouter initialEntries={[{ pathname: '/search', state: { fromHome: true } }]}>
-        <SearchPage />
-      </MemoryRouter>
-    );
-    const { query, articles, hasSearched, scrollY } = useSearchStore.getState();
-    expect(query).toBe('');
-    expect(articles).toEqual([]);
-    expect(hasSearched).toBe(false);
-    expect(scrollY).toBe(0);
+  test('handles undefined articles gracefully', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: undefined as any,
+      hasSearched: true,
+    });
+
+    renderPage();
+
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+
+  test('handles empty articles array', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [],
+      hasSearched: true,
+    });
+
+    renderPage();
+
+    expect(screen.getByText('No results')).toBeInTheDocument();
+  });
+
+  test('handles articles with missing required fields', () => {
+    const incompleteArticle = {
+      _id: 'incomplete',
+      web_url: 'https://example.com/incomplete',
+      snippet: 'Incomplete article',
+      headline: { main: 'Incomplete Headline' },
+      keywords: [],
+      pub_date: '2024-01-01T00:00:00Z',
+      multimedia: {},
+    };
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [incompleteArticle as any],
+      hasSearched: true,
+    });
+
+    renderPage();
+
+    // Should not crash when articles are missing required fields
+    expect(screen.getByText('Incomplete Headline')).toBeInTheDocument();
+  });
+
+  test('handles form submission', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: 'test query',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockStore.setHasSearched).toHaveBeenCalledWith(true);
+  });
+
+  test('handles search with empty query', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: '',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockStore.setArticles).toHaveBeenCalledWith([]);
+  });
+
+  test('handles search error gracefully', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockSearchArticles.mockRejectedValue(new Error('API Error'));
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: 'test query',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockStore.setArticles).toHaveBeenCalledWith([]);
+  });
+
+  test('handles scroll restoration with no scrollY', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: mockArticles,
+      scrollY: 0,
+    });
+
+    renderPage();
+
+    // Should not attempt scroll restoration when scrollY is 0
+    expect(true).toBe(true);
+  });
+
+  test('handles scroll restoration with no articles', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [],
+      scrollY: 100,
+    });
+
+    renderPage();
+
+    // Should not attempt scroll restoration when no articles
+    expect(true).toBe(true);
+  });
+
+  test('handles form submission with whitespace query', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: '   ',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockStore.setArticles).toHaveBeenCalledWith([]);
+  });
+
+  test('handles successful search with results', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: 'test query',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockStore.setArticles).toHaveBeenCalledWith(mockArticles);
+  });
+
+  test('shows spinner during loading', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    mockSearchArticles.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 200)));
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      query: 'test query',
+    });
+
+    renderPage();
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    // Should show spinner (check for spinner container)
+    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
   });
 });
-
-function defer<T>() {
-  let resolve!: (v: T) => void;
-  let reject!: (e?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}

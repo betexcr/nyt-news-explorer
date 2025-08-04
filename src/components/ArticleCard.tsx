@@ -1,10 +1,10 @@
 import React from "react";
 import { Link, createSearchParams } from "react-router-dom";
-import type { NytArticle } from "../types/nyt";
+import type { Article } from "../types/nyt";
 import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
 
-function getImageUrl(article: NytArticle): string {
+function getImageUrl(article: Article): string {
   const mm = article.multimedia;
   if (mm && mm.default && mm.default.url) {
     return mm.default.url;
@@ -13,7 +13,7 @@ function getImageUrl(article: NytArticle): string {
 }
 
 interface Props {
-  article: NytArticle;
+  article: Article;
 }
 
 const ArticleCard: React.FC<Props> = ({ article }) => {
