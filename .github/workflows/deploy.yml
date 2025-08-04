@@ -21,11 +21,11 @@ jobs:
       - name: Install Dependencies
         run: |
           corepack enable
-          bun install || npm install
+          npm install
 
       - name: Build React App
         run: |
-          bun run build || npm run build
+          npm run build
 
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
