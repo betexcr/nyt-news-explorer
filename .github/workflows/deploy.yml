@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Build and Deploy
 on:
   workflow_run:
     workflows: ["Tests"]
