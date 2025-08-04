@@ -1,10 +1,18 @@
-# New York Times News Explorer
+<h1>
+  New York Times News Explorer
+  <span style="float: right;">
+    <a href="https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml">
+      <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml/badge.svg" alt="Tests" />
+    </a>
+    <a href="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml">
+      <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg" alt="Deploy to Hostinger" />
+    </a>
+  </span>
+</h1>
 
+<p>
 A React + TypeScript web application that allows users to explore and search articles from the New York Times API. Built for performance, clean architecture, and easy navigation.
-
-[![Tests](https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml)
-
-[![Deploy](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml)
+</p>
 
 ## **Features**
 - Search for articles using the New York Times API
