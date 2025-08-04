@@ -5,12 +5,12 @@ import {
   useSearchParams,
   Link,
 } from "react-router-dom";
-import type { NytArticle } from "../types/nyt";
+import type { Article } from "../types/nyt";
 import { getArticleByUrl } from "../api/nyt";
 import { formatDate } from "../utils/format";
 import "../styles/detail.css";
 
-function getImageUrl(article: NytArticle | null): string {
+function getImageUrl(article: Article | null): string {
   const mm = article?.multimedia; 
   if (mm && mm.default && mm.default.url) {
     return mm.default.url;
@@ -23,10 +23,10 @@ const DetailPage: React.FC = () => {
   const [params] = useSearchParams();
   const url = params.get("url") || "";
 
-  const { state } = useLocation() as { state?: { article?: NytArticle } };
+  const { state } = useLocation() as { state?: { article?: Article } };
   const initialArticle = useMemo(() => state?.article || null, [state]);
 
-  const [article, setArticle] = useState<NytArticle | null>(initialArticle);
+  const [article, setArticle] = useState<Article | null>(initialArticle);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {

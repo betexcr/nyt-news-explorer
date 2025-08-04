@@ -1,6 +1,6 @@
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 /** Global axios mock to avoid ESM parsing issues in Jest */
-jest.mock('axios', () => ({
+jest.mock("axios", () => ({
   __esModule: true,
   default: {
     get: jest.fn(),

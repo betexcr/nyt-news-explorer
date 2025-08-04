@@ -53,8 +53,25 @@ describe('src/api/nyt.ts aborts in-flight requests', () => {
       expect(first.signal.aborted).toBe(true);
     }
 
-    // Resolve the second request with a normal NYT-like payload
-    second.resolve({ data: { response: { docs: [{ _id: 'b' }] } } });
+    // Resolve the second request with a valid NYT API response
+    second.resolve({ 
+      data: { 
+        status: 'OK',
+        copyright: 'Copyright (c) 2024 The New York Times Company',
+        response: { 
+          docs: [{ 
+            _id: 'b',
+            web_url: 'https://example.com/b',
+            snippet: 'Test article',
+            multimedia: {},
+            headline: { main: 'Test Headline' },
+            keywords: [],
+            pub_date: '2024-01-01T00:00:00Z'
+          }],
+          meta: { hits: 1, offset: 0, time: 10 }
+        }
+      }
+    });
  
     await p2;  
  

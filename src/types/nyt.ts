@@ -1,27 +1,32 @@
-export interface NytMultimedia {
-  url: string;
-  credit?: string;
-  default?: NytMultimediaImage; 
-  thumbnail?: NytMultimediaImage; 
-}
+// Re-export generated types
+export type {
+  Image,
+  Multimedia,
+  Headline,
+  Byline,
+  Keyword,
+  Article,
+  Meta,
+  Response,
+  NytApiResponse,
+  SearchParams,
+  // Legacy aliases
+  NytMultimedia,
+  NytMultimediaImage,
+  NytHeadline,
+  NytArticle,
+} from './nyt.generated';
 
-export interface NytMultimediaImage {
-  width: number;
-  height: number;
-  url: string;
-}
-export interface NytHeadline {
-  main: string;
-}
-
-export interface NytArticle {
-  _id: string;
-  web_url: string;
-  snippet: string;
-  lead_paragraph?: string;
-  multimedia: NytMultimedia;
-  headline: NytHeadline;
-  pub_date: string;
-  section_name?: string;
-  byline?: { original?: string };
-}
+// Re-export Zod schemas for runtime validation
+export {
+  ImageSchema,
+  MultimediaSchema,
+  HeadlineSchema,
+  BylineSchema,
+  KeywordSchema,
+  ArticleSchema,
+  MetaSchema,
+  ResponseSchema,
+  NytApiResponseSchema,
+  SearchParamsSchema,
+} from './nyt.schemas';
