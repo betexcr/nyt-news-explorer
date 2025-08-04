@@ -2,9 +2,8 @@
 
 A React + TypeScript web application that allows users to explore and search articles from the New York Times API. Built for performance, clean architecture, and easy navigation.
 
----
-![Tests](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml)
-[![Build & Deploy](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml)
+![Tests](https://github.com/your-username/your-repo/actions/workflows/test.yml/badge.svg)
+![Deploy](https://github.com/your-username/your-repo/actions/workflows/deploy.yml/badge.svg)
 ## **Features**
 - Search for articles using the New York Times API
 - Responsive and accessible UI
