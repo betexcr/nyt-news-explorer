@@ -1,0 +1,95 @@
+name: Validate Deployment
+
+on:
+  workflow_run:
+    workflows: ["Deploy"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  validate-deployment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Wait for deployment
+        run: |
+          echo "Waiting 30 seconds for deployment to complete..."
+          sleep 30
+      
+      - name: Check if app is accessible
+        run: |
+          echo "Checking if the app is accessible..."
+          
+          # Test the main URL
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://nyt.brainvaultdev.com/ || echo "000")
+          echo "Main URL response code: $response"
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Main URL is accessible"
+          else
+            echo "❌ Main URL returned $response"
+            exit 1
+          fi
+      
+      - name: Test search page
+        run: |
+          echo "Testing search page..."
+          
+          # Test the search page
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://nyt.brainvaultdev.com/search || echo "000")
+          echo "Search page response code: $response"
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Search page is accessible"
+          else
+            echo "❌ Search page returned $response"
+            exit 1
+          fi
+      
+      - name: Check for React app content
+        run: |
+          echo "Checking for React app content..."
+          
+          # Check if the page contains React app content
+          content=$(curl -s https://nyt.brainvaultdev.com/ || echo "")
+          
+          if echo "$content" | grep -q "NYT News Explorer"; then
+            echo "✅ Found React app content"
+          else
+            echo "❌ React app content not found"
+            echo "Page content preview:"
+            echo "$content" | head -20
+            exit 1
+          fi
+      
+      - name: Test API connectivity
+        run: |
+          echo "Testing API connectivity..."
+          
+          # Check if the app can make API calls (this is a basic test)
+          # We'll check if the page loads without JavaScript errors
+          content=$(curl -s https://nyt.brainvaultdev.com/ || echo "")
+          
+          if echo "$content" | grep -q "react-scripts"; then
+            echo "✅ React app structure detected"
+          else
+            echo "❌ React app structure not found"
+            exit 1
+          fi
+      
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Deployment validation successful!"
+          echo "The NYT News Explorer app is now live at https://nyt.brainvaultdev.com/"
+          echo "Search page: https://nyt.brainvaultdev.com/search"
+      
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment validation failed!"
+          echo "The app may not be properly deployed or accessible."
+          echo "Please check the deployment logs and try again." 

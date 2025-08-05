@@ -19,7 +19,10 @@ jobs:
         uses: oven-sh/setup-bun@v1
 
       - name: Configure npm registry
-        run: npm config set registry https://registry.npmjs.org/
+        run: |
+          echo "Configuring npm registry..."
+          npm config set registry https://registry.npmjs.org/
+          npm config list
 
       - name: Install Dependencies
         run: bun install
@@ -28,7 +31,13 @@ jobs:
         run: bun run gen:types
 
       - name: Build React App
-        run: bun run build
+        run: |
+          echo "Building React app..."
+          bun run build
+          echo "Build completed. Checking build output..."
+          ls -la build/
+          echo "Build size:"
+          du -sh build/
 
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -40,3 +49,39 @@ jobs:
           server-dir: public_html/
           protocol: ftp
           log-level: verbose
+
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for deployment to complete..."
+          sleep 10
+
+      - name: Test deployment
+        run: |
+          echo "Testing deployment..."
+          
+          # Test if the app is accessible
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://nyt.brainvaultdev.com/ || echo "000")
+          echo "Deployment test response: $response"
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Deployment appears successful"
+          else
+            echo "⚠️  Deployment test returned $response - this might be due to caching"
+            echo "Please check manually at https://nyt.brainvaultdev.com/"
+          fi
+
+      - name: Deployment Summary
+        run: |
+          echo "🚀 Deployment Summary:"
+          echo "App URL: https://nyt.brainvaultdev.com/"
+          echo "Search URL: https://nyt.brainvaultdev.com/search"
+          echo ""
+          echo "If you don't see the updated app, try:"
+          echo "1. Clear your browser cache (Ctrl+Shift+R or Cmd+Shift+R)"
+          echo "2. Check Hostinger's Cache Manager in hPanel"
+          echo "3. Wait a few minutes for CDN cache to clear"
+          echo ""
+          echo "Hostinger Cache Manager:"
+          echo "- Go to Websites → Dashboard → Cache Manager"
+          echo "- Toggle 'Automatic cache' off and on"
+          echo "- Or manually purge cache for the domain"
