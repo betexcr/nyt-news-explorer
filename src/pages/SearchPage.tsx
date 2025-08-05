@@ -83,11 +83,17 @@ const SearchPage: React.FC = () => {
     scrollY,
     viewMode,
     loading,
+    loadingMore,
+    currentPage,
+    hasMore,
     setQuery,
     setArticles,
+    appendArticles,
     setHasSearched,
     setViewMode,
     setLoading,
+    setLoadingMore,
+    setHasMore,
     setAdvancedParams,
     reset,
   } = useSearchStore();
@@ -168,47 +174,32 @@ const SearchPage: React.FC = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         const currentScrollY = window.scrollY;
-        // Always save on visibility change
         sessionStorage.setItem('search-page-scroll', currentScrollY.toString());
       }
     };
 
     const handlePageHide = () => {
       const currentScrollY = window.scrollY;
-      // Always save on page hide
       sessionStorage.setItem('search-page-scroll', currentScrollY.toString());
     };
 
-    // Save scroll position on multiple events
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', handlePageHide);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('pagehide', handlePageHide);
 
-    // Test scroll event immediately
-    handleScroll();
-
-    return () => {
-      // Clear any pending timeout
-      clearTimeout(scrollTimeout);
-      
-      // Save current scroll position when component unmounts
-      const currentScrollY = window.scrollY;
-      // Only save on unmount if we have a meaningful scroll position
-      if (currentScrollY > 0) {
-        sessionStorage.setItem('search-page-scroll', currentScrollY.toString());
-      }
-      
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', handlePageHide);
-    };
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('pagehide', handlePageHide);
+        clearTimeout(scrollTimeout);
+      };
+    }
   }, []);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [listHeight, setListHeight] = useState(600);
-  const [itemHeight, setItemHeight] = useState(200);
   const [advancedForm, setAdvancedForm] = useState({
     sort: 'newest' as 'newest' | 'oldest',
     beginDate: '',
@@ -283,20 +274,45 @@ const SearchPage: React.FC = () => {
     }
   }, []);
 
+  // Dynamic height calculation for virtualized list
+  const [listHeight, setListHeight] = useState(600);
+  const [itemHeight, setItemHeight] = useState(400);
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const containerHeight = window.innerHeight - 200; // Account for header and padding
+        setListHeight(Math.max(400, containerHeight));
+        
+        // Adjust item height based on viewport
+        const viewportWidth = window.innerWidth;
+        if (viewportWidth < 768) {
+          setItemHeight(350); // Mobile
+        } else if (viewportWidth < 1024) {
+          setItemHeight(380); // Tablet
+        } else {
+          setItemHeight(400); // Desktop
+        }
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  // ResizeObserver for more precise height updates
   useEffect(() => {
     if (containerRef.current && typeof ResizeObserver !== 'undefined') {
       try {
         const resizeObserver = new ResizeObserver(() => {
-          if (containerRef.current) {
-            const height = containerRef.current.clientHeight;
-            setListHeight(Math.max(400, height - 200));
-            setItemHeight(viewMode === 'grid' ? 300 : 80);
-          }
+          const containerHeight = window.innerHeight - 200;
+          setListHeight(Math.max(400, containerHeight));
         });
-        
-        if (containerRef.current) {
-          resizeObserver.observe(containerRef.current);
-        }
+
+        resizeObserver.observe(containerRef.current);
+
         return () => resizeObserver.disconnect();
       } catch (error) {
         // Fallback if ResizeObserver is not available or fails
@@ -330,6 +346,35 @@ const SearchPage: React.FC = () => {
       setArticles([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return;
+
+    const text = (query || "").trim();
+    if (!text) return;
+
+    setLoadingMore(true);
+
+    try {
+      const nextPage = currentPage + 1;
+      const result = await searchArticlesAdv({
+        q: text,
+        page: nextPage,
+        ...advancedForm
+      });
+      
+      if (result.length > 0) {
+        appendArticles(result);
+      } else {
+        // No more results
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -372,6 +417,9 @@ const SearchPage: React.FC = () => {
           articles={articles}
           height={listHeight}
           itemHeight={itemHeight}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={handleLoadMore}
         />
       );
     }
@@ -381,6 +429,17 @@ const SearchPage: React.FC = () => {
         {articles.map((a) => (
           <ArticleCard key={a.web_url} article={a} />
         ))}
+        {loadingMore && (
+          <div className="loading-more">
+            <Spinner />
+            <p>Loading more articles...</p>
+          </div>
+        )}
+        {!hasMore && articles.length > 0 && (
+          <div className="no-more-results">
+            <p>No more articles to load</p>
+          </div>
+        )}
       </div>
     );
   };
