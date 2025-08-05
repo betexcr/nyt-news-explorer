@@ -13,12 +13,14 @@ function App() {
     <Router>
       <SiteHeader />
       <main style={{ paddingTop: "70px" }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/detail" element={<DetailPage />} />
-        </Routes>
+        <div className="container">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/detail" element={<DetailPage />} />
+          </Routes>
+        </div>
       </main>
     </Router>
   );
