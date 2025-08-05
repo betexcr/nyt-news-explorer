@@ -2,13 +2,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import SearchPage from '../SearchPage';
-import { searchArticles } from '../../api/nyt';
+import { searchArticles, searchArticlesAdv } from '../../api/nyt';
 import { useSearchStore } from '../../store/searchStore';
 import type { Article } from '../../types/nyt';
 
 // Mock the API
 jest.mock('../../api/nyt');
 const mockSearchArticles = searchArticles as jest.MockedFunction<typeof searchArticles>;
+const mockSearchArticlesAdv = searchArticlesAdv as jest.MockedFunction<typeof searchArticlesAdv>;
 
 // Mock the store
 jest.mock('../../store/searchStore');
@@ -73,6 +74,7 @@ describe('SearchPage', () => {
     jest.clearAllMocks();
     mockUseSearchStore.mockReturnValue(mockStore);
     mockSearchArticles.mockResolvedValue(mockArticles);
+    mockSearchArticlesAdv.mockResolvedValue(mockArticles);
     mockUseLocation.mockReturnValue({ state: undefined } as any);
   });
 
@@ -100,7 +102,192 @@ describe('SearchPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText(/no results found/i)).toBeInTheDocument();
+  });
+
+  test('renders advanced search toggle button', () => {
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: /advanced/i })).toBeInTheDocument();
+  });
+
+  test('handles view mode toggle', async () => {
+    const user = userEvent.setup();
+    
+    // Mock store with articles and hasSearched
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: mockArticles,
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    const gridButton = screen.getByLabelText('Grid view');
+    const tableButton = screen.getByLabelText('Table view');
+
+    // Initially should be in grid mode
+    expect(gridButton).toHaveClass('active');
+    expect(tableButton).not.toHaveClass('active');
+
+    // Click table button
+    await user.click(tableButton);
+    expect(mockStore.setViewMode).toHaveBeenCalledWith('table');
+
+    // Click grid button
+    await user.click(gridButton);
+    expect(mockStore.setViewMode).toHaveBeenCalledWith('grid');
+  });
+
+  test('handles search with loading state', async () => {
+    const user = userEvent.setup();
+    
+    // Mock loading state
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      loading: true,
+    });
+
+    const { container } = render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    // Check for spinner container
+    expect(container.querySelector('.spinner-container')).toBeInTheDocument();
+  });
+
+  test('prevents search with empty query', async () => {
+    const user = userEvent.setup();
+    
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    const searchButton = screen.getByRole('button', { name: /search/i });
+    await user.click(searchButton);
+
+    expect(mockSearchArticles).not.toHaveBeenCalled();
+  });
+
+  test('handles fromHome state correctly', () => {
+    mockUseLocation.mockReturnValue({ 
+      state: { fromHome: true } 
+    } as any);
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(mockStore.reset).toHaveBeenCalled();
+  });
+
+  test('renders articles in grid view', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: mockArticles,
+      hasSearched: true,
+      viewMode: 'grid',
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Headline 1')).toBeInTheDocument();
+    expect(screen.getByText('Headline 2')).toBeInTheDocument();
+  });
+
+  test('renders articles in table view', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: mockArticles,
+      hasSearched: true,
+      viewMode: 'table',
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Headline 1')).toBeInTheDocument();
+    expect(screen.getByText('Headline 2')).toBeInTheDocument();
+  });
+
+  test('toggles advanced search form', async () => {
+    const user = userEvent.setup();
+    
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    const advancedButton = screen.getByRole('button', { name: /advanced/i });
+    
+    // Initially should show "Advanced"
+    expect(advancedButton).toHaveTextContent('Advanced');
+    
+    // Click to show advanced form
+    await user.click(advancedButton);
+    
+    // Should now show "Simple"
+    expect(advancedButton).toHaveTextContent('Simple');
+    
+    // Click again to hide advanced form
+    await user.click(advancedButton);
+    
+    // Should show "Advanced" again
+    expect(advancedButton).toHaveTextContent('Advanced');
+  });
+
+  test('shows results count when articles are found', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: mockArticles,
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/showing 2 results/i)).toBeInTheDocument();
+  });
+
+  test('does not show results count when no articles', () => {
+    mockUseSearchStore.mockReturnValue({
+      ...mockStore,
+      articles: [],
+      hasSearched: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText(/showing/i)).not.toBeInTheDocument();
   });
 
   test('handles null articles', () => {
@@ -116,7 +303,7 @@ describe('SearchPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText(/no results found/i)).toBeInTheDocument();
   });
 
   test('handles undefined articles', () => {
@@ -132,7 +319,7 @@ describe('SearchPage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('No results found')).toBeInTheDocument();
+    expect(screen.getByText(/no results found/i)).toBeInTheDocument();
   });
 
   test('handles articles with missing required fields', () => {
@@ -145,6 +332,7 @@ describe('SearchPage', () => {
       pub_date: '2024-01-01T00:00:00Z',
       multimedia: {},
     };
+    
     mockUseSearchStore.mockReturnValue({
       ...mockStore,
       articles: [incompleteArticle as any],
@@ -159,18 +347,5 @@ describe('SearchPage', () => {
 
     // Should not crash when articles are missing required fields
     expect(screen.getByText('Incomplete Headline')).toBeInTheDocument();
-  });
-
-  test('handles fromHome state', () => {
-    // Mock useLocation to return fromHome state
-    mockUseLocation.mockReturnValue({ state: { fromHome: true } } as any);
-
-    render(
-      <MemoryRouter>
-        <SearchPage />
-      </MemoryRouter>
-    );
-
-    expect(mockStore.reset).toHaveBeenCalled();
   });
 });
