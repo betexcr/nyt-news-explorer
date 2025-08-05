@@ -24,6 +24,13 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
 }) => {
   const listRef = useRef<List>(null);
 
+  // Debug logging
+  console.log('VirtualizedArticleList props:', {
+    articlesLength: articles.length,
+    hasMore,
+    loadingMore
+  });
+
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     const article = articles[index];
     return (
@@ -47,6 +54,7 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
     const threshold = 200; // pixels from bottom to trigger load more
     
     if (scrollHeight - scrollTop - clientHeight < threshold && hasMore && !loadingMore) {
+      console.log('Triggering load more...');
       onLoadMore();
     }
   }, [hasMore, loadingMore, onLoadMore]);
@@ -73,8 +81,8 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
       )}
       
       {!hasMore && articles.length > 0 && (
-        <div className="no-more-results">
-          <p>No more articles to load</p>
+        <div className="no-more-results" style={{ border: '2px solid red', padding: '10px' }}>
+          <p>No more articles to load (Debug: hasMore={hasMore.toString()}, articles={articles.length})</p>
         </div>
       )}
     </div>

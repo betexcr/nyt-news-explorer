@@ -355,6 +355,8 @@ const SearchPage: React.FC = () => {
     const text = (query || "").trim();
     if (!text) return;
 
+    console.log('handleLoadMore called:', { currentPage, hasMore, loadingMore });
+
     setLoadingMore(true);
 
     try {
@@ -365,15 +367,23 @@ const SearchPage: React.FC = () => {
         ...advancedForm
       });
       
+      console.log('Load more result:', { 
+        nextPage, 
+        resultLength: result.length, 
+        hasMore: result.length === 10 
+      });
+      
       // NYT API returns max 10 results per page
       if (result.length > 0) {
         appendArticles(result);
         // If we get less than 10 results, we've reached the end
         if (result.length < 10) {
+          console.log('Setting hasMore to false - got less than 10 results');
           setHasMore(false);
         }
       } else {
         // No more results
+        console.log('Setting hasMore to false - no results returned');
         setHasMore(false);
       }
     } catch (error) {
