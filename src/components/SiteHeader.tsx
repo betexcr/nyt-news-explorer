@@ -85,7 +85,7 @@ export const SiteHeader: React.FC = () => {
             >
               NYT News Explorer
             </span>
-            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by You</span>
+            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by Alberto Muñoz</span>
           </div>
         </Link>
 

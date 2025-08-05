@@ -65,7 +65,7 @@ describe('SiteHeader', () => {
     );
 
     expect(screen.getByText('NYT News Explorer')).toBeInTheDocument();
-    expect(screen.getByText('by You')).toBeInTheDocument();
+    expect(screen.getByText('by Alberto Muñoz')).toBeInTheDocument();
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Favorites')).toBeInTheDocument();
     expect(screen.getByText('Options')).toBeInTheDocument();
