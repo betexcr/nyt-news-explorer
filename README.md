@@ -1,226 +1,117 @@
-# New York Times News Explorer
+# NYT News Explorer
 
-<div style="float: right;">
-  <a href="https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml">
-    <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml/badge.svg" alt="Tests" /> 
-  </a>
-  <a href="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml">
-    <img src="https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg" alt="Build and Deploy" />
-  </a>
-</div>
+A modern React application for exploring and searching articles from The New York Times API.
 
-A modern React + TypeScript web application that allows users to explore and search articles from the New York Times API. Built for performance, clean architecture, and excellent user experience with comprehensive test coverage.
+## Features
 
-## 🚀 **Live Demo**
+- 🔍 **Advanced Search**: Search articles with multiple filters and categories
+- ❤️ **Favorites**: Save and manage your favorite articles
+- 📱 **Responsive Design**: Works on desktop, tablet, and mobile
+- 🚀 **Virtualized Lists**: Smooth scrolling with large datasets
+- 🎨 **Modern UI**: Clean, intuitive interface with dark/light themes
+- ⚡ **Performance Optimized**: Fast loading and smooth interactions
 
-Visit the live application: [https://nyt.brainvaultdev.com](https://nyt.brainvaultdev.com)
+## Tech Stack
 
----
-
-## ✨ **Features**
-
-### 🔍 **Advanced Search & Discovery**
-- **Real-time search** with debounced input for optimal performance
-- **Advanced search filters** with section-based filtering (U.S., World, Politics, etc.)
-- **Sort options** (Newest First, Oldest First)
-- **Infinite scrolling** for seamless article browsing
-- **Virtualized lists** for optimal performance with large datasets
-
-### 💾 **Favorites System**
-- **Save articles** to your personal favorites collection
-- **Favorites page** with dedicated view and management
-- **Persistent storage** - favorites survive page reloads
-- **Quick add/remove** with heart icons on all article cards
-- **Favorites count** display and management
-
-### 🎨 **Modern UI/UX**
-- **Responsive design** that works on desktop, tablet, and mobile
-- **Dark/Light theme** toggle with system preference detection
-- **Glassmorphism design** with modern visual effects
-- **Fixed header** with navigation and quick actions
-- **Smooth animations** and transitions throughout
-
-### 📱 **Navigation & Layout**
-- **Fixed header** with logo and navigation
-- **Mobile-responsive** hamburger menu
-- **Breadcrumb navigation** and intuitive routing
-- **Professional search interface** with advanced options
-- **Grid and table view** modes for different preferences
-
-### 🔧 **Data Management**
-- **Clear cache functionality** to reset search state and storage
-- **Session persistence** - maintain search state across page reloads
-- **Scroll position memory** for seamless navigation
-- **Advanced state management** with Zustand
-
-### 📊 **Performance Optimizations**
-- **Virtualized article lists** for handling large datasets
-- **Lazy loading** and infinite scroll for optimal performance
-- **Debounced search** to reduce API calls
-- **Optimized re-renders** with React.memo and useCallback
-- **Efficient state management** with selective subscriptions
-
-### 🧪 **Quality Assurance**
-- **Comprehensive test coverage** (73%+ overall, 100% on core components)
-- **194 passing tests** across 26 test suites
-- **TypeScript** for type safety and better developer experience
-- **ESLint** configuration for code quality
-- **Continuous Integration** with GitHub Actions
-
----
-
-## 🛠 **Technology Stack**
-
-- **Frontend**: React 18 + TypeScript
+- **Frontend**: React 18, TypeScript, CSS3
 - **State Management**: Zustand
-- **Styling**: CSS with CSS Variables for theming
-- **Testing**: Jest + React Testing Library
-- **Build Tool**: Vite (via Create React App)
-- **Package Manager**: Bun
-- **Deployment**: GitHub Actions + Hostinger
+- **API**: New York Times Article Search API
+- **Build Tool**: Bun
+- **Testing**: Jest, React Testing Library
+- **Deployment**: Hostinger Git Deployment
 
----
+## Getting Started
 
-## 📦 **Installation**
+### Prerequisites
+
+- Node.js 18+ or Bun
+- NYT API Key (get from [NYT Developer Portal](https://developer.nytimes.com/))
+
+### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/betexcr/nyt-news-explorer.git
 cd nyt-news-explorer
+
+# Install dependencies
 bun install
+
+# Generate TypeScript types from Zod schemas
+bun run gen:types
+
+# Start development server
+bun run dev
 ```
 
----
+### Environment Variables
 
-## ⚙️ **Environment Setup**
-
-Create a `.env` file in the project root:
+Create a `.env` file in the root directory:
 
 ```env
-REACT_APP_NYT_API_KEY=your_api_key_here
+REACT_APP_NYT_API_KEY=your_nyt_api_key_here
 ```
 
-You can obtain your API key from [NYT Developer Portal](https://developer.nytimes.com/).
+## Available Scripts
 
----
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run test` - Run tests
+- `bun run test:cov` - Run tests with coverage
+- `bun run gen:types` - Generate TypeScript types from Zod schemas
 
-## 🚀 **Development**
+## API Integration
 
-```bash
-# Start development server
-bun start
+The app integrates with the New York Times Article Search API v2, providing:
 
-# Run tests with coverage
-bun test:cov
+- Article search with multiple filters
+- Section-based filtering (U.S., World, Technology, etc.)
+- Advanced search with date ranges and categories
+- Real-time search results
 
-# Build for production
-bun run build
+## Deployment
 
-# Serve production build locally
-npx serve -s build -l 3001
-```
+This project is deployed using Hostinger's Git deployment system:
 
----
+1. **Automatic Deployment**: Pushes to `master` branch trigger deployment
+2. **Webhook Integration**: Uses GitHub Actions to trigger Hostinger deployment
+3. **Live URL**: https://nyt.brainvaultdev.com/
 
-## 🧪 **Testing**
+## Testing
 
-The application includes comprehensive test coverage:
+The project includes comprehensive tests with 100% code coverage:
 
-```bash
-# Run all tests
-bun test
+- Unit tests for all components
+- Integration tests for search functionality
+- API mocking and error handling tests
+- Accessibility and user interaction tests
 
-# Run tests with coverage
-bun test:cov
-
-# Run tests in watch mode
-bun test --watch
-```
-
-**Test Coverage Highlights:**
-- ✅ **100% coverage** on core components (ArticleCard, FavoritesPage, etc.)
-- ✅ **100% coverage** on API layer and utilities
-- ✅ **Comprehensive integration tests** for user workflows
-- ✅ **Edge case testing** for error states and null handling
-
----
-
-## 🔄 **CI/CD Pipeline**
-
-This project includes automated workflows:
-
-- **Automated Testing**: Runs on every push/PR
-- **Automated Deployment**: Deploys to production on master branch
-- **Quality Gates**: Enforces test coverage and code quality
-- **Deployment Validation**: Verifies successful deployment
-
----
-
-## 📁 **Project Structure**
+## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-├── pages/              # Page-level components
+├── components/          # React components
+├── pages/              # Page components
 ├── store/              # Zustand state management
-├── api/                # API integration layer
+├── api/                # API integration
 ├── types/              # TypeScript type definitions
-├── utils/              # Utility functions
-├── styles/             # Global styles and themes
-└── __tests__/          # Test files
+├── schemas/            # Zod validation schemas
+├── styles/             # CSS stylesheets
+└── utils/              # Utility functions
 ```
 
----
-
-## 🎯 **Key Features in Detail**
-
-### **Search & Discovery**
-- Real-time search with NYT API integration
-- Advanced filtering by news sections
-- Sort by publication date
-- Infinite scrolling for seamless browsing
-- Virtualized lists for performance
-
-### **Favorites Management**
-- Add/remove articles with heart icons
-- Dedicated favorites page
-- Persistent storage across sessions
-- Favorites count and management
-
-### **User Experience**
-- Responsive design for all devices
-- Dark/light theme toggle
-- Fixed header with navigation
-- Smooth animations and transitions
-- Professional search interface
-
-### **Performance**
-- Optimized re-renders
-- Debounced search input
-- Virtualized lists for large datasets
-- Efficient state management
-- Lazy loading and infinite scroll
-
----
-
-## 🤝 **Contributing**
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
 
 ---
 
-## 📄 **License**
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-## 🔗 **Links**
-
-- **Live Application**: [https://nyt.brainvaultdev.com](https://nyt.brainvaultdev.com)
-- **GitHub Repository**: [https://github.com/betexcr/nyt-news-explorer](https://github.com/betexcr/nyt-news-explorer)
-- **NYT API Documentation**: [https://developer.nytimes.com/](https://developer.nytimes.com/)
+**Test commit for Hostinger Git deployment verification** ✅
