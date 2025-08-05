@@ -1,5 +1,5 @@
 // Auto-generated TypeScript interfaces from Zod schemas
-// Generated on: 2025-08-05T04:47:25.656Z
+// Generated on: 2025-08-05T05:05:39.473Z
 // Do not edit manually - regenerate using: npm run gen:types
 
 export interface Image {
