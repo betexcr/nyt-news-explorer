@@ -1,7 +1,5 @@
 name: Setup Environment
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
     inputs:
       test_install:
