@@ -1,0 +1,75 @@
+name: Manual Test Run
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run all tests'
+        required: false
+        default: true
+        type: boolean
+      run_build:
+        description: 'Run build process'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Configure npm registry
+        run: |
+          # Clear any npm-related environment variables
+          unset NPM_CONFIG_REGISTRY || true
+          unset NPM_CONFIG_AUTH_TOKEN || true
+          unset NPM_CONFIG_ALWAYS_AUTH || true
+          
+          # Clear npm config
+          npm config delete registry
+          npm config set registry https://registry.npmjs.org/
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:_authToken
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:always-auth
+          
+          # Verify configuration
+          echo "NPM Registry Configuration:"
+          npm config list
+          echo "Environment variables:"
+          env | grep -i npm || echo "No npm environment variables found"
+
+      - name: Install Dependencies
+        run: |
+          # Clear bun cache to ensure fresh install
+          bun pm cache rm
+          # Install dependencies
+          bun install
+
+      - name: Generate Types
+        run: bun run gen:types
+
+      - name: Run Tests
+        if: ${{ inputs.run_tests }}
+        run: |
+          echo "🧪 Running tests with coverage..."
+          bun run test:cov:strict
+          echo "✅ Tests completed!"
+
+      - name: Build Application
+        if: ${{ inputs.run_build }}
+        run: |
+          echo "🏗️ Building application..."
+          bun run build
+          echo "✅ Build completed!"
+
+      - name: Show Results
+        run: |
+          echo "=== Test Results ==="
+          echo "All steps completed successfully!"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Run ID: ${{ github.run_id }}" 

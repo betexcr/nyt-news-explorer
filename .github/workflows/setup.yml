@@ -1,0 +1,59 @@
+name: Setup Environment
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      test_install:
+        description: 'Test installation after setup'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Configure npm registry
+        run: |
+          # Clear any npm-related environment variables
+          unset NPM_CONFIG_REGISTRY || true
+          unset NPM_CONFIG_AUTH_TOKEN || true
+          unset NPM_CONFIG_ALWAYS_AUTH || true
+          
+          # Clear npm config
+          npm config delete registry
+          npm config set registry https://registry.npmjs.org/
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:_authToken
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:always-auth
+          
+          # Verify configuration
+          echo "NPM Registry Configuration:"
+          npm config list
+          echo "Environment variables:"
+          env | grep -i npm || echo "No npm environment variables found"
+
+      - name: Test Installation
+        if: ${{ inputs.test_install }}
+        run: |
+          # Clear bun cache to ensure fresh install
+          bun pm cache rm
+          # Test installation
+          bun install --dry-run
+          echo "✅ Installation test completed successfully!"
+
+      - name: Show Environment Info
+        run: |
+          echo "=== Environment Information ==="
+          echo "Node version: $(node --version)"
+          echo "Bun version: $(bun --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Current directory: $(pwd)"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}" 
