@@ -1,11 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useSearchStore } from "../store/searchStore";
 
 const HomePage: React.FC = () => {
+  const reset = useSearchStore((state) => state.reset);
+
+  const handleHomeClick = () => {
+    // Clear search state when navigating to home
+    reset();
+  };
+
   return (
     <Link
       to="/search"
       state={{ fromHome: true }}
+      onClick={handleHomeClick}
       aria-label="Go to Search"
       style={{ display: "block", textDecoration: "none", color: "inherit" }}
     >

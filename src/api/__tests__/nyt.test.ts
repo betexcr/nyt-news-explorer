@@ -41,7 +41,20 @@ test('searchArticles: success, includes api-key and trimmed query', async () => 
             _id: 'A',
             web_url: 'https://example.com',
             snippet: 'Test article',
-            multimedia: {},
+            multimedia: {
+              caption: 'Test caption',
+              credit: 'Test credit',
+              default: {
+                url: 'https://example.com/image.jpg',
+                height: 600,
+                width: 600
+              },
+              thumbnail: {
+                url: 'https://example.com/thumb.jpg',
+                height: 75,
+                width: 75
+              }
+            },
             headline: { main: 'Test Headline' },
             keywords: [],
             pub_date: '2024-01-01T00:00:00Z'
@@ -60,7 +73,20 @@ test('searchArticles: success, includes api-key and trimmed query', async () => 
     _id: 'A',
     web_url: 'https://example.com',
     snippet: 'Test article',
-    multimedia: {},
+    multimedia: {
+      caption: 'Test caption',
+      credit: 'Test credit',
+      default: {
+        url: 'https://example.com/image.jpg',
+        height: 600,
+        width: 600
+      },
+      thumbnail: {
+        url: 'https://example.com/thumb.jpg',
+        height: 75,
+        width: 75
+      }
+    },
     headline: { main: 'Test Headline' },
     keywords: [],
     pub_date: '2024-01-01T00:00:00Z'
@@ -118,7 +144,20 @@ test('searchArticlesAdv: builds params (page default, sort, begin/end, section->
             _id: 'D1',
             web_url: 'https://example.com/1',
             snippet: 'Test article 1',
-            multimedia: {},
+            multimedia: {
+              caption: 'Test caption 1',
+              credit: 'Test credit 1',
+              default: {
+                url: 'https://example.com/image1.jpg',
+                height: 600,
+                width: 600
+              },
+              thumbnail: {
+                url: 'https://example.com/thumb1.jpg',
+                height: 75,
+                width: 75
+              }
+            },
             headline: { main: 'Test Headline 1' },
             keywords: [],
             pub_date: '2024-01-01T00:00:00Z'
@@ -126,7 +165,20 @@ test('searchArticlesAdv: builds params (page default, sort, begin/end, section->
             _id: 'D2',
             web_url: 'https://example.com/2',
             snippet: 'Test article 2',
-            multimedia: {},
+            multimedia: {
+              caption: 'Test caption 2',
+              credit: 'Test credit 2',
+              default: {
+                url: 'https://example.com/image2.jpg',
+                height: 600,
+                width: 600
+              },
+              thumbnail: {
+                url: 'https://example.com/thumb2.jpg',
+                height: 75,
+                width: 75
+              }
+            },
             headline: { main: 'Test Headline 2' },
             keywords: [],
             pub_date: '2024-01-01T00:00:00Z'

@@ -1,0 +1,48 @@
+.view-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.25rem;
+}
+
+.toggle-buttons .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-buttons .button:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.toggle-buttons .button.active {
+  background: var(--primary);
+  color: white;
+}
+
+.toggle-buttons .button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-buttons .button svg {
+  width: 16px;
+  height: 16px;
+} 

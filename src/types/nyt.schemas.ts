@@ -10,6 +10,10 @@ export const ImageSchema = z.object({
 export const MultimediaSchema = z.object({
   caption: z.string().optional(),
   credit: z.string().optional(),
+  subtype: z.string().optional(),
+  url: z.string().optional(),
+  height: z.number().optional(),
+  width: z.number().optional(),
   default: ImageSchema.optional(),
   thumbnail: ImageSchema.optional(),
 });
@@ -34,10 +38,10 @@ export const KeywordSchema = z.object({
 export const ArticleSchema = z.object({
   web_url: z.string(),
   snippet: z.string(),
-  print_page: z.string().optional(), // Changed from number to string
+  print_page: z.number().optional(),
   print_section: z.string().optional(),
   source: z.string().optional(),
-  multimedia: MultimediaSchema, // Changed from array to single object
+  multimedia: MultimediaSchema, // Fixed: multimedia is a single object
   headline: HeadlineSchema,
   keywords: z.array(KeywordSchema),
   pub_date: z.string(),

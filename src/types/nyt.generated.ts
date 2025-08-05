@@ -1,46 +1,17 @@
-// Auto-generated TypeScript interfaces from Zod schemas
-// Generated on: 2025-08-04T21:55:48.939Z
-// Do not edit manually - regenerate using: npm run generate-types
-
-export interface Image {
-  url: string;
-  height: number;
-  width: number;
-}
-
-export interface Multimedia {
-  caption?: string;
-  credit?: string;
-  default?: Image;
-  thumbnail?: Image;
-}
-
-export interface Headline {
-  main: string;
-  kicker?: string;
-  print_headline?: string;
-}
-
-export interface Byline {
-  original?: string;
-}
-
-export interface Keyword {
-  name: string;
-  value: string;
-  rank: number;
-}
+// Auto-generated TypeScript interfaces from YAML schema
+// Generated on: 2025-08-05T02:09:09.173Z
+// Do not edit manually - regenerate using: npm run gen:types
 
 export interface Article {
-  web_url: string;
-  snippet: string;
-  print_page?: string;
+  web_url?: string;
+  snippet?: string;
+  print_page?: number;
   print_section?: string;
   source?: string;
-  multimedia: Multimedia;
-  headline: Headline;
-  keywords: Keyword[];
-  pub_date: string;
+  multimedia?: Multimedia;
+  headline?: Headline;
+  keywords?: Keyword[];
+  pub_date?: string;
   document_type?: string;
   desk?: string;
   section_name?: string;
@@ -52,21 +23,50 @@ export interface Article {
   lead_paragraph?: string;
 }
 
+export interface Byline {
+  original?: string;
+}
+
+export interface Headline {
+  main?: string;
+  kicker?: string;
+  print_headline?: string;
+}
+
+export interface Keyword {
+  name?: string;
+  value?: string;
+  rank?: number;
+}
+
+export interface Multimedia {
+  caption?: string;
+  credit?: string;
+  default?: Image;
+  thumbnail?: Image;
+}
+
+export interface Image {
+  url?: string;
+  height?: number;
+  width?: number;
+}
+
 export interface Meta {
-  hits: number;
-  offset: number;
-  time: number;
+  hits?: number;
+  offset?: number;
+  time?: number;
 }
 
 export interface Response {
-  docs: Article[];
+  docs?: Article[];
   meta?: Meta;
 }
 
 export interface NytApiResponse {
-  status: string;
-  copyright: string;
-  response: Response;
+  status?: string;
+  copyright?: string;
+  response?: Response;
 }
 
 export interface SearchParams {
@@ -84,3 +84,4 @@ export type NytMultimedia = Multimedia;
 export type NytMultimediaImage = Image;
 export type NytHeadline = Headline;
 export type NytArticle = Article;
+

@@ -1,1 +1,564 @@
- 
+swagger: '2.0'
+basePath: /svc/search/v2
+host: api.nytimes.com
+info:
+  version: 2.0.0
+  title: Article Search
+  description: |
+
+    Use the Article Search API to look up articles by keyword.  You can refine your search using filters.
+
+    ```
+    /articlesearch.json?q={query}&fq={filter}
+    ```
+
+    ## Example Call
+
+    ```
+    https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key=yourkey
+    ```
+
+    ## Recent API Changes
+
+    **Note:** On April 8, 2025 the Article Search API changed.
+    - The filter field names are different (e.g. source is now source.vernacular), see the Filter Query Fields table below for the full list of the new field names.
+    - The `facet`, `facet_fields`, `facet_filter`, and `fl` query parameters are no longer supported.
+    - The `multimedia` array in the response is simplified to only contain two crops: default and thumbnail.
+
+    ## Filtering Your Search
+
+    Use filters to narrow the scope of your search. You can specify the fields and the values that your query will be filtered on. The Article Search API uses [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#simple-query-string-syntax). The filter query (fq) uses standard [Lucene syntax](http://www.lucenetutorial.com/lucene-query-syntax.html). Separate the filter field name and value with a colon, and surround multiple values with parentheses.
+
+    ```
+    field-name:("value1", "value2", ... "value n")
+    ```
+
+    The default connector for values in parentheses is OR. If you declare an explicit boolean value, it must be capitalized (e.g. AND).  You can filter on multiple values and fields.
+
+    ```
+    field-name-1:("value1") AND field-name-2:("value2", "value3")
+    ```
+
+    For a list of all fields you can filter on, see the Filter Query Fields table below.
+
+    You can also query by search text.
+
+    ### Pagination
+
+    The Article Search API returns a max of 10 results at a time. The meta node in the response contains the total number of matches ("hits") and the current offset. Use the page query parameter to paginate thru results (page=0 for results 1-10, page=1 for 11-20, ...). You can paginate thru up to 100 pages (1,000 results). If you get too many results try filtering by date range. Hits shows 10,000 if there are 10,000 or more results.
+
+    ### Filter Query Examples
+
+    Here are some example filter queries.
+
+    Restrict your search to articles with International New York Times as the source:
+
+    ```
+    fq=source.vernacular:"International New York Times"
+    ```
+
+    Restrict your search to articles from either the Culture or Foreign desks:
+
+    ```
+    fq=desk:("Culture", "Foreign")
+    ```
+
+    Restrict your search to articles that are about New York City and from the Culture desk:
+
+    ```
+    fq=desk:"Culture" AND timesTag.location:"New York City"
+    ```
+
+    #### Example URL
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?fq=desk%3A%22Culture%22%20AND%20timesTag.location%3A%22New%20York%20City%22&api-key={api-key}>
+
+
+    ### Query Examples
+
+    If you do not specify a field, the scope of the query will look for matches in the body, headline and byline. The example below will restrict your search to articles with 'climate' and 'change' in the body, headline or byline:
+
+    ```
+    q=climate change
+    ```
+
+    Put in quotes to do an exact match:
+
+    ```
+    q="climate change"
+    ```
+
+    #### Example URL
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?q=%22climate%20change%22&api-key={api-key}>
+
+    ### Combo Examples
+
+    You can search using both the query parameter (q) and the filter query parameter (fq) at the same time.
+
+    Find articles with the word Pokemon that were on the print paper's front page:
+
+    ```
+    q=Pokemon fq=Article.printInformation.page:1 AND Article.printInformation.section:("A", "1")
+    ```
+
+    Find news articles with the word sofa and tagged with the Germany location Tag.
+
+    ```
+    q=sofa fq=typeOfMaterials:News AND timesTag.location:Germany
+    ```
+
+    #### Example URL
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?q=sofa&begin_date=19960122&end_date=20060122&fq=typeOfMaterials%3ANews%20AND%20timesTag.location%3AGermany&api-key={api-key}>
+
+    ### Times Tags Examples
+
+    The New York Times maintains a taxonomy of semantic tags, known as Times Tags.
+    You can filter by Times Tags.
+
+    Get articles tagged with the "Olympic Games (2026)" subject tag:
+
+    ```
+    fq=timesTag.subject:"Olympic Games (2026)"
+    ```
+
+    Get articles that have the "United Nations" and the "Security Council (UN)" organization tags:
+
+    ```
+    fq=timesTag.organization:("United Nations" AND "Security Council (UN)")
+    ```
+
+    #### Example URL
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?&fq=timesTag.organization%3A(%22United%20Nations%22%20AND%20%22Security%20Council%20(UN)%22)&api-key={api-key}>
+
+    ### Reviews Examples
+
+    Get book reviews.
+
+    ```
+    fq=typeOfMaterials:Review AND section.name:Books
+    ```
+
+    Get movie reviews.
+
+    ```
+    fq=typeOfMaterials:Review AND section.name:Movies
+    ```
+
+    #### Example URL
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?&fq=typeOfMaterials%3AReview%20AND%20section.name%3ABooks&begin_date=20250101&end_date=20260101&api-key={api-key}>
+
+    ### Filter Query Fields
+
+    Field                              | Type
+    ---------------------------------- | -------
+    addendums.body                     | Text
+    addendums.type                     | Keyword
+    bylines.prefix                     | Keyword
+    bylines.renderedRepresentation     | Text
+    collections.collectionType         | Keyword
+    collections.name                   | Keyword
+    collections.uri                    | Keyword
+    collections.slug                   | Keyword
+    column.collectionType              | Keyword
+    column.name                        | Keyword
+    column.uri                         | Keyword
+    contributingDesks                  | Keyword
+    credits.creator.displayName        | Text
+    credits.creator.role               | Keyword
+    credits.creator.uri                | Keyword
+    desk                               | Keyword
+    desk.contains                      | Text
+    firstPublished                     | Date
+    headline.default                   | Text
+    headline.seo                       | Text
+    kicker                             | Keyword
+    kicker.contains                    | Text
+    language.code                      | Keyword
+    language.name                      | Keyword
+    lastMajorModification              | Date
+    lastModified                       | Date
+    originalDesk.type                  | Keyword
+    previouslyPublishedUrls            | Keyword
+    section.displayName                | Keyword
+    section.displayName.contains       | Text
+    section.name                       | Keyword
+    section.uri                        | Keyword
+    slug                               | Keyword
+    source.displayName                 | Text
+    source.vernacular                  | Text
+    source.uri                         | Keyword
+    sourceApplication                  | Keyword
+    sourceId                           | Keyword
+    sourcePublisher                    | Keyword
+    subsection.displayName             | Keyword
+    subsection.displayName.contains    | Text
+    subsection.name                    | Keyword
+    subsection.uri                     | Keyword
+    summary                            | Text
+    timesTags.displayName              | Keyword
+    timesTags.type                     | Keyword
+    timesTags.uri                      | Keyword
+    timesTags.vernacular               | Keyword
+    timesTag.location                  | Keyword
+    timesTag.location.contains         | Text
+    timesTag.organization              | Keyword
+    timesTag.organization.contains     | Text
+    timesTag.person                    | Keyword
+    timesTag.person.contains           | Text
+    timesTag.subject                   | Keyword
+    timesTag.subject.contains          | Text
+    timesTag.title                     | Keyword
+    timesTag.title.contains            | Text
+    tone                               | Keyword
+    typeOfMaterials                    | Keyword
+    type                               | Keyword
+    uri                                | Keyword
+    url                                | Keyword
+
+    #### Article Specific Filters
+
+    Field                                     | Type
+    ----------------------------------------- | -------
+    Article.body                              | Text
+    Article.dateline.renderedDateline         | Text
+    Article.printInformation.edition          | Keyword
+    Article.printInformation.headline         | Text
+    Article.printInformation.illustrationText | Keyword
+    Article.printInformation.page             | Keyword
+    Article.printInformation.reconciled       | Boolean
+    Article.printInformation.section          | Keyword
+    Article.wordCount                         | Integer
+
+
+    #### Interactive Specific Filters
+
+    Field                                         | Type
+    --------------------------------------------- | -------
+    Interactive.printInformation.edition          | Keyword
+    Interactive.printInformation.headline         | Text
+    Interactive.printInformation.illustrationText | Keyword
+    Interactive.printInformation.page             | Keyword
+    Interactive.printInformation.reconciled       | Boolean
+    Interactive.printInformation.section          | Keyword
+    Interactive.textFormat.unformattedText        | Text
+
+    #### Desk Values (partial list)
+
+    * Arts&Leisure
+    * BookReview
+    * Business
+    * Climate
+    * Corrections
+    * Culture
+    * Dining
+    * Español
+    * Express
+    * Foreign
+    * Games
+    * Graphics
+    * Learning
+    * Letters
+    * Magazine
+    * Metro
+    * NYTNow
+    * National
+    * Obits
+    * OpEd
+    * Podcasts
+    * Politics
+    * RealEstate
+    * Science
+    * Styles
+    * Summary
+    * SundayBusiness
+    * TStyle
+    * Travel
+    * Washington
+    * Weather
+    * Weekend
+    * Well
+
+    #### Section Names (partial list)
+
+    * Arts
+    * Books
+    * Briefing
+    * Climate
+    * Corrections
+    * En español
+    * Fashion
+    * Food
+    * Gameplay
+    * Guide
+    * Headway
+    * Health
+    * Home Page
+    * Job Market
+    * Lens
+    * Magazine
+    * Movies
+    * Multimedia/Photos
+    * New York
+    * Obituaries
+    * Opinion
+    * Parenting
+    * Podcasts
+    * Reader Center
+    * Real Estate
+    * Science
+    * Smarter Living
+    * Sports
+    * Style
+    * Sunday Review
+    * T Brand
+    * T Magazine
+    * The Learning Network
+    * The New York Times Presents
+    * The Upshot
+    * The Weekly
+    * Theater
+    * Times Insider
+    * Today's Paper
+    * Travel
+    * U.S.
+    * Universal
+    * Well
+    * World
+    * Your Money
+
+    #### Type of Material Values
+
+    * Addendum
+    * An Analysis
+    * An Appraisal
+    * Archives
+    * Article
+    * Banner
+    * Biography
+    * Birth Notice
+    * Blog
+    * Brief
+    * Caption
+    * Chronology
+    * Column
+    * Correction
+    * Economic Analysis
+    * Editorial
+    * Editorial Cartoon
+    * Editors' Note
+    * First Chapter
+    * Front Page
+    * Glossary
+    * Interactive Feature
+    * Interactive Graphic
+    * Interview
+    * Letter
+    * List
+    * Marriage Announcement
+    * Military Analysis
+    * News
+    * News Analysis
+    * Newsletter
+    * Obituary
+    * Obituary (Obit)
+    * Op-Ed
+    * Paid Death Notice
+    * Postscript
+    * Premium
+    * Question
+    * Quote
+    * Recipe
+    * Review
+    * Schedule
+    * SectionFront
+    * Series
+    * Slideshow
+    * Special Report
+    * Statistics
+    * Summary
+    * Text
+    * Video
+    * Web Log
+
+schemes:
+  - https
+produces:
+  - application/json
+security:
+  - apikey: []
+paths:
+  '/articlesearch.json':
+    get:
+      summary: Returns an array of articles.
+      description: Search for NYT articles by keywords and filters.
+      parameters:
+        - name: begin_date
+          in: query
+          description: 'Begin date (e.g. 20120101)'
+          required: false
+          type: string
+          pattern: '^\d{8}$'
+        - name: end_date
+          in: query
+          description: 'End date (e.g. 20121231)'
+          required: false
+          type: string
+          pattern: '^\d{8}$'
+        - name: fq
+          in: query
+          description: 'Filter query'
+          required: false
+          type: string
+        - name: page
+          in: query
+          description: 'Page number (0, 1, ...)'
+          required: false
+          minimum: 0
+          maximum: 100
+          type: integer
+        - name: q
+          in: query
+          description: 'Query'
+          required: false
+          type: string
+        - name: sort
+          in: query
+          default: best
+          description: 'Sort order'
+          required: false
+          type: string
+          enum: [best, newest, oldest, relevance]
+      tags:
+        - Search
+      responses:
+        '200':
+          description: An array of articles.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              copyright:
+                type: string
+              response:
+                type: object
+                properties:
+                  docs:
+                    type: array
+                    items:
+                      $ref: '#/definitions/Article'
+                  meta:
+                    type: object
+                    properties:
+                      hits:
+                        type: integer
+                      offset:
+                        type: integer
+                      time:
+                        type: integer
+        '400':
+          description: Bad request. Check your query parameters.
+        '401':
+          description: Unauthorized request. Make sure api-key is set.
+        '429':
+          description: Too many requests. You reached your per minute or per day rate limit.
+definitions:
+  Article:
+    type: object
+    properties:
+      web_url:
+        type: string
+        description: Article URL.
+      snippet:
+        type: string
+      print_page:
+        type: integer
+        description: Page in print (e.g. 1).
+      print_section:
+        type: string
+        description: Section in print (e.g. A).
+      source:
+        type: string
+      multimedia:
+        $ref: '#/definitions/Multimedia'
+      headline:
+        $ref: '#/definitions/Headline'
+      keywords:
+        type: array
+        items:
+          $ref: '#/definitions/Keyword'
+      pub_date:
+        type: string
+        description: Publication date.
+      document_type:
+        type: string
+        description: Document type (article, multimedia).
+      desk:
+        type: string
+        description: Desk in the newsroom that worked on the story (Business, Foreign, Metro, ...).
+      section_name:
+        type: string
+        description: Section that the article appeared in (Arts, New York, World, ...).
+      byline:
+        $ref: '#/definitions/Byline'
+      type_of_material:
+        type: string
+        description: Type of asset (Correction, News, Op-Ed, Review, Video, ...).
+      word_count:
+        type: integer
+        description: Number of words in the article.
+      uri:
+        type: string
+        description: Uniquely identifies an asset.
+  Byline:
+    type: object
+    properties:
+      original:
+        type: string
+  Headline:
+    type: object
+    properties:
+      main:
+        type: string
+      kicker:
+        type: string
+      print_headline:
+        type: string
+  Keyword:
+    type: object
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+      rank:
+        type: integer
+  Multimedia:
+    type: object
+    properties:
+      caption:
+        type: string
+      credit:
+        type: string
+      default:
+        $ref: '#/definitions/Image'
+      thumbnail:
+        $ref: '#/definitions/Image'
+  Image:
+    type: object
+    properties:
+      url:
+        type: string
+      height:
+        type: integer
+      width:
+        type: integer
+securityDefinitions:
+  apikey:
+    type: apiKey
+    name: api-key
+    in: query

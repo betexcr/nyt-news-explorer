@@ -12,8 +12,15 @@ import "../styles/detail.css";
 
 function getImageUrl(article: Article | null): string {
   const mm = article?.multimedia; 
-  if (mm && mm.default && mm.default.url) {
-    return mm.default.url;
+  if (mm) {
+    // Try default first, then thumbnail as fallback
+    if (mm.default && mm.default.url) {
+      return mm.default.url; // URLs are already complete
+    }
+    
+    if (mm.thumbnail && mm.thumbnail.url) {
+      return mm.thumbnail.url; // URLs are already complete
+    }
   }
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }

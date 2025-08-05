@@ -52,10 +52,23 @@ const mockStore = {
   articles: [],
   hasSearched: false,
   scrollY: 0,
+  viewMode: 'grid' as const,
+  loading: false,
+  totalResults: 0,
+  currentPage: 0,
+  hasMore: false,
+  advancedParams: null,
   setQuery: jest.fn(),
   setArticles: jest.fn(),
   setHasSearched: jest.fn(),
   setScrollY: jest.fn(),
+  setViewMode: jest.fn(),
+  setLoading: jest.fn(),
+  setTotalResults: jest.fn(),
+  setCurrentPage: jest.fn(),
+  setHasMore: jest.fn(),
+  setAdvancedParams: jest.fn(),
+  appendArticles: jest.fn(),
   reset: jest.fn(),
 };
 
@@ -139,7 +152,7 @@ describe('SearchPage behavior', () => {
 
     renderPage();
 
-    expect(screen.getByText('No results')).toBeInTheDocument();
+    expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
   test('handles undefined articles gracefully', () => {
@@ -151,7 +164,7 @@ describe('SearchPage behavior', () => {
 
     renderPage();
 
-    expect(screen.getByText('No results')).toBeInTheDocument();
+    expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
   test('handles empty articles array', () => {
@@ -163,7 +176,7 @@ describe('SearchPage behavior', () => {
 
     renderPage();
 
-    expect(screen.getByText('No results')).toBeInTheDocument();
+    expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
   test('handles articles with missing required fields', () => {

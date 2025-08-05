@@ -13,19 +13,17 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
 
       - name: Install Dependencies
-        run: |
-          corepack enable
-          npm install
+        run: bun install
+
+      - name: Generate Types
+        run: bun run gen:types
 
       - name: Build React App
-        run: |
-          npm run build
+        run: bun run build
 
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4

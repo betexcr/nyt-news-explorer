@@ -25,6 +25,16 @@ export async function searchArticles(
     signal,
   });
   const docs = response?.data?.response?.docs;
+  
+  // Debug logging to see actual API response structure
+  if (docs && docs.length > 0) {
+    console.log('API Response - First article multimedia:', docs[0].multimedia);
+    console.log('API Response - First article multimedia type:', typeof docs[0].multimedia);
+    console.log('API Response - First article multimedia keys:', Object.keys(docs[0].multimedia || {}));
+    console.log('API Response - First article multimedia.thumbnail:', docs[0].multimedia?.thumbnail);
+    console.log('API Response - First article multimedia.default:', docs[0].multimedia?.default);
+  }
+  
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
 

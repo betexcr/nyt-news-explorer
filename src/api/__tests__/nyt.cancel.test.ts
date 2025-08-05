@@ -63,7 +63,20 @@ describe('src/api/nyt.ts aborts in-flight requests', () => {
             _id: 'b',
             web_url: 'https://example.com/b',
             snippet: 'Test article',
-            multimedia: {},
+            multimedia: {
+              caption: 'Test caption',
+              credit: 'Test credit',
+              default: {
+                url: 'https://example.com/image.jpg',
+                height: 600,
+                width: 600
+              },
+              thumbnail: {
+                url: 'https://example.com/thumb.jpg',
+                height: 75,
+                width: 75
+              }
+            },
             headline: { main: 'Test Headline' },
             keywords: [],
             pub_date: '2024-01-01T00:00:00Z'
