@@ -16,6 +16,9 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
 
+      - name: Configure npm registry
+        run: npm config set registry https://registry.npmjs.org/
+
       - name: Install Dependencies
         run: bun install
 
