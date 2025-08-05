@@ -1,4 +1,8 @@
+// Import mocks first before any other imports
+import './testMocks';
+
 import "@testing-library/jest-dom";
+
 /** Global axios mock to avoid ESM parsing issues in Jest */
 jest.mock("axios", () => ({
   __esModule: true,

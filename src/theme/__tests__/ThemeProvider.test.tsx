@@ -36,6 +36,17 @@ describe('ThemeProvider', () => {
   });
 
   test('renders children', () => {
+    // Mock localStorage before rendering
+    const mockLocalStorage = {
+      getItem: jest.fn().mockReturnValue(null),
+      setItem: jest.fn(),
+      removeItem: jest.fn(),
+      clear: jest.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: mockLocalStorage,
+    });
+
     render(
       <ThemeProvider>
         <div>Test content</div>

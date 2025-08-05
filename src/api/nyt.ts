@@ -81,11 +81,11 @@ export async function searchArticlesAdv(params: {
   if (sort) query.sort = sort;
   if (begin) query.begin_date = begin;
   if (end) query.end_date = end;
-  if (section && section.trim()) {
-    // Try wildcard search for section_name
-    const sectionValue = section.trim();
-    query.fq = `section_name:*${sectionValue}*`;
-  }
+      if (section && section.trim()) {
+      const newsDeskValue = SECTION_TO_NEWS_DESK[section.trim()] || section.trim();
+      const sectionValue = esc(newsDeskValue);
+      query.fq = `news_desk:("${sectionValue}")`;
+    }
   
   console.log('Advanced search params:', { q, page, sort, begin, end, section, query });
   

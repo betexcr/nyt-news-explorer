@@ -134,7 +134,7 @@ test('searchArticlesAdv: builds params (page default, sort, begin/end, section->
     expect(params.sort).toBe('newest');
     expect(params.begin_date).toBe('20240101');
     expect(params.end_date).toBe('20241231'); 
-    expect(params.fq).toBe('section_name:("Opinions \\"and\\" Ideas")');
+    expect(params.fq).toBe('news_desk:("Opinions \\"and\\" Ideas")');
     return Promise.resolve({
       data: { 
         status: 'OK',

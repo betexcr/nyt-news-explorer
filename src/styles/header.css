@@ -1,0 +1,76 @@
+/* Header Styles */
+.desktop-nav {
+  display: flex !important;
+}
+
+.mobile-menu-btn {
+  display: none !important;
+}
+
+/* Mobile Navigation Styles */
+.mobile-nav-link:hover {
+  background: var(--bg) !important;
+}
+
+/* Desktop Navigation Styles */
+.nav-link:hover {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Dropdown Options */
+.options-dropdown button:hover {
+  background: var(--bg) !important;
+}
+
+/* Animation for mobile menu */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+}
+
+/* Add padding to body to account for fixed header */
+body {
+  padding-top: 70px;
+}
+
+/* Ensure the header has proper background opacity */
+header {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+[data-theme="dark"] header {
+  background: rgba(18, 20, 26, 0.9) !important;
+}
+
+/* Hover effects for buttons */
+.mobile-menu-btn:hover {
+  background: var(--bg) !important;
+  border-color: var(--text) !important;
+}
+
+/* Focus states for accessibility */
+.mobile-menu-btn:focus-visible,
+.nav-link:focus-visible,
+.options-dropdown button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+} 

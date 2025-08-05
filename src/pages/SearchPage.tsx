@@ -139,7 +139,7 @@ const SearchPage: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [hasSearched, articles?.length, loading]);
+  }, [hasSearched, articles, loading]);
 
   // Save scroll position to sessionStorage
   useEffect(() => {
@@ -285,16 +285,21 @@ const SearchPage: React.FC = () => {
 
   useEffect(() => {
     if (containerRef.current && typeof ResizeObserver !== 'undefined') {
-      const resizeObserver = new ResizeObserver(() => {
-        if (containerRef.current) {
-          const height = containerRef.current.clientHeight;
-          setListHeight(Math.max(400, height - 200));
-          setItemHeight(viewMode === 'grid' ? 300 : 80);
-        }
-      });
-      
-      resizeObserver.observe(containerRef.current);
-      return () => resizeObserver.disconnect();
+      try {
+        const resizeObserver = new ResizeObserver(() => {
+          if (containerRef.current) {
+            const height = containerRef.current.clientHeight;
+            setListHeight(Math.max(400, height - 200));
+            setItemHeight(viewMode === 'grid' ? 300 : 80);
+          }
+        });
+        
+        resizeObserver.observe(containerRef.current);
+        return () => resizeObserver.disconnect();
+      } catch (error) {
+        // Fallback if ResizeObserver is not available or fails
+        console.warn('ResizeObserver not available:', error);
+      }
     }
   }, [viewMode]);
 

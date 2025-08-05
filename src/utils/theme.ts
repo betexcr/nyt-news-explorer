@@ -3,7 +3,12 @@ const KEY = "theme";
 
 function systemPrefersDark(): boolean {
   if (typeof window === "undefined") return false;
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (!window.matchMedia) return false;
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return false;
+  }
 }
 
 export function getStoredTheme(): Theme | null {

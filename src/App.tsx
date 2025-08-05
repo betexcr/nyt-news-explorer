@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import "./index.css";
+import "./styles/header.css";
 
 function App() {
   return (

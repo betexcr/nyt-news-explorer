@@ -44,7 +44,20 @@ describe('ThemeProvider behavior', () => {
 
   test('bootstraps theme from localStorage and writes to DOM/localStorage', async () => {
     const user = userEvent.setup();
-    localStorage.setItem('app-theme', 'dark');
+    
+    // Mock localStorage to return 'dark' for 'app-theme'
+    const mockLocalStorage = {
+      getItem: jest.fn().mockImplementation((key: string) => {
+        if (key === 'app-theme') return 'dark';
+        return null;
+      }),
+      setItem: jest.fn(),
+      removeItem: jest.fn(),
+      clear: jest.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: mockLocalStorage,
+    });
 
     render(
       <ThemeProvider>
@@ -58,7 +71,7 @@ describe('ThemeProvider behavior', () => {
     await user.click(screen.getByText('light'));
     expect(screen.getByTestId('theme').textContent).toBe('light');
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
-    expect(setItemSpy).toHaveBeenLastCalledWith('app-theme', 'light');
+    expect(mockLocalStorage.setItem).toHaveBeenLastCalledWith('app-theme', 'light');
  
     await user.click(screen.getByText('toggle'));
     expect(screen.getByTestId('theme').textContent).toBe('dark');

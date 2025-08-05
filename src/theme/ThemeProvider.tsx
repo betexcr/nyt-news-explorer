@@ -17,10 +17,16 @@ function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
   if (stored === "light" || stored === "dark") return stored;
-  const prefersDark =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return prefersDark ? "dark" : "light";
+  
+  // Handle test environment where matchMedia might not be available
+  if (!window.matchMedia) return "light";
+  
+  try {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return prefersDark ? "dark" : "light";
+  } catch {
+    return "light";
+  }
 }
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
