@@ -69,13 +69,13 @@ export const SiteHeader: React.FC = () => {
       >
         {/* Logo/Brand */}
         <Link to="/" style={{ textDecoration: "none", color: "var(--text)" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span
               style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.02em" }}
             >
               NYT News Explorer
             </span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>by You</span>
+            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by You</span>
           </div>
         </Link>
 
