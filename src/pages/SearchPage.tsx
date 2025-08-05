@@ -401,7 +401,7 @@ const SearchPage: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, articles?.length, handleLoadMore]);
+  }, [hasMore, loadingMore, articles, handleLoadMore]);
 
   const renderResults = () => {
     if (loading) {
