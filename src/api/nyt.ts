@@ -13,8 +13,8 @@ function esc(str: string) {
 function baseParams(): Record<string, string> {
   return { 
     "api-key": API_KEY,
-    // Request more results - NYT API defaults to 10, max is 200
-    "fl": "web_url,headline,abstract,byline,multimedia,news_desk,print_page,print_section,pub_date,section_name,snippet,source,subsection_name,type_of_material,uri,word_count,_id,lead_paragraph"
+    // Try without field list to see if that's causing issues
+    // "fl": "web_url,headline,abstract,byline,multimedia,news_desk,print_page,print_section,pub_date,section_name,snippet,source,subsection_name,type_of_material,uri,word_count,_id,lead_paragraph"
   };
 }
 
@@ -48,13 +48,14 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
+  // Try different approaches to get more results
   const params = { 
     ...baseParams(), 
     q, 
-    // Try using offset instead of page
-    "offset": 0,
-    // Request more results per page - NYT API max is 200
-    "rows": 50
+    // Try using page instead of offset
+    "page": 0,
+    // Try different row values - start with 20 to see if we can get more than 10
+    "rows": 20
   };
   
   console.log('API Request params:', params);
@@ -66,13 +67,52 @@ export async function searchArticles(
   
   const docs = response?.data?.response?.docs;
   const totalHits = response?.data?.response?.meta?.hits;
+  const meta = response?.data?.response?.meta;
   
   console.log('API Response:', {
     totalHits,
     resultsReturned: docs?.length || 0,
-    page: response?.data?.response?.meta?.offset || 0,
-    requestedRows: 50
+    page: meta?.offset || 0,
+    requestedRows: 20,
+    meta: meta
   });
+  
+  // If we only get 10 results, try a different approach
+  if (docs?.length === 10 && totalHits > 10) {
+    console.log('Only got 10 results despite requesting 20. Trying alternative approach...');
+    
+    // Try with different parameters
+    const altParams = { 
+      ...baseParams(), 
+      q, 
+      "page": 0,
+      "rows": 15, // Try a different number
+      "sort": "newest" // Add sorting to see if it helps
+    };
+    
+    try {
+      const altResponse = await axios.get(BASE_URL, {
+        params: altParams,
+        signal,
+      });
+      
+      const altDocs = altResponse?.data?.response?.docs;
+      const altTotalHits = altResponse?.data?.response?.meta?.hits;
+      
+      console.log('Alternative API Response:', {
+        totalHits: altTotalHits,
+        resultsReturned: altDocs?.length || 0,
+        requestedRows: 15
+      });
+      
+      // Use the alternative response if it has more results
+      if (altDocs && altDocs.length > docs.length) {
+        return Array.isArray(altDocs) ? (altDocs as NytArticle[]) : [];
+      }
+    } catch (error) {
+      console.log('Alternative approach failed:', error);
+    }
+  }
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
@@ -92,10 +132,10 @@ export async function searchArticlesAdv(params: {
   const query: Record<string, string | number> = { 
     ...baseParams(), 
     q, 
-    // Use offset instead of page
-    "offset": page * 50,
-    // Request more results per page - NYT API max is 200
-    "rows": 50
+    // Try using page instead of offset
+    "page": page,
+    // Try different row values
+    "rows": 20
   };
   if (sort) query.sort = sort;
   if (begin) query.begin_date = begin;
@@ -111,12 +151,14 @@ export async function searchArticlesAdv(params: {
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
   const totalHits = response?.data?.response?.meta?.hits;
+  const meta = response?.data?.response?.meta;
   
   console.log('Advanced API Response:', {
     totalHits,
     resultsReturned: docs?.length || 0,
-    page: response?.data?.response?.meta?.offset || 0,
-    requestedRows: 50
+    page: meta?.offset || 0,
+    requestedRows: 20,
+    meta: meta
   });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
@@ -132,7 +174,7 @@ export async function getArticleByUrl(
     params: { 
       ...baseParams(), 
       fq: `web_url:("${esc(u)}")`, 
-      "offset": 0,
+      "page": 0,
       "rows": 1
     },
     signal,
