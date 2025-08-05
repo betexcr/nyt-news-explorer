@@ -47,9 +47,7 @@
 }
 
 /* Add padding to body to account for fixed header */
-body {
-  padding-top: 70px;
-}
+/* Removed - handled in App.tsx main element */
 
 /* Ensure the header has proper background opacity */
 header {
