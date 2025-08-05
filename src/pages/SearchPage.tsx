@@ -432,6 +432,7 @@ const SearchPage: React.FC = () => {
 
     // Use virtualization for grid view when there are many articles
     if (articles.length > 50) {
+      console.log('Using VirtualizedArticleList:', { articlesLength: articles.length, hasMore, loadingMore });
       return (
         <VirtualizedArticleList
           articles={articles}
@@ -444,6 +445,7 @@ const SearchPage: React.FC = () => {
       );
     }
 
+    console.log('Using regular grid view:', { articlesLength: articles.length, hasMore, loadingMore });
     return (
       <div className="grid results">
         {articles.map((a) => (
@@ -456,8 +458,8 @@ const SearchPage: React.FC = () => {
           </div>
         )}
         {!hasMore && articles.length > 0 && (
-          <div className="no-more-results">
-            <p>No more articles to load</p>
+          <div className="no-more-results" style={{ border: '2px solid red', padding: '10px' }}>
+            <p>No more articles to load (Debug: hasMore={hasMore.toString()}, articles={articles.length})</p>
           </div>
         )}
       </div>
