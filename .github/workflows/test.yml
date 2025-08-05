@@ -11,6 +11,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
       - name: Configure npm registry
-        run: npm config set registry https://registry.npmjs.org/
-      - run: bun install
+        run: |
+          # Clear any npm-related environment variables
+          unset NPM_CONFIG_REGISTRY || true
+          unset NPM_CONFIG_AUTH_TOKEN || true
+          unset NPM_CONFIG_ALWAYS_AUTH || true
+          
+          # Clear npm config
+          npm config delete registry
+          npm config set registry https://registry.npmjs.org/
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:_authToken
+          npm config delete //artifactory.nordstrom.com/artifactory/api/npm/npm/:always-auth
+          
+          # Verify configuration
+          echo "NPM Registry Configuration:"
+          npm config list
+          echo "Environment variables:"
+          env | grep -i npm || echo "No npm environment variables found"
+      - name: Install Dependencies
+        run: |
+          # Clear bun cache to ensure fresh install
+          bun pm cache rm
+          # Install dependencies
+          bun install
       - run: bun run test:cov:strict
