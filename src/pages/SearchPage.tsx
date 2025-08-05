@@ -341,6 +341,10 @@ const SearchPage: React.FC = () => {
 
     try {
       const result = await runSearch(text);
+      console.log('Initial search result:', { 
+        resultLength: result.length, 
+        hasMore: result.length === 10 
+      });
       setArticles(result);
     } catch {
       setArticles([]);
