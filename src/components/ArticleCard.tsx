@@ -6,25 +6,19 @@ import { useSearchStore } from "../store/searchStore";
 
 function getImageUrl(article: Article): string {
   const mm = article.multimedia;
-  console.log('ArticleCard - Article multimedia:', mm);
-  console.log('ArticleCard - Article ID:', article._id);
-  console.log('ArticleCard - Article web_url:', article.web_url);
   
   if (mm) {
     // Try default first, then thumbnail as fallback
     if (mm.default && mm.default.url) {
       const url = mm.default.url; // URLs are already complete
-      console.log('ArticleCard - Using default URL:', url);
       return url;
     }
     
     if (mm.thumbnail && mm.thumbnail.url) {
       const url = mm.thumbnail.url; // URLs are already complete
-      console.log('ArticleCard - Using thumbnail URL:', url);
       return url;
     }
   }
-  console.log('ArticleCard - No multimedia found, using default image');
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
 

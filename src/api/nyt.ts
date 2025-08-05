@@ -14,26 +14,53 @@ function baseParams(): Record<string, string> {
   return { "api-key": API_KEY };
 }
 
+// Mapping from our section names to NYT API news_desk values
+const SECTION_TO_NEWS_DESK: Record<string, string> = {
+  'U.S.': 'Washington',
+  'World': 'Foreign',
+  'Business': 'Business',
+  'Technology': 'Technology',
+  'Science': 'Science',
+  'Health': 'Health',
+  'Sports': 'Sports',
+  'Arts': 'Arts',
+  'Style': 'Style',
+  'Food': 'Food',
+  'Travel': 'Travel',
+  'Real Estate': 'Real Estate',
+  'Education': 'Education',
+  'Opinion': 'Opinion',
+  'Politics': 'Washington',
+  'National': 'National',
+  'Metro': 'Metro',
+  'New York': 'Metro',
+  'New York and Region': 'Metro',
+};
+
 export async function searchArticles(
   query: string,
   signal?: AbortSignal
 ): Promise<NytArticle[]> {
   const q = (query || "").trim();
   if (!q) return [];
+  
+  console.log('Regular search params:', { q });
+  
   const response = await axios.get(BASE_URL, {
     params: { ...baseParams(), q, page: 0 },
     signal,
   });
   const docs = response?.data?.response?.docs;
   
-  // Debug logging to see actual API response structure
-  if (docs && docs.length > 0) {
-    console.log('API Response - First article multimedia:', docs[0].multimedia);
-    console.log('API Response - First article multimedia type:', typeof docs[0].multimedia);
-    console.log('API Response - First article multimedia keys:', Object.keys(docs[0].multimedia || {}));
-    console.log('API Response - First article multimedia.thumbnail:', docs[0].multimedia?.thumbnail);
-    console.log('API Response - First article multimedia.default:', docs[0].multimedia?.default);
-  }
+  console.log('Regular search response:', {
+    totalResults: response?.data?.response?.meta?.hits,
+    docsCount: docs?.length,
+    firstDoc: docs?.[0]?.section_name || docs?.[0]?.news_desk,
+    allSections: docs?.slice(0, 5).map((doc: any) => ({
+      section_name: doc.section_name,
+      news_desk: doc.news_desk
+    }))
+  });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
@@ -55,10 +82,22 @@ export async function searchArticlesAdv(params: {
   if (begin) query.begin_date = begin;
   if (end) query.end_date = end;
   if (section && section.trim()) {
-    query.fq = `section_name:("${esc(section.trim())}")`;
+    // Try wildcard search for section_name
+    const sectionValue = section.trim();
+    query.fq = `section_name:*${sectionValue}*`;
   }
+  
+  console.log('Advanced search params:', { q, page, sort, begin, end, section, query });
+  
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
+  
+  console.log('Advanced search response:', {
+    totalResults: response?.data?.response?.meta?.hits,
+    docsCount: docs?.length,
+    firstDoc: docs?.[0]?.section_name || docs?.[0]?.news_desk
+  });
+  
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
 

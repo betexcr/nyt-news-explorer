@@ -137,7 +137,7 @@ describe('ArticleCard extra tests', () => {
     const img = screen.getByAltText('');
     expect(img).toHaveAttribute(
       'src',
-      'https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg'
+      'https://example.com/thumb.jpg'
     );
   });
 

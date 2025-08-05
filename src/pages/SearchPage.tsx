@@ -13,16 +13,63 @@ import "../styles/search.css";
 type FromHomeState = { fromHome?: boolean };
 
 const SECTIONS = [
+  'Administration',
   'Arts',
+  'Automobiles',
+  'Blogs',
+  'Books',
+  'Booming',
   'Business',
-  'Climate',
+  'Business Day',
+  'Corrections',
+  'Crosswords & Games',
+  'Dining & Wine',
+  'Editorial',
   'Education',
+  'Fashion & Style',
+  'Food',
+  'Front Page',
+  'Global Home',
+  'Great Homes & Destinations',
   'Health',
-  'Politics',
+  'Home & Garden',
+  'International Home',
+  'Job Market',
+  'Learning',
+  'Magazine',
+  'Media',
+  'Metro',
+  'Movies',
+  'Multimedia',
+  'National',
+  'New York',
+  'New York and Region',
+  'Obituaries',
+  'Open',
+  'Opinion',
+  'Paid Death Notices',
+  'Public Editor',
+  'Real Estate',
   'Science',
+  'Small Business',
+  'Society',
   'Sports',
+  'Style',
+  'Sunday Magazine',
+  'Sunday Review',
   'Technology',
+  'The Public Editor',
+  'The Upshot',
+  'Theater',
+  'Times Topics',
+  'Today\'s Headlines',
+  'Travel',
+  'U.S.',
+  'Universal',
+  'Washington',
+  'Week in Review',
   'World',
+  'Your Money',
 ];
 
 const SearchPage: React.FC = () => {
@@ -36,20 +83,12 @@ const SearchPage: React.FC = () => {
     scrollY,
     viewMode,
     loading,
-    totalResults,
-    currentPage,
-    hasMore,
-    advancedParams,
     setQuery,
     setArticles,
     setHasSearched,
     setViewMode,
     setLoading,
-    setTotalResults,
-    setCurrentPage,
-    setHasMore,
     setAdvancedParams,
-    appendArticles,
     reset,
   } = useSearchStore();
 
@@ -83,11 +122,11 @@ const SearchPage: React.FC = () => {
         setTimeout(restoreScroll, 1000);
       }
     }
-  }, [hasSearched, articles.length]);
+  }, [hasSearched, articles?.length]);
 
   // Additional restoration when content is fully loaded
   useEffect(() => {
-    if (typeof window !== 'undefined' && hasSearched && articles.length > 0 && !loading) {
+    if (typeof window !== 'undefined' && hasSearched && articles && articles.length > 0 && !loading) {
       const savedScroll = sessionStorage.getItem('search-page-scroll');
       if (savedScroll) {
         const scrollY = parseInt(savedScroll, 10);
@@ -100,7 +139,7 @@ const SearchPage: React.FC = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [hasSearched, articles.length, loading]);
+  }, [hasSearched, articles?.length, loading]);
 
   // Save scroll position to sessionStorage
   useEffect(() => {
@@ -206,8 +245,7 @@ const SearchPage: React.FC = () => {
     
     setLoading(true);
     setHasSearched(true);
-    setAdvancedParams({ query: text, ...advancedForm, page: 0 });
-    setCurrentPage(0);
+    setAdvancedParams({ query: text, ...advancedForm });
     
     try {
       const result = await searchArticlesAdv({
@@ -220,42 +258,8 @@ const SearchPage: React.FC = () => {
       });
       
       setArticles(result);
-      setTotalResults(result.length);
-      setHasMore(result.length > 0);
     } catch {
       setArticles([]);
-      setTotalResults(0);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMore = async () => {
-    if (!hasMore || loading) return;
-    
-    setLoading(true);
-    const nextPage = currentPage + 1;
-    
-    try {
-      const result = await searchArticlesAdv({
-        q: advancedParams!.query,
-        sort: advancedParams!.sort,
-        begin: advancedParams!.beginDate,
-        end: advancedParams!.endDate,
-        section: advancedParams!.section,
-        page: nextPage,
-      });
-      
-      if (result.length > 0) {
-        appendArticles(result);
-        setCurrentPage(nextPage);
-        setHasMore(result.length > 0);
-      } else {
-        setHasMore(false);
-      }
-    } catch {
-      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -452,17 +456,8 @@ const SearchPage: React.FC = () => {
           <div className="results-section">
             <div className="results-info">
               <span className="results-count">
-                Showing {articles.length} of {totalResults > 0 ? totalResults : articles.length} results
+                Showing {articles.length} results
               </span>
-              {hasMore && (
-                <button 
-                  onClick={loadMore} 
-                  className="button"
-                  disabled={loading}
-                >
-                  {loading ? 'Loading...' : 'Load More'}
-                </button>
-              )}
             </div>
             <ViewToggle
               viewMode={viewMode}

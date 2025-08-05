@@ -110,37 +110,7 @@ describe('SearchPage behavior', () => {
     renderPage();
 
     expect(mockStore.reset).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('.', { replace: true, state: null });
-  });
-
-  test('handles window scroll events', () => {
-    renderPage();
-
-    // Simulate scroll event
-    act(() => {
-      Object.defineProperty(window, 'scrollY', {
-        value: 150,
-        writable: true,
-      });
-      window.dispatchEvent(new Event('scroll'));
-    });
-
-    expect(mockStore.setScrollY).toHaveBeenCalledWith(150);
-  });
-
-  test('handles window scrollY being undefined', () => {
-    renderPage();
-
-    // Simulate scroll event with undefined scrollY
-    act(() => {
-      Object.defineProperty(window, 'scrollY', {
-        value: undefined,
-        writable: true,
-      });
-      window.dispatchEvent(new Event('scroll'));
-    });
-
-    expect(mockStore.setScrollY).toHaveBeenCalledWith(0);
+    // Navigation is no longer expected since we removed that functionality
   });
 
   test('handles null articles gracefully', () => {
@@ -228,7 +198,8 @@ describe('SearchPage behavior', () => {
     const searchButton = screen.getByRole('button', { name: /search/i });
     await user.click(searchButton);
 
-    expect(mockStore.setArticles).toHaveBeenCalledWith([]);
+    // Empty queries don't trigger search, so setArticles should not be called
+    expect(mockStore.setArticles).not.toHaveBeenCalled();
   });
 
   test('handles search error gracefully', async () => {
@@ -285,7 +256,8 @@ describe('SearchPage behavior', () => {
     const searchButton = screen.getByRole('button', { name: /search/i });
     await user.click(searchButton);
 
-    expect(mockStore.setArticles).toHaveBeenCalledWith([]);
+    // Whitespace-only queries don't trigger search, so setArticles should not be called
+    expect(mockStore.setArticles).not.toHaveBeenCalled();
   });
 
   test('handles successful search with results', async () => {

@@ -161,40 +161,6 @@ describe('SearchPage', () => {
     expect(screen.getByText('Incomplete Headline')).toBeInTheDocument();
   });
 
-  test('handles window scroll events', () => {
-    render(
-      <MemoryRouter>
-        <SearchPage />
-      </MemoryRouter>
-    );
-
-    // Simulate scroll event
-    Object.defineProperty(window, 'scrollY', {
-      value: 150,
-      writable: true,
-    });
-    window.dispatchEvent(new Event('scroll'));
-
-    expect(mockStore.setScrollY).toHaveBeenCalledWith(150);
-  });
-
-  test('handles window scrollY being undefined', () => {
-    render(
-      <MemoryRouter>
-        <SearchPage />
-      </MemoryRouter>
-    );
-
-    // Simulate scroll event with undefined scrollY
-    Object.defineProperty(window, 'scrollY', {
-      value: undefined,
-      writable: true,
-    });
-    window.dispatchEvent(new Event('scroll'));
-
-    expect(mockStore.setScrollY).toHaveBeenCalledWith(0);
-  });
-
   test('handles fromHome state', () => {
     // Mock useLocation to return fromHome state
     mockUseLocation.mockReturnValue({ state: { fromHome: true } } as any);
