@@ -48,17 +48,31 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
+  const params = { 
+    ...baseParams(), 
+    q, 
+    // Try using offset instead of page
+    "offset": 0,
+    // Request more results per page - NYT API max is 200
+    "rows": 50
+  };
+  
+  console.log('API Request params:', params);
+  
   const response = await axios.get(BASE_URL, {
-    params: { 
-      ...baseParams(), 
-      q, 
-      page: 0,
-      // Request more results per page - NYT API max is 200
-      "rows": 50
-    },
+    params,
     signal,
   });
+  
   const docs = response?.data?.response?.docs;
+  const totalHits = response?.data?.response?.meta?.hits;
+  
+  console.log('API Response:', {
+    totalHits,
+    resultsReturned: docs?.length || 0,
+    page: response?.data?.response?.meta?.offset || 0,
+    requestedRows: 50
+  });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
@@ -78,7 +92,8 @@ export async function searchArticlesAdv(params: {
   const query: Record<string, string | number> = { 
     ...baseParams(), 
     q, 
-    page,
+    // Use offset instead of page
+    "offset": page * 50,
     // Request more results per page - NYT API max is 200
     "rows": 50
   };
@@ -91,8 +106,18 @@ export async function searchArticlesAdv(params: {
       query.fq = `news_desk:("${sectionValue}")`;
     }
   
+  console.log('Advanced API Request params:', query);
+  
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
+  const totalHits = response?.data?.response?.meta?.hits;
+  
+  console.log('Advanced API Response:', {
+    totalHits,
+    resultsReturned: docs?.length || 0,
+    page: response?.data?.response?.meta?.offset || 0,
+    requestedRows: 50
+  });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
@@ -107,7 +132,7 @@ export async function getArticleByUrl(
     params: { 
       ...baseParams(), 
       fq: `web_url:("${esc(u)}")`, 
-      page: 0,
+      "offset": 0,
       "rows": 1
     },
     signal,
