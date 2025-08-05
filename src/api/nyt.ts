@@ -11,7 +11,11 @@ function esc(str: string) {
 }
 
 function baseParams(): Record<string, string> {
-  return { "api-key": API_KEY };
+  return { 
+    "api-key": API_KEY,
+    // Request more results - NYT API defaults to 10, max is 200
+    "fl": "web_url,headline,abstract,byline,multimedia,news_desk,print_page,print_section,pub_date,section_name,snippet,source,subsection_name,type_of_material,uri,word_count,_id,lead_paragraph"
+  };
 }
 
 // Mapping from our section names to NYT API news_desk values
@@ -45,7 +49,13 @@ export async function searchArticles(
   if (!q) return [];
   
   const response = await axios.get(BASE_URL, {
-    params: { ...baseParams(), q, page: 0 },
+    params: { 
+      ...baseParams(), 
+      q, 
+      page: 0,
+      // Request more results per page - NYT API max is 200
+      "rows": 50
+    },
     signal,
   });
   const docs = response?.data?.response?.docs;
@@ -65,7 +75,13 @@ export async function searchArticlesAdv(params: {
   signal?: AbortSignal;
 }): Promise<NytArticle[]> {
   const { q, page = 0, sort, begin, end, section, signal } = params;
-  const query: Record<string, string | number> = { ...baseParams(), q, page };
+  const query: Record<string, string | number> = { 
+    ...baseParams(), 
+    q, 
+    page,
+    // Request more results per page - NYT API max is 200
+    "rows": 50
+  };
   if (sort) query.sort = sort;
   if (begin) query.begin_date = begin;
   if (end) query.end_date = end;
@@ -88,7 +104,12 @@ export async function getArticleByUrl(
   const u = (url || "").trim();
   if (!u) return null;
   const response = await axios.get(BASE_URL, {
-    params: { ...baseParams(), fq: `web_url:("${esc(u)}")`, page: 0 },
+    params: { 
+      ...baseParams(), 
+      fq: `web_url:("${esc(u)}")`, 
+      page: 0,
+      "rows": 1
+    },
     signal,
   });
   const docs = response?.data?.response?.docs;
