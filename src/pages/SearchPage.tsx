@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import { searchArticlesAdv, makeSearchController } from "../api/nyt";
@@ -341,10 +341,6 @@ const SearchPage: React.FC = () => {
 
     try {
       const result = await runSearch(text);
-      console.log('Initial search result:', { 
-        resultLength: result.length, 
-        hasMore: result.length === 5 
-      });
       setArticles(result);
     } catch {
       setArticles([]);
@@ -353,13 +349,11 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
 
     const text = (query || "").trim();
     if (!text) return;
-
-    console.log('handleLoadMore called:', { currentPage, hasMore, loadingMore });
 
     setLoadingMore(true);
 
@@ -370,24 +364,16 @@ const SearchPage: React.FC = () => {
         page: nextPage,
         ...advancedForm
       });
-      
-      console.log('Load more result:', { 
-        nextPage, 
-        resultLength: result.length, 
-        hasMore: result.length === 5 
-      });
-      
+
       // For testing: 5 results per page
       if (result.length > 0) {
         appendArticles(result);
         // If we get less than 5 results, we've reached the end
         if (result.length < 5) {
-          console.log('Setting hasMore to false - got less than 5 results');
           setHasMore(false);
         }
       } else {
         // No more results
-        console.log('Setting hasMore to false - no results returned');
         setHasMore(false);
       }
     } catch (error) {
@@ -396,7 +382,26 @@ const SearchPage: React.FC = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [loadingMore, hasMore, currentPage, query, advancedForm, appendArticles, setHasMore, setLoadingMore]);
+
+  // Add scroll detection for regular grid view
+  useEffect(() => {
+    if (!hasMore || loadingMore || !articles || articles.length < 5) return;
+
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Trigger load more when user is near bottom
+      if (documentHeight - scrollTop - windowHeight < 200) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadingMore, articles?.length, handleLoadMore]);
 
   const renderResults = () => {
     if (loading) {
@@ -432,7 +437,6 @@ const SearchPage: React.FC = () => {
 
     // Use virtualization for grid view when there are many articles
     if (articles.length > 50) {
-      console.log('Using VirtualizedArticleList:', { articlesLength: articles.length, hasMore, loadingMore });
       return (
         <VirtualizedArticleList
           articles={articles}
@@ -445,7 +449,6 @@ const SearchPage: React.FC = () => {
       );
     }
 
-    console.log('Using regular grid view:', { articlesLength: articles.length, hasMore, loadingMore });
     return (
       <div className="grid results">
         {articles.map((a) => (
@@ -458,8 +461,8 @@ const SearchPage: React.FC = () => {
           </div>
         )}
         {!hasMore && articles.length > 0 && (
-          <div className="no-more-results" style={{ border: '2px solid red', padding: '10px' }}>
-            <p>No more articles to load (Debug: hasMore={hasMore.toString()}, articles={articles.length})</p>
+          <div className="no-more-results">
+            <p>No more articles to load</p>
           </div>
         )}
       </div>

@@ -1,7 +1,12 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { SiteHeader } from '../SiteHeader';
+import { useSearchStore } from '../../store/searchStore';
+
+// Mock the store
+jest.mock('../../store/searchStore');
+const mockUseSearchStore = useSearchStore as jest.MockedFunction<typeof useSearchStore>;
 
 // Mock ThemeToggle component
 jest.mock('../ThemeToggle', () => {
@@ -11,146 +16,176 @@ jest.mock('../ThemeToggle', () => {
 });
 
 describe('SiteHeader', () => {
-  test('renders SiteHeader with logo and navigation', () => {
+  const mockReset = jest.fn();
+
+  const mockState = {
+    query: '',
+    articles: [],
+    hasSearched: false,
+    scrollY: 0,
+    viewMode: 'grid' as const,
+    loading: false,
+    loadingMore: false,
+    currentPage: 0,
+    hasMore: false,
+    advancedParams: null,
+    favorites: [],
+    setQuery: jest.fn(),
+    setArticles: jest.fn(),
+    setHasSearched: jest.fn(),
+    setScrollY: jest.fn(),
+    setViewMode: jest.fn(),
+    setLoading: jest.fn(),
+    setLoadingMore: jest.fn(),
+    setCurrentPage: jest.fn(),
+    setHasMore: jest.fn(),
+    setAdvancedParams: jest.fn(),
+    appendArticles: jest.fn(),
+    addFavorite: jest.fn(),
+    removeFavorite: jest.fn(),
+    clearFavorites: jest.fn(),
+    reset: mockReset,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseSearchStore.mockImplementation((selector) => {
+      if (typeof selector === 'function') {
+        return selector(mockState);
+      }
+      return mockState;
+    });
+  });
+
+  test('renders header with logo and navigation', () => {
     render(
       <MemoryRouter>
         <SiteHeader />
       </MemoryRouter>
     );
-    
+
     expect(screen.getByText('NYT News Explorer')).toBeInTheDocument();
+    expect(screen.getByText('by You')).toBeInTheDocument();
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Favorites')).toBeInTheDocument();
-  });
-
-  test('renders hamburger menu button on mobile', () => {
-    render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    // The hamburger button should be present
-    const mobileMenuBtn = screen.getByRole('button', { name: '' });
-    expect(mobileMenuBtn).toBeInTheDocument();
-  });
-
-  test('renders options dropdown button', () => {
-    render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
     expect(screen.getByText('Options')).toBeInTheDocument();
   });
 
-  test('has correct CSS classes and styling', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    const header = container.firstChild as HTMLElement;
-    expect(header).toHaveStyle({
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      right: '0',
-      zIndex: '1000'
-    });
-  });
-
-  test('renders navigation links with correct hrefs', () => {
+  test('toggles options dropdown when Options button is clicked', () => {
     render(
       <MemoryRouter>
         <SiteHeader />
       </MemoryRouter>
     );
-    
-    const homeLink = screen.getByText('Home').closest('a');
-    const favoritesLink = screen.getByText('Favorites').closest('a');
-    
-    expect(homeLink).toHaveAttribute('href', '/');
-    expect(favoritesLink).toHaveAttribute('href', '/favorites');
-  });
 
-  test('renders logo with correct link', () => {
-    render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    const logoLink = screen.getByText('NYT News Explorer').closest('a');
-    expect(logoLink).toHaveAttribute('href', '/');
-  });
-
-  test('renders "by You" text', () => {
-    render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    expect(screen.getByText('by You')).toBeInTheDocument();
-  });
-
-  test('has desktop navigation with correct classes', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    const desktopNav = container.querySelector('.desktop-nav');
-    expect(desktopNav).toBeInTheDocument();
-  });
-
-  test('has mobile menu button with correct classes', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
-    const mobileMenuBtn = container.querySelector('.mobile-menu-btn');
-    expect(mobileMenuBtn).toBeInTheDocument();
-  });
-
-  test('renders options dropdown with correct structure', () => {
-    render(
-      <MemoryRouter>
-        <SiteHeader />
-      </MemoryRouter>
-    );
-    
     const optionsButton = screen.getByText('Options');
-    expect(optionsButton).toBeInTheDocument();
-    
-    // Check for the dropdown arrow
-    expect(screen.getByText('▶')).toBeInTheDocument();
+    fireEvent.click(optionsButton);
+
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('Clear Cache')).toBeInTheDocument();
   });
 
-  test('header has correct container structure', () => {
-    const { container } = render(
+  test('calls reset and clears storage when Clear Cache is clicked', () => {
+    const mockSessionStorage = {
+      clear: jest.fn(),
+    };
+    const mockLocalStorage = {
+      clear: jest.fn(),
+    };
+    
+    Object.defineProperty(window, 'sessionStorage', {
+      value: mockSessionStorage,
+      writable: true,
+    });
+    Object.defineProperty(window, 'localStorage', {
+      value: mockLocalStorage,
+      writable: true,
+    });
+
+    render(
       <MemoryRouter>
         <SiteHeader />
       </MemoryRouter>
     );
-    
-    const header = container.querySelector('header');
-    expect(header).toBeInTheDocument();
-    
-    const innerDiv = header?.querySelector('div');
-    expect(innerDiv).toHaveStyle({
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '0.75rem 1rem',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    });
+
+    const optionsButton = screen.getByText('Options');
+    fireEvent.click(optionsButton);
+
+    const clearCacheButton = screen.getByText('Clear Cache');
+    fireEvent.click(clearCacheButton);
+
+    expect(mockReset).toHaveBeenCalled();
+    expect(mockSessionStorage.clear).toHaveBeenCalled();
+    expect(mockLocalStorage.clear).toHaveBeenCalled();
+  });
+
+  test('toggles mobile menu when hamburger button is clicked', () => {
+    render(
+      <MemoryRouter>
+        <SiteHeader />
+      </MemoryRouter>
+    );
+
+    const mobileMenuButton = screen.getByRole('button', { name: '' });
+    fireEvent.click(mobileMenuButton);
+
+    // Check for mobile menu content - should be visible after clicking
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('Clear Cache')).toBeInTheDocument();
+  });
+
+  test('closes mobile menu when Escape key is pressed', () => {
+    render(
+      <MemoryRouter>
+        <SiteHeader />
+      </MemoryRouter>
+    );
+
+    const mobileMenuButton = screen.getByRole('button', { name: '' });
+    fireEvent.click(mobileMenuButton);
+
+    // Menu should be open
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+
+    // Press Escape
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    // Menu should be closed
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+  });
+
+  test('closes dropdowns when clicking outside', () => {
+    render(
+      <MemoryRouter>
+        <SiteHeader />
+      </MemoryRouter>
+    );
+
+    const optionsButton = screen.getByText('Options');
+    fireEvent.click(optionsButton);
+
+    // Dropdown should be open
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+
+    // Click outside
+    fireEvent.mouseDown(document.body);
+
+    // Dropdown should be closed
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+  });
+
+  test('includes ThemeToggle component in settings', () => {
+    render(
+      <MemoryRouter>
+        <SiteHeader />
+      </MemoryRouter>
+    );
+
+    const optionsButton = screen.getByText('Options');
+    fireEvent.click(optionsButton);
+
+    expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
   });
 });

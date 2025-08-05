@@ -23,6 +23,7 @@ type SearchState = {
   currentPage: number;
   hasMore: boolean;
   advancedParams: AdvancedParams | null;
+  favorites: NytArticle[];
   setQuery: (q: string) => void;
   setArticles: (a: NytArticle[]) => void;
   appendArticles: (a: NytArticle[]) => void;
@@ -34,6 +35,9 @@ type SearchState = {
   setCurrentPage: (page: number) => void;
   setHasMore: (hasMore: boolean) => void;
   setAdvancedParams: (params: AdvancedParams | null) => void;
+  addFavorite: (article: NytArticle) => void;
+  removeFavorite: (articleUrl: string) => void;
+  clearFavorites: () => void;
   reset: () => void;
 };
 
@@ -50,6 +54,7 @@ export const useSearchStore = create<SearchState>()(
       currentPage: 0,
       hasMore: true,
       advancedParams: null,
+      favorites: [],
       setQuery: (q) => set({ query: q }),
       setArticles: (a) => set({ 
         articles: a, 
@@ -71,6 +76,11 @@ export const useSearchStore = create<SearchState>()(
       setCurrentPage: (currentPage) => set({ currentPage }),
       setHasMore: (hasMore) => set({ hasMore }),
       setAdvancedParams: (params) => set({ advancedParams: params }),
+      addFavorite: (article) => set((state) => ({ favorites: [...state.favorites, article] })),
+      removeFavorite: (articleUrl) => set((state) => ({ 
+        favorites: state.favorites.filter(article => article.web_url !== articleUrl) 
+      })),
+      clearFavorites: () => set({ favorites: [] }),
       reset: () => set({ 
         query: "", 
         articles: [], 
@@ -82,6 +92,7 @@ export const useSearchStore = create<SearchState>()(
         currentPage: 0,
         hasMore: true,
         advancedParams: null,
+        favorites: [],
       }),
     }),
     {
@@ -94,6 +105,7 @@ export const useSearchStore = create<SearchState>()(
         scrollY: s.scrollY,
         viewMode: s.viewMode,
         advancedParams: s.advancedParams,
+        favorites: s.favorites,
       }),
       onRehydrateStorage: () => (state) => {
         // Ensure loading is false after rehydration

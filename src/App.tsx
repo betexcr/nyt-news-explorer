@@ -4,6 +4,7 @@ import { SiteHeader } from "./components/SiteHeader";
 import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
+import FavoritesPage from "./pages/FavoritesPage";
 import "./index.css";
 import "./styles/header.css";
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/detail" element={<DetailPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
           </Routes>
         </div>
       </main>

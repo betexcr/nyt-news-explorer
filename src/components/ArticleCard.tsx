@@ -28,6 +28,9 @@ interface Props {
 
 const ArticleCard: React.FC<Props> = ({ article }) => {
   const image = getImageUrl(article);
+  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const isFavorite = favorites?.some(fav => fav.web_url === article.web_url) || false;
+  
   const to = {
     pathname: "/detail",
     search: `?${createSearchParams({ url: article.web_url || '' }).toString()}`,
@@ -39,12 +42,23 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
     } catch {}
   };
 
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isFavorite) {
+      removeFavorite(article.web_url);
+    } else {
+      addFavorite(article);
+    }
+  };
+
   return (
     <Link
       to={to}
       state={{ article }}
       onClick={onClick}
-      style={{ display: "block", textDecoration: "none", color: "inherit" }}
+      style={{ display: "block", textDecoration: "none", color: "inherit", position: "relative" }}
       aria-label={article.headline?.main || "Article"}
     >
       <article className="panel" style={{ padding: ".9rem" }}>
@@ -55,6 +69,31 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           {article.section_name ? <span> · {article.section_name}</span> : null}
         </div>
         <p className="lead">{article.snippet || ""}</p>
+        
+        {/* Favorite Button */}
+        <button
+          onClick={handleFavoriteClick}
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            background: isFavorite ? "rgba(255, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.6)",
+            color: "white",
+            border: "none",
+            borderRadius: "50%",
+            width: "32px",
+            height: "32px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "16px",
+            transition: "all 0.2s ease",
+          }}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorite ? "♥" : "♡"}
+        </button>
       </article>
     </Link>
   );

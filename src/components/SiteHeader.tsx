@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
+import { useSearchStore } from "../store/searchStore";
 
 export const SiteHeader: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const reset = useSearchStore((state) => state.reset);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleOptions = () => setIsOptionsOpen(!isOptionsOpen);
+
+  const handleClearCache = () => {
+    reset();
+    sessionStorage.clear();
+    localStorage.clear();
+    setIsOptionsOpen(false);
+    setIsMenuOpen(false);
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -179,32 +189,9 @@ export const SiteHeader: React.FC = () => {
                       fontSize: "0.875rem",
                       transition: "background 0.2s ease",
                     }}
-                    onClick={() => {
-                      // Add functionality here
-                      console.log("Clear cache");
-                    }}
+                    onClick={handleClearCache}
                   >
                     Clear Cache
-                  </button>
-                  <button
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      background: "transparent",
-                      border: "none",
-                      padding: "0.5rem",
-                      borderRadius: "6px",
-                      color: "var(--text)",
-                      cursor: "pointer",
-                      fontSize: "0.875rem",
-                      transition: "background 0.2s ease",
-                    }}
-                    onClick={() => {
-                      // Add functionality here
-                      console.log("Export data");
-                    }}
-                  >
-                    Export Data
                   </button>
                 </div>
               </div>
@@ -338,32 +325,9 @@ export const SiteHeader: React.FC = () => {
                   fontSize: "0.875rem",
                   transition: "background 0.2s ease",
                 }}
-                onClick={() => {
-                  console.log("Clear cache");
-                  setIsMenuOpen(false);
-                }}
+                onClick={handleClearCache}
               >
                 Clear Cache
-              </button>
-              <button
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  background: "transparent",
-                  border: "none",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "8px",
-                  color: "var(--text)",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  transition: "background 0.2s ease",
-                }}
-                onClick={() => {
-                  console.log("Export data");
-                  setIsMenuOpen(false);
-                }}
-              >
-                Export Data
               </button>
             </div>
           </nav>
