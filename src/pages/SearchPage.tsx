@@ -365,14 +365,20 @@ const SearchPage: React.FC = () => {
         ...advancedForm
       });
       
+      // NYT API returns max 10 results per page
       if (result.length > 0) {
         appendArticles(result);
+        // If we get less than 10 results, we've reached the end
+        if (result.length < 10) {
+          setHasMore(false);
+        }
       } else {
         // No more results
         setHasMore(false);
       }
     } catch (error) {
       console.error('Error loading more articles:', error);
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }
