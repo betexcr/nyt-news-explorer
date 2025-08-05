@@ -4,6 +4,8 @@ on:
     workflows: ["Tests"]
     types:
       - completed
+  push:
+    branches: [master]
 
 jobs:
   build-and-deploy:
