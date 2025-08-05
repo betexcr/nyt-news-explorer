@@ -54,14 +54,14 @@ export const useSearchStore = create<SearchState>()(
       setArticles: (a) => set({ 
         articles: a, 
         currentPage: 0, 
-        // If we get less than 10 results, there are no more pages
-        hasMore: a.length === 10 
+        // If we get less than 5 results, there are no more pages (for testing)
+        hasMore: a.length === 5 
       }),
       appendArticles: (a) => set((state) => ({ 
         articles: [...state.articles, ...a],
         currentPage: state.currentPage + 1,
-        // NYT API returns max 10 results per page
-        hasMore: a.length === 10
+        // For testing: 5 results per page
+        hasMore: a.length === 5
       })),
       setHasSearched: (v) => set({ hasSearched: v }),
       setScrollY: (y) => set({ scrollY: y }),

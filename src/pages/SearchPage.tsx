@@ -343,7 +343,7 @@ const SearchPage: React.FC = () => {
       const result = await runSearch(text);
       console.log('Initial search result:', { 
         resultLength: result.length, 
-        hasMore: result.length === 10 
+        hasMore: result.length === 5 
       });
       setArticles(result);
     } catch {
@@ -374,15 +374,15 @@ const SearchPage: React.FC = () => {
       console.log('Load more result:', { 
         nextPage, 
         resultLength: result.length, 
-        hasMore: result.length === 10 
+        hasMore: result.length === 5 
       });
       
-      // NYT API returns max 10 results per page
+      // For testing: 5 results per page
       if (result.length > 0) {
         appendArticles(result);
-        // If we get less than 10 results, we've reached the end
-        if (result.length < 10) {
-          console.log('Setting hasMore to false - got less than 10 results');
+        // If we get less than 5 results, we've reached the end
+        if (result.length < 5) {
+          console.log('Setting hasMore to false - got less than 5 results');
           setHasMore(false);
         }
       } else {

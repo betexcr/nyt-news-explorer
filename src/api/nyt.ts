@@ -48,7 +48,7 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  // NYT API is limited to 10 results per page
+  // NYT API is limited to 10 results per page, but we'll simulate 5 results for testing
   const params = { 
     ...baseParams(), 
     q, 
@@ -61,7 +61,10 @@ export async function searchArticles(
   });
   
   const docs = response?.data?.response?.docs;
-  return Array.isArray(docs) ? (docs as NytArticle[]) : [];
+  // For testing: only return first 5 results to simulate smaller page size
+  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 5) : [];
+  
+  return limitedDocs as NytArticle[];
 }
 
 // Advanced search with pagination, sorting, and date filters
@@ -92,7 +95,10 @@ export async function searchArticlesAdv(params: {
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
   
-  return Array.isArray(docs) ? (docs as NytArticle[]) : [];
+  // For testing: only return first 5 results to simulate smaller page size
+  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 5) : [];
+  
+  return limitedDocs as NytArticle[];
 }
 
 export async function getArticleByUrl(
