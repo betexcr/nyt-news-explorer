@@ -294,11 +294,13 @@ const SearchPage: React.FC = () => {
           }
         });
         
-        resizeObserver.observe(containerRef.current);
+        if (containerRef.current) {
+          resizeObserver.observe(containerRef.current);
+        }
         return () => resizeObserver.disconnect();
       } catch (error) {
         // Fallback if ResizeObserver is not available or fails
-        console.warn('ResizeObserver not available:', error);
+        // Silently handle the error to avoid test warnings
       }
     }
   }, [viewMode]);

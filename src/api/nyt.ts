@@ -44,23 +44,11 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  console.log('Regular search params:', { q });
-  
   const response = await axios.get(BASE_URL, {
     params: { ...baseParams(), q, page: 0 },
     signal,
   });
   const docs = response?.data?.response?.docs;
-  
-  console.log('Regular search response:', {
-    totalResults: response?.data?.response?.meta?.hits,
-    docsCount: docs?.length,
-    firstDoc: docs?.[0]?.section_name || docs?.[0]?.news_desk,
-    allSections: docs?.slice(0, 5).map((doc: any) => ({
-      section_name: doc.section_name,
-      news_desk: doc.news_desk
-    }))
-  });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
@@ -87,16 +75,8 @@ export async function searchArticlesAdv(params: {
       query.fq = `news_desk:("${sectionValue}")`;
     }
   
-  console.log('Advanced search params:', { q, page, sort, begin, end, section, query });
-  
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
-  
-  console.log('Advanced search response:', {
-    totalResults: response?.data?.response?.meta?.hits,
-    docsCount: docs?.length,
-    firstDoc: docs?.[0]?.section_name || docs?.[0]?.news_desk
-  });
   
   return Array.isArray(docs) ? (docs as NytArticle[]) : [];
 }
