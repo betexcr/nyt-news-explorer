@@ -1,21 +1,54 @@
-// Auto-generated TypeScript interfaces from YAML schema
-// Generated on: 2025-08-05T02:09:09.173Z
+// Auto-generated TypeScript interfaces from Zod schemas
+// Generated on: 2025-08-05T04:47:25.656Z
 // Do not edit manually - regenerate using: npm run gen:types
 
+export interface Image {
+  url: string;
+  height: number;
+  width: number;
+}
+
+export interface Multimedia {
+  caption?: string;
+  credit?: string;
+  subtype?: string;
+  url?: string;
+  height?: number;
+  width?: number;
+  default?: any;
+  thumbnail?: any;
+}
+
+export interface Headline {
+  main: string;
+  kicker?: string;
+  print_headline?: string;
+}
+
+export interface Byline {
+  original?: string;
+}
+
+export interface Keyword {
+  name: string;
+  value: string;
+  rank: number;
+}
+
 export interface Article {
-  web_url?: string;
-  snippet?: string;
+  web_url: string;
+  snippet: string;
   print_page?: number;
   print_section?: string;
   source?: string;
-  multimedia?: Multimedia;
-  headline?: Headline;
-  keywords?: Keyword[];
-  pub_date?: string;
+  multimedia: any;
+  headline: any;
+  keywords: any[];
+  pub_date: string;
   document_type?: string;
   desk?: string;
   section_name?: string;
-  byline?: Byline;
+  byline?: any;
   type_of_material?: string;
   word_count?: number;
   uri?: string;
@@ -23,61 +56,33 @@ export interface Article {
   lead_paragraph?: string;
 }
 
-export interface Byline {
-  original?: string;
-}
-
-export interface Headline {
-  main?: string;
-  kicker?: string;
-  print_headline?: string;
-}
-
-export interface Keyword {
-  name?: string;
-  value?: string;
-  rank?: number;
-}
-
-export interface Multimedia {
-  caption?: string;
-  credit?: string;
-  default?: Image;
-  thumbnail?: Image;
-}
-
-export interface Image {
-  url?: string;
-  height?: number;
-  width?: number;
-}
-
 export interface Meta {
-  hits?: number;
-  offset?: number;
-  time?: number;
+  hits: number;
+  offset: number;
+  time: number;
 }
 
 export interface Response {
-  docs?: Article[];
-  meta?: Meta;
+  docs: any[];
+  meta?: any;
 }
 
 export interface NytApiResponse {
-  status?: string;
-  copyright?: string;
-  response?: Response;
+  status: string;
+  copyright: string;
+  response: any;
 }
 
 export interface SearchParams {
+  'api-key': string;
   q?: string;
   page?: number;
-  sort?: 'best' | 'newest' | 'oldest' | 'relevance';
+  sort?: any;
   begin_date?: string;
   end_date?: string;
   fq?: string;
-  'api-key'?: string;
 }
+
 
 // Legacy type aliases for backward compatibility
 export type NytMultimedia = Multimedia;

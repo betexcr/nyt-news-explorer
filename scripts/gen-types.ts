@@ -1,74 +1,87 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as yaml from "js-yaml";
 
-interface SwaggerDefinition {
-  definitions: Record<string, any>;
-}
+// Import our Zod schemas
+import {
+  ImageSchema,
+  MultimediaSchema,
+  HeadlineSchema,
+  BylineSchema,
+  KeywordSchema,
+  ArticleSchema,
+  MetaSchema,
+  ResponseSchema,
+  NytApiResponseSchema,
+  SearchParamsSchema,
+} from '../src/types/nyt.schemas';
 
-function generateTypeScriptInterface(name: string, schema: any): string {
-  if (schema.type === 'object' && schema.properties) {
-    const properties: string[] = [];
+function generateTypeScriptFromZod(schema: any, name: string): string {
+  const shape = schema._def.shape();
+  const properties: string[] = [];
+  
+  for (const [key, value] of Object.entries(shape)) {
+    const zodValue = value as any;
+    const isOptional = zodValue._def.typeName === 'ZodOptional';
+    const optional = isOptional ? '?' : '';
     
-    for (const [propName, propSchema] of Object.entries(schema.properties)) {
-      const propType = getTypeScriptType(propName, propSchema);
-      const required = schema.required?.includes(propName) ? '' : '?';
-      properties.push(`  ${propName}${required}: ${propType};`);
+    // Handle property names that need to be quoted
+    const propertyName = key.includes('-') ? `'${key}'` : key;
+    
+    let typeName = 'any';
+    if (zodValue._def.typeName === 'ZodString') {
+      typeName = 'string';
+    } else if (zodValue._def.typeName === 'ZodNumber') {
+      typeName = 'number';
+    } else if (zodValue._def.typeName === 'ZodBoolean') {
+      typeName = 'boolean';
+    } else if (zodValue._def.typeName === 'ZodArray') {
+      const itemType = zodValue._def.type._def.typeName;
+      if (itemType === 'ZodString') {
+        typeName = 'string[]';
+      } else if (itemType === 'ZodNumber') {
+        typeName = 'number[]';
+      } else {
+        typeName = 'any[]';
+      }
+    } else if (zodValue._def.typeName === 'ZodEnum') {
+      const enumValues = zodValue._def.values.map((v: string) => `'${v}'`).join(' | ');
+      typeName = enumValues;
+    } else if (zodValue._def.typeName === 'ZodOptional') {
+      const innerType = zodValue._def.innerType._def.typeName;
+      if (innerType === 'ZodString') {
+        typeName = 'string';
+      } else if (innerType === 'ZodNumber') {
+        typeName = 'number';
+      } else if (innerType === 'ZodBoolean') {
+        typeName = 'boolean';
+      } else {
+        typeName = 'any';
+      }
     }
     
-    return `export interface ${name} {
-${properties.join('\n')}
-}`;
+    properties.push(`  ${propertyName}${optional}: ${typeName};`);
   }
   
   return `export interface ${name} {
-  // TODO: Implement for ${schema.type} type
+${properties.join('\n')}
 }`;
-}
-
-function getTypeScriptType(propName: string, schema: any): string {
-  if (schema.$ref) {
-    const refName = schema.$ref.split('/').pop();
-    return refName;
-  }
-  
-  switch (schema.type) {
-    case 'string':
-      return 'string';
-    case 'integer':
-      return 'number';
-    case 'array':
-      if (schema.items?.$ref) {
-        const refName = schema.items.$ref.split('/').pop();
-        return `${refName}[]`;
-      }
-      return 'any[]';
-    case 'object':
-      return 'any';
-    default:
-      return 'any';
-  }
 }
 
 function main() {
   try {
-    // Read the YAML file
-    const yamlPath = path.join(__dirname, '../articlesearch-product.yaml');
-    const yamlContent = fs.readFileSync(yamlPath, 'utf8');
-    const swagger = yaml.load(yamlContent) as SwaggerDefinition;
-    
-    if (!swagger.definitions) {
-      console.error('No definitions found in YAML file');
-      return;
-    }
-    
     const interfaces: string[] = [];
     
-    // Generate interfaces for each definition
-    for (const [name, schema] of Object.entries(swagger.definitions)) {
-      const interfaceCode = generateTypeScriptInterface(name, schema);
-      interfaces.push(interfaceCode);
-    }
+    // Generate interfaces from our Zod schemas
+    interfaces.push(generateTypeScriptFromZod(ImageSchema, 'Image'));
+    interfaces.push(generateTypeScriptFromZod(MultimediaSchema, 'Multimedia'));
+    interfaces.push(generateTypeScriptFromZod(HeadlineSchema, 'Headline'));
+    interfaces.push(generateTypeScriptFromZod(BylineSchema, 'Byline'));
+    interfaces.push(generateTypeScriptFromZod(KeywordSchema, 'Keyword'));
+    interfaces.push(generateTypeScriptFromZod(ArticleSchema, 'Article'));
+    interfaces.push(generateTypeScriptFromZod(MetaSchema, 'Meta'));
+    interfaces.push(generateTypeScriptFromZod(ResponseSchema, 'Response'));
+    interfaces.push(generateTypeScriptFromZod(NytApiResponseSchema, 'NytApiResponse'));
+    interfaces.push(generateTypeScriptFromZod(SearchParamsSchema, 'SearchParams'));
     
     // Add legacy type aliases
     interfaces.push(`
@@ -81,7 +94,7 @@ export type NytArticle = Article;
     
     // Write to generated file
     const outputPath = path.join(__dirname, '../src/types/nyt.generated.ts');
-    const content = `// Auto-generated TypeScript interfaces from YAML schema
+    const content = `// Auto-generated TypeScript interfaces from Zod schemas
 // Generated on: ${new Date().toISOString()}
 // Do not edit manually - regenerate using: npm run gen:types
 
@@ -89,7 +102,7 @@ ${interfaces.join('\n\n')}
 `;
     
     fs.writeFileSync(outputPath, content);
-    console.log(`✅ Wrote ${Object.keys(swagger.definitions).length} types to src/types/nyt.generated.ts`);
+    console.log(`✅ Wrote ${interfaces.length - 1} types to src/types/nyt.generated.ts`);
     
   } catch (error) {
     console.error('Error generating types:', error);
