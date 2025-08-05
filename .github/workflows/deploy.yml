@@ -49,6 +49,7 @@ jobs:
           server-dir: public_html/
           protocol: ftp
           log-level: verbose
+          dangerous-clean-slate: true
 
       - name: Wait for deployment
         run: |
