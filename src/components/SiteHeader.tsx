@@ -78,7 +78,7 @@ export const SiteHeader: React.FC = () => {
         }}
       >
         {/* Logo/Brand */}
-        <Link to="/" style={{ textDecoration: "none", color: "var(--text)" }}>
+        <Link to="/search" style={{ textDecoration: "none", color: "var(--text)" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span
               style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.02em" }}
@@ -111,6 +111,20 @@ export const SiteHeader: React.FC = () => {
             className="nav-link"
           >
             Home
+          </Link>
+          <Link
+            to="/search"
+            style={{
+              color: "var(--textMuted)",
+              textDecoration: "none",
+              fontWeight: 600,
+              padding: "0.5rem 1rem",
+              borderRadius: "8px",
+              transition: "all 0.2s ease",
+            }}
+            className="nav-link"
+          >
+            Search
           </Link>
           <Link
             to="/favorites"
@@ -276,6 +290,21 @@ export const SiteHeader: React.FC = () => {
               className="mobile-nav-link"
             >
               Home
+            </Link>
+            <Link
+              to="/search"
+              style={{
+                color: "var(--text)",
+                textDecoration: "none",
+                fontWeight: 600,
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                transition: "background 0.2s ease",
+              }}
+              onClick={() => setIsMenuOpen(false)}
+              className="mobile-nav-link"
+            >
+              Search
             </Link>
             <Link
               to="/favorites"
