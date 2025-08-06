@@ -39,23 +39,22 @@ jobs:
           echo "Build size:"
           du -sh build/
 
-      - name: Deploy to Hostinger via Git Webhook
-        run: |
-          echo "Triggering Hostinger Git deployment..."
-          # This will trigger the webhook URL you get from Hostinger's Auto-Deployment feature
-          # Replace WEBHOOK_URL with your actual webhook URL from Hostinger
-          if [ -n "${{ secrets.HOSTINGER_WEBHOOK_URL }}" ]; then
-            curl -X POST "${{ secrets.HOSTINGER_WEBHOOK_URL }}"
-            echo "✅ Webhook triggered successfully"
-          else
-            echo "⚠️  HOSTINGER_WEBHOOK_URL secret not configured"
-            echo "Please set up Auto-Deployment in Hostinger hPanel and add the webhook URL as a secret"
-          fi
+      - name: Deploy to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./build/
+          server-dir: nyt/
+          protocol: ftp
+          log-level: verbose
+          dangerous-clean-slate: true
 
       - name: Wait for deployment
         run: |
           echo "Waiting for deployment to complete..."
-          sleep 30
+          sleep 10
 
       - name: Test deployment
         run: |
