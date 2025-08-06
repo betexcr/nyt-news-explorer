@@ -11,7 +11,10 @@ export const SiteHeader: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const toggleOptions = () => setIsOptionsOpen(!isOptionsOpen);
+  const toggleOptions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOptionsOpen(!isOptionsOpen);
+  };
 
   const handleClearCache = () => {
     reset();
@@ -144,7 +147,10 @@ export const SiteHeader: React.FC = () => {
           {/* Options Dropdown */}
           <div style={{ position: "relative" }} ref={optionsRef}>
             <button
-              onClick={toggleOptions}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleOptions(e);
+              }}
               style={{
                 background: "transparent",
                 border: "1px solid var(--border)",
@@ -166,6 +172,7 @@ export const SiteHeader: React.FC = () => {
             
             {isOptionsOpen && (
               <div
+                onClick={(e) => e.stopPropagation()}
                 style={{
                   position: "absolute",
                   top: "100%",
