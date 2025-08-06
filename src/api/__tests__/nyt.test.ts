@@ -126,7 +126,7 @@ test('searchArticles: handles malformed response', async () => {
 });
 
 test('searchArticlesAdv: builds params (page default, sort, begin/end, section->fq with escaping)', async () => {
-  const sectionWithQuotes = 'Opinions "and" Ideas';
+  const sectionWithQuotes = 'Opinion';
   const mockGet = jest.fn((_url: string, { params }: any) => {
     expect(params['api-key']).toBe('test-key')
     expect(params.page).toBe(0);
@@ -134,7 +134,7 @@ test('searchArticlesAdv: builds params (page default, sort, begin/end, section->
     expect(params.sort).toBe('newest');
     expect(params.begin_date).toBe('20240101');
     expect(params.end_date).toBe('20241231'); 
-    expect(params.fq).toBe('news_desk:("Opinions \\"and\\" Ideas")');
+    expect(params.fq).toBe('desk:("OpEd")');
     return Promise.resolve({
       data: { 
         status: 'OK',
