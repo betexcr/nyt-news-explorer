@@ -4,7 +4,7 @@ import type { NytArticle } from "../types/nyt";
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 const BASE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
-type NytSort = "newest" | "oldest";
+type NytSort = "newest" | "oldest" | "best" | "relevance";
 
 function esc(str: string) {
   return String(str).replace(/"/g, '\\"');
@@ -13,13 +13,11 @@ function esc(str: string) {
 function baseParams(): Record<string, string> {
   return { 
     "api-key": API_KEY,
-    // NYT API appears to limit results to 10 per page regardless of rows parameter
-    // We'll work with this limitation and use pagination
   };
 }
 
-// Mapping from our section names to NYT API news_desk values
-const SECTION_TO_NEWS_DESK: Record<string, string> = {
+// Mapping from our section names to NYT API desk values
+const SECTION_TO_DESK: Record<string, string> = {
   'U.S.': 'Washington',
   'World': 'Foreign',
   'Business': 'Business',
@@ -28,18 +26,39 @@ const SECTION_TO_NEWS_DESK: Record<string, string> = {
   'Health': 'Health',
   'Sports': 'Sports',
   'Arts': 'Arts',
-  'Style': 'Style',
-  'Food': 'Food',
+  'Style': 'Styles',
+  'Food': 'Dining',
   'Travel': 'Travel',
-  'Real Estate': 'Real Estate',
-  'Education': 'Education',
-  'Opinion': 'Opinion',
-  'Politics': 'Washington',
+  'Real Estate': 'RealEstate',
+  'Education': 'Learning',
+  'Opinion': 'OpEd',
+  'Politics': 'Politics',
   'National': 'National',
   'Metro': 'Metro',
   'New York': 'Metro',
   'New York and Region': 'Metro',
+  'Books': 'BookReview',
+  'Movies': 'Movies',
+  'Theater': 'Theater',
+  'Music': 'Arts',
+  'Dining': 'Dining',
+  'Fashion': 'Styles',
+  'Well': 'Well',
+  'Climate': 'Climate',
+  'Corrections': 'Corrections',
+  'Magazine': 'Magazine',
+  'Sunday Review': 'SundayReview',
+  'The Upshot': 'TheUpshot',
+  'Today\'s Paper': 'TodayPaper',
+  'Universal': 'Universal',
+  'Your Money': 'YourMoney',
 };
+
+// Convert date from YYYY-MM-DD to YYYYMMDD format
+function formatDateForAPI(dateString: string): string {
+  if (!dateString) return '';
+  return dateString.replace(/-/g, '');
+}
 
 export async function searchArticles(
   query: string,
@@ -48,7 +67,6 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  // NYT API is limited to 10 results per page, but we'll simulate 5 results for testing
   const params = { 
     ...baseParams(), 
     q, 
@@ -83,13 +101,20 @@ export async function searchArticlesAdv(params: {
     q, 
     "page": page
   };
+  
+  // Add sort parameter
   if (sort) query.sort = sort;
-  if (begin) query.begin_date = begin;
-  if (end) query.end_date = end;
+  
+  // Add date filters (convert from YYYY-MM-DD to YYYYMMDD)
+  if (begin) query.begin_date = formatDateForAPI(begin);
+  if (end) query.end_date = formatDateForAPI(end);
+  
+  // Add section filter using desk field
   if (section && section.trim()) {
-    const newsDeskValue = SECTION_TO_NEWS_DESK[section.trim()] || section.trim();
-    const sectionValue = esc(newsDeskValue);
-    query.fq = `news_desk:("${sectionValue}")`;
+    const deskValue = SECTION_TO_DESK[section.trim()];
+    if (deskValue) {
+      query.fq = `desk:("${esc(deskValue)}")`;
+    }
   }
   
   const response = await axios.get(BASE_URL, { params: query, signal });
