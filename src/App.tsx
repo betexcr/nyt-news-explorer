@@ -5,10 +5,12 @@ import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import DetailPage from "./pages/DetailPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import ApiDocsPage from "./pages/ApiDocsPage";
 import "./index.css";
 import "./styles/header.css";
+import "./styles/api-docs.css";
 
-// Updated deployment test - $(date)
+
 function App() {
   return (
     <Router>
@@ -21,6 +23,7 @@ function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/detail" element={<DetailPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/api-docs" element={<ApiDocsPage />} />
           </Routes>
         </div>
       </main>

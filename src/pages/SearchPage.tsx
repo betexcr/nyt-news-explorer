@@ -75,7 +75,7 @@ const SearchPage: React.FC = () => {
     reset,
   } = useSearchStore();
 
-  // Debug: Log initial scroll position
+  
   useEffect(() => {
     // Component mounted successfully
   }, [scrollY]);
@@ -354,7 +354,7 @@ const SearchPage: React.FC = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error loading more articles:', error);
+              // Error loading more articles
       setHasMore(false);
     } finally {
       setLoadingMore(false);

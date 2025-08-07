@@ -1,0 +1,72 @@
+/* API Documentation Styles */
+.api-docs-page {
+  padding: 2rem 0;
+}
+
+.api-docs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.api-docs-description {
+  margin-bottom: 2rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* SwaggerUI Container Styles */
+.swagger-ui-container {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Override SwaggerUI default styles for better theme integration */
+.swagger-ui-container .swagger-ui {
+  font-family: inherit;
+}
+
+.swagger-ui-container .swagger-ui .info {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.swagger-ui-container .swagger-ui .scheme-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.swagger-ui-container .swagger-ui .opblock {
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.swagger-ui-container .swagger-ui .opblock .opblock-summary {
+  background: var(--bg-secondary);
+}
+
+.swagger-ui-container .swagger-ui .model {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.swagger-ui-container .swagger-ui .model-box {
+  background: var(--bg-secondary);
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .swagger-ui-container .swagger-ui {
+    color: var(--text-primary);
+  }
+  
+  .swagger-ui-container .swagger-ui .info {
+    background: var(--bg-secondary);
+  }
+  
+  .swagger-ui-container .swagger-ui .scheme-container {
+    background: var(--bg-secondary);
+  }
+} 

@@ -143,6 +143,20 @@ export const SiteHeader: React.FC = () => {
           >
             Favorites
           </Link>
+          <Link
+            to="/api-docs"
+            style={{
+              color: "var(--textMuted)",
+              textDecoration: "none",
+              fontWeight: 600,
+              padding: "0.5rem 1rem",
+              borderRadius: "8px",
+              transition: "all 0.2s ease",
+            }}
+            className="nav-link"
+          >
+            API Docs
+          </Link>
           
           {/* Options Dropdown */}
           <div style={{ position: "relative" }} ref={optionsRef}>
@@ -327,6 +341,21 @@ export const SiteHeader: React.FC = () => {
               className="mobile-nav-link"
             >
               Favorites
+            </Link>
+            <Link
+              to="/api-docs"
+              style={{
+                color: "var(--text)",
+                textDecoration: "none",
+                fontWeight: 600,
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                transition: "background 0.2s ease",
+              }}
+              onClick={() => setIsMenuOpen(false)}
+              className="mobile-nav-link"
+            >
+              API Docs
             </Link>
             
             <div style={{ 

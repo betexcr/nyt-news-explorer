@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
       <section className="panel" style={{ padding: "1rem 1.25rem" }}>
         <h1 style={{ marginTop: 0 }}>NYT News Explorer</h1>
         <p>Quickly find recent articles from The New York Times.</p>
-        <p style={{ color: 'red', fontWeight: 'bold', fontSize: '18px' }}>🚀 TEST: Deployment is working! 🚀</p>
+
         <picture>
           <source
             type="image/avif"
