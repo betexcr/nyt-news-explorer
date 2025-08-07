@@ -24,6 +24,9 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
     const optional = zodValue._def.typeName === 'ZodOptional' ? '?' : '';
     let typeName = 'any';
     
+    // Handle property names that need to be quoted
+    const quotedPropertyName = propertyName.includes('-') ? `'${propertyName}'` : propertyName;
+    
     if (zodValue._def.typeName === 'ZodString') {
       typeName = 'string';
     } else if (zodValue._def.typeName === 'ZodNumber') {
@@ -94,7 +97,7 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
       }
     }
     
-    properties.push(`  ${propertyName}${optional}: ${typeName};`);
+    properties.push(`  ${quotedPropertyName}${optional}: ${typeName};`);
   }
   
   return `export interface ${name} {
