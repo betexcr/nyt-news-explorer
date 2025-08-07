@@ -1,5 +1,12 @@
 # NYT News Explorer
 
+[![Tests](https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/test.yml)
+[![Deploy](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml/badge.svg)](https://github.com/betexcr/nyt-news-explorer/actions/workflows/deploy.yml)
+[![Code Coverage](https://img.shields.io/badge/coverage-73.27%25-brightgreen)](https://github.com/betexcr/nyt-news-explorer)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+[![Bun](https://img.shields.io/badge/Bun-1.0-orange)](https://bun.sh/)
+
 A modern React application for exploring and searching articles from The New York Times API, featuring comprehensive API documentation and advanced search capabilities.
 
 ## 🚀 Features
@@ -98,7 +105,6 @@ The project includes comprehensive tests with **100% code coverage**:
 - ✅ **API Mocking**: Comprehensive API response mocking
 - ✅ **Error Handling**: Edge cases and error scenarios
 - ✅ **Accessibility**: User interaction and accessibility tests
-- ✅ **SwaggerUI Tests**: API documentation component testing
 
 ## 📁 Project Structure
 
