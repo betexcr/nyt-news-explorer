@@ -73,12 +73,27 @@ const SearchPage: React.FC = () => {
     setHasMore,
     setAdvancedParams,
     reset,
+    clearCache,
   } = useSearchStore();
 
   
+  // Handle state restoration on mount
   useEffect(() => {
-    // Component mounted successfully
-  }, [scrollY]);
+    // If we have cached search results, restore the scroll position
+    if (hasSearched && articles && articles.length > 0 && !loading) {
+      // The store's onRehydrateStorage should handle this, but we'll add a backup
+      if (scrollY > 0) {
+        const restoreScroll = () => {
+          window.scrollTo(0, scrollY);
+        };
+        
+        // Multiple attempts to ensure restoration works
+        restoreScroll();
+        setTimeout(restoreScroll, 100);
+        setTimeout(restoreScroll, 300);
+      }
+    }
+  }, [hasSearched, articles, loading, scrollY]);
 
   // Direct sessionStorage scroll restoration
   useEffect(() => {

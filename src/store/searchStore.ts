@@ -39,6 +39,49 @@ type SearchState = {
   removeFavorite: (articleUrl: string) => void;
   clearFavorites: () => void;
   reset: () => void;
+  // Cache management utilities
+  clearCache: () => void;
+  exportCache: () => string;
+  importCache: (data: string) => boolean;
+};
+
+// Cache management utilities
+const clearSearchCache = () => {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('search-store');
+    sessionStorage.removeItem('search-page-scroll');
+  }
+};
+
+const exportSearchCache = () => {
+  if (typeof window !== 'undefined') {
+    const storeData = sessionStorage.getItem('search-store');
+    const scrollData = sessionStorage.getItem('search-page-scroll');
+    return JSON.stringify({
+      store: storeData,
+      scroll: scrollData,
+      timestamp: Date.now()
+    });
+  }
+  return '';
+};
+
+const importSearchCache = (data: string): boolean => {
+  try {
+    if (typeof window !== 'undefined') {
+      const parsed = JSON.parse(data);
+      if (parsed.store) {
+        sessionStorage.setItem('search-store', parsed.store);
+      }
+      if (parsed.scroll) {
+        sessionStorage.setItem('search-page-scroll', parsed.scroll);
+      }
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to import cache:', error);
+  }
+  return false;
 };
 
 export const useSearchStore = create<SearchState>()(
@@ -76,7 +119,9 @@ export const useSearchStore = create<SearchState>()(
       setCurrentPage: (currentPage) => set({ currentPage }),
       setHasMore: (hasMore) => set({ hasMore }),
       setAdvancedParams: (params) => set({ advancedParams: params }),
-      addFavorite: (article) => set((state) => ({ favorites: [...state.favorites, article] })),
+      addFavorite: (article) => set((state) => ({ 
+        favorites: [...state.favorites.filter(fav => fav.web_url !== article.web_url), article] 
+      })),
       removeFavorite: (articleUrl) => set((state) => ({ 
         favorites: state.favorites.filter(article => article.web_url !== articleUrl) 
       })),
@@ -94,6 +139,13 @@ export const useSearchStore = create<SearchState>()(
         advancedParams: null,
         favorites: [],
       }),
+      // Cache management utilities
+      clearCache: () => {
+        clearSearchCache();
+        get().reset();
+      },
+      exportCache: () => exportSearchCache(),
+      importCache: (data: string) => importSearchCache(data),
     }),
     {
       name: "search-store",
@@ -104,14 +156,22 @@ export const useSearchStore = create<SearchState>()(
         hasSearched: s.hasSearched,
         scrollY: s.scrollY,
         viewMode: s.viewMode,
+        currentPage: s.currentPage,
+        hasMore: s.hasMore,
         advancedParams: s.advancedParams,
         favorites: s.favorites,
       }),
       onRehydrateStorage: () => (state) => {
-        // Ensure loading is false after rehydration
+        // Ensure loading states are false after rehydration
         if (state) {
           state.loading = false;
           state.loadingMore = false;
+          // Ensure scroll position is restored
+          if (state.scrollY > 0) {
+            setTimeout(() => {
+              window.scrollTo(0, state.scrollY);
+            }, 100);
+          }
         }
       },
     }
