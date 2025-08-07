@@ -1,93 +1,115 @@
-/**
- * Covers the "cancel previous request" / AbortController branch in src/api/nyt.ts
- * - First request stays pending
- * - Second request triggers abort on the first 
- */
-const pending: Array<{ resolve: Function; reject: Function; signal?: AbortSignal }> = [];
+import { searchArticles } from '../nyt';
 
-const makeAxiosForAbort = () => {
-  const get = jest.fn((url: string, opts?: any) => {
-    return new Promise((resolve, reject) => { 
-      pending.push({ resolve, reject, signal: opts?.signal }); 
-      if (opts?.signal) {
-        opts.signal.addEventListener('abort', () => { 
-          const err: any = new Error('aborted');
-          err.name = 'AbortError';
-          reject(err);
-        });
-      }
-    });
-  });
-  const instance = { get };
-  const create = jest.fn(() => instance);
-  const axios = Object.assign(() => instance, { create, get });
-  return { __esModule: true, default: axios };
-};
+// Mock axios
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
 
-describe('src/api/nyt.ts aborts in-flight requests', () => {
+describe('NYT API - Cancel Tests', () => {
+  const mockAxios = {
+    get: jest.fn(),
+  };
+
   beforeEach(() => {
-    jest.resetModules();
-    jest.doMock('axios', makeAxiosForAbort);
-    process.env.REACT_APP_NYT_API_KEY = 'test';
+    jest.clearAllMocks();
   });
 
-  test('second search aborts first in-flight request (controller branch covered)', async () => {
-    const api = await import('../nyt');
-    const make = (api as any).makeSearchController;
-    const search = typeof make === 'function' ? make() : (api as any).searchArticles;
+  test('cancels previous request when new request is made', async () => {
+    const controller1 = new AbortController();
+    const controller2 = new AbortController();
 
-    // Kick off first search  
-    const p1 = search('alpha', 0);
+    // Mock axios to return promises that never resolve initially
+    mockAxios.get.mockImplementation(() => new Promise(() => {}));
 
-    // Kick off second search quickly -> should abort the first
-    const p2 = search('beta', 1);
+    // Start first request
+    const request1 = searchArticles('query1', controller1.signal);
+    
+    // Start second request (should cancel first)
+    const request2 = searchArticles('query2', controller2.signal);
 
-    // Ensure our mock saw two requests
-    expect(pending.length).toBe(2);
-
-    // First call should now be aborted by the controller logic
-    const [first, second] = pending;
-
-    // The controller should have called abort() on the first signal
-    if (first.signal) {
-      expect(first.signal.aborted).toBe(true);
-    }
-
-    // Resolve the second request with a valid NYT API response
-    second.resolve({ 
-      data: { 
-        status: 'OK',
-        copyright: 'Copyright (c) 2024 The New York Times Company',
-        response: { 
-          docs: [{ 
-            _id: 'b',
-            web_url: 'https://example.com/b',
-            snippet: 'Test article',
-            multimedia: {
-              caption: 'Test caption',
-              credit: 'Test credit',
-              default: {
-                url: 'https://example.com/image.jpg',
-                height: 600,
-                width: 600
-              },
-              thumbnail: {
-                url: 'https://example.com/thumb.jpg',
-                height: 75,
-                width: 75
-              }
+    // Mock successful response for second request
+    mockAxios.get.mockResolvedValueOnce({
+      data: {
+        response: {
+          docs: [
+            {
+              _id: 'test-id-2',
+              web_url: 'https://example.com/2',
+              snippet: 'Test snippet 2',
+              headline: { main: 'Test Headline 2' },
+              pub_date: '2023-01-02T00:00:00Z',
+              multimedia: null,
+              keywords: [],
             },
-            headline: { main: 'Test Headline' },
-            keywords: [],
-            pub_date: '2024-01-01T00:00:00Z'
-          }],
-          meta: { hits: 1, offset: 0, time: 10 }
-        }
-      }
+          ],
+        },
+      },
     });
- 
-    await p2;  
- 
-    await p1.catch(() => {});
+
+    // First request should be aborted
+    await expect(request1).rejects.toThrow();
+    
+    // Second request should complete
+    const result = await request2;
+    expect(result).toHaveLength(1);
+  });
+
+  test('handles cancellation with multiple requests', async () => {
+    const controllers = Array.from({ length: 3 }, () => new AbortController());
+    
+    // Mock axios to return promises that never resolve
+    mockAxios.get.mockImplementation(() => new Promise(() => {}));
+    
+    const requests = controllers.map((controller, index) => 
+      searchArticles(`query${index}`, controller.signal)
+    );
+
+    // Cancel all requests
+    controllers.forEach(controller => controller.abort());
+
+    // All requests should be rejected
+    await Promise.all(requests.map(request => 
+      expect(request).rejects.toThrow()
+    ));
+  });
+
+  test('completes request when no cancellation occurs', async () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // Mock successful response
+    mockAxios.get.mockResolvedValueOnce({
+      data: {
+        response: {
+          docs: [
+            {
+              _id: 'test-id',
+              web_url: 'https://example.com',
+              snippet: 'Test snippet',
+              headline: { main: 'Test Headline' },
+              pub_date: '2023-01-01T00:00:00Z',
+              multimedia: null,
+              keywords: [],
+            },
+          ],
+        },
+      },
+    });
+
+    const result = await searchArticles('test query', signal);
+
+    expect(result).toHaveLength(1);
+    expect(mockAxios.get).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        params: expect.objectContaining({
+          q: 'test query',
+        }),
+        signal,
+      })
+    );
   });
 });

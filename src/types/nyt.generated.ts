@@ -1,6 +1,6 @@
 // Auto-generated TypeScript interfaces from Zod schemas
-// Generated on: 2025-08-05T05:05:39.473Z
-// Do not edit manually - regenerate using: npm run gen:types
+// Generated on: 2025-08-07T01:07:04.321Z
+// Do not edit manually - regenerate using: bun run gen:types
 
 export interface Image {
   url: string;
@@ -15,8 +15,8 @@ export interface Multimedia {
   url?: string;
   height?: number;
   width?: number;
-  default?: any;
-  thumbnail?: any;
+  default?: Image;
+  thumbnail?: Image;
 }
 
 export interface Headline {
@@ -41,14 +41,14 @@ export interface Article {
   print_page?: number;
   print_section?: string;
   source?: string;
-  multimedia: any;
-  headline: any;
-  keywords: any[];
+  multimedia: Image;
+  headline: Headline;
+  keywords: Keyword[];
   pub_date: string;
   document_type?: string;
   desk?: string;
   section_name?: string;
-  byline?: any;
+  byline?: Byline;
   type_of_material?: string;
   word_count?: number;
   uri?: string;

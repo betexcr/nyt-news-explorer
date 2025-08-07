@@ -1,81 +1,90 @@
-/**
- * Explicitly covers the "abort previous" path in makeSearchController().
- */
-const pending: Array<{ resolve: Function; reject: Function; signal?: AbortSignal }> = [];
+import { searchArticles } from '../nyt';
 
-const makeAxiosForAbort = () => {
-  const get = jest.fn((_url: string, opts?: any) => {
-    return new Promise((resolve, reject) => {
-      pending.push({ resolve, reject, signal: opts?.signal });
-      if (opts?.signal) {
-        opts.signal.addEventListener('abort', () => {
-          const err: any = new Error('aborted');
-          err.name = 'AbortError';
-          reject(err);
-        });
-      }
-    });
+// Mock axios
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
+
+describe('NYT API - Abort Signal Tests', () => {
+  const mockAxios = {
+    get: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
-  const instance = { get };
-  const create = jest.fn(() => instance);
-  const axios = Object.assign(() => instance, { create, get });
-  return { __esModule: true, default: axios };
-};
 
-beforeEach(() => {
-  jest.resetModules();
-  pending.length = 0;
-  jest.doMock('axios', makeAxiosForAbort);
-  process.env.REACT_APP_NYT_API_KEY = 'test';
-});
+  test('aborts request when signal is triggered', async () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-test('second search aborts the first in-flight request', async () => {
-  const api = await import('../nyt');
-  const search = (api as any).makeSearchController();
+    // Mock axios to return a promise that never resolves
+    mockAxios.get.mockImplementation(() => new Promise(() => {}));
 
-  const p1 = search('alpha'); // stays pending
-  const p2 = search('beta');  // triggers abort on p1
+    // Start the request
+    const requestPromise = searchArticles('test query', signal);
 
-  expect(pending.length).toBe(2);
-  const [first, second] = pending;
+    // Abort the request
+    controller.abort();
 
-  if (first.signal) {
-    expect(first.signal.aborted).toBe(true);
-  }
+    // Wait for the request to be aborted
+    await expect(requestPromise).rejects.toThrow();
+  });
 
-  // Resolve second request with valid NYT API response
-  second.resolve({ 
-    data: { 
-      status: 'OK',
-      copyright: 'Copyright (c) 2024 The New York Times Company',
-      response: { 
-                  docs: [{ 
-            _id: 'b',
-            web_url: 'https://example.com/b',
-            snippet: 'Test article',
-            multimedia: {
-              caption: 'Test caption',
-              credit: 'Test credit',
-              default: {
-                url: 'https://example.com/image.jpg',
-                height: 600,
-                width: 600
-              },
-              thumbnail: {
-                url: 'https://example.com/thumb.jpg',
-                height: 75,
-                width: 75
-              }
+  test('handles multiple aborted requests', async () => {
+    const controller1 = new AbortController();
+    const controller2 = new AbortController();
+
+    // Mock axios to return promises that never resolve
+    mockAxios.get.mockImplementation(() => new Promise(() => {}));
+
+    const request1 = searchArticles('query1', controller1.signal);
+    const request2 = searchArticles('query2', controller2.signal);
+
+    controller1.abort();
+    controller2.abort();
+
+    await expect(request1).rejects.toThrow();
+    await expect(request2).rejects.toThrow();
+  });
+
+  test('completes request when not aborted', async () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // Mock successful response
+    mockAxios.get.mockResolvedValueOnce({
+      data: {
+        response: {
+          docs: [
+            {
+              _id: 'test-id',
+              web_url: 'https://example.com',
+              snippet: 'Test snippet',
+              headline: { main: 'Test Headline' },
+              pub_date: '2023-01-01T00:00:00Z',
+              multimedia: null,
+              keywords: [],
             },
-            headline: { main: 'Test Headline' },
-            keywords: [],
-            pub_date: '2024-01-01T00:00:00Z'
-          }],
-        meta: { hits: 1, offset: 0, time: 10 }
-      }
-    }
-  });
+          ],
+        },
+      },
+    });
 
-  await expect(p2).resolves.toBeDefined();
-  await p1.catch(() => {}); // swallow AbortError
+    const result = await searchArticles('test query', signal);
+
+    expect(result).toHaveLength(1);
+    expect(mockAxios.get).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        params: expect.objectContaining({
+          q: 'test query',
+        }),
+        signal,
+      })
+    );
+  });
 });

@@ -28,6 +28,8 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
     const propertyName = key.includes('-') ? `'${key}'` : key;
     
     let typeName = 'any';
+    
+    // Handle different Zod types
     if (zodValue._def.typeName === 'ZodString') {
       typeName = 'string';
     } else if (zodValue._def.typeName === 'ZodNumber') {
@@ -40,6 +42,15 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
         typeName = 'string[]';
       } else if (itemType === 'ZodNumber') {
         typeName = 'number[]';
+      } else if (itemType === 'ZodObject') {
+        // For arrays of objects, use the existing type names
+        const itemShape = zodValue._def.type._def.shape();
+        const itemKeys = Object.keys(itemShape);
+        if (itemKeys.includes('name') && itemKeys.includes('value') && itemKeys.includes('rank')) {
+          typeName = 'Keyword[]';
+        } else {
+          typeName = 'any[]';
+        }
       } else {
         typeName = 'any[]';
       }
@@ -54,6 +65,34 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
         typeName = 'number';
       } else if (innerType === 'ZodBoolean') {
         typeName = 'boolean';
+      } else if (innerType === 'ZodObject') {
+        // For optional objects, use existing type names
+        const innerShape = zodValue._def.innerType._def.shape();
+        const innerKeys = Object.keys(innerShape);
+        if (innerKeys.includes('url') && innerKeys.includes('height') && innerKeys.includes('width')) {
+          typeName = 'Image';
+        } else if (innerKeys.includes('main')) {
+          typeName = 'Headline';
+        } else if (innerKeys.includes('original')) {
+          typeName = 'Byline';
+        } else {
+          typeName = 'any';
+        }
+      } else {
+        typeName = 'any';
+      }
+    } else if (zodValue._def.typeName === 'ZodObject') {
+      // For nested objects, use existing type names
+      const nestedShape = zodValue._def.shape();
+      const nestedKeys = Object.keys(nestedShape);
+      if (nestedKeys.includes('url') && nestedKeys.includes('height') && nestedKeys.includes('width')) {
+        typeName = 'Image';
+      } else if (nestedKeys.includes('main')) {
+        typeName = 'Headline';
+      } else if (nestedKeys.includes('original')) {
+        typeName = 'Byline';
+      } else if (nestedKeys.includes('caption') || nestedKeys.includes('credit') || nestedKeys.includes('default') || nestedKeys.includes('thumbnail')) {
+        typeName = 'Multimedia';
       } else {
         typeName = 'any';
       }
@@ -96,7 +135,7 @@ export type NytArticle = Article;
     const outputPath = path.join(__dirname, '../src/types/nyt.generated.ts');
     const content = `// Auto-generated TypeScript interfaces from Zod schemas
 // Generated on: ${new Date().toISOString()}
-// Do not edit manually - regenerate using: npm run gen:types
+// Do not edit manually - regenerate using: bun run gen:types
 
 ${interfaces.join('\n\n')}
 `;
