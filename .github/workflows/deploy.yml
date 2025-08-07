@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./build/
-          server-dir: nyt/
+          server-dir: domains/brainvaultdev.com/nyt/
           protocol: ftp
           log-level: verbose
           dangerous-clean-slate: true
@@ -59,11 +59,11 @@ jobs:
       - name: Test deployment
         run: |
           echo "Testing deployment..."
-          
+
           # Test if the app is accessible
           response=$(curl -s -o /dev/null -w "%{http_code}" https://nyt.brainvaultdev.com/ || echo "000")
           echo "Deployment test response: $response"
-          
+
           if [ "$response" = "200" ]; then
             echo "✅ Deployment appears successful"
           else
