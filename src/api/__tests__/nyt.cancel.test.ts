@@ -1,28 +1,42 @@
 import { searchArticles } from '../nyt';
+import axios from 'axios';
 
 // Mock axios
-jest.mock('axios', () => ({
-  __esModule: true,
-  default: {
-    get: jest.fn(),
-  },
-}));
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('NYT API - Cancel Tests', () => {
-  const mockAxios = {
-    get: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set up environment variable for API key
+    process.env.REACT_APP_NYT_API_KEY = 'test-api-key';
   });
 
   test('cancels previous request when new request is made', async () => {
     const controller1 = new AbortController();
     const controller2 = new AbortController();
 
-    // Mock axios to return promises that never resolve initially
-    mockAxios.get.mockImplementation(() => new Promise(() => {}));
+    // Mock axios to check for abort signal
+    mockedAxios.get.mockImplementation((url, config) => {
+      return new Promise((resolve, reject) => {
+        // Check if signal is already aborted
+        if (config?.signal?.aborted) {
+          const error = new Error('Request aborted');
+          error.name = 'AbortError';
+          reject(error);
+          return;
+        }
+        
+        // Simulate a delay then check if aborted
+        setTimeout(() => {
+          if (config?.signal?.aborted) {
+            const error = new Error('Request aborted');
+            error.name = 'AbortError';
+            reject(error);
+          }
+        }, 10);
+      });
+    });
 
     // Start first request
     const request1 = searchArticles('query1', controller1.signal);
@@ -31,7 +45,7 @@ describe('NYT API - Cancel Tests', () => {
     const request2 = searchArticles('query2', controller2.signal);
 
     // Mock successful response for second request
-    mockAxios.get.mockResolvedValueOnce({
+    mockedAxios.get.mockResolvedValueOnce({
       data: {
         response: {
           docs: [
@@ -50,7 +64,7 @@ describe('NYT API - Cancel Tests', () => {
     });
 
     // First request should be aborted
-    await expect(request1).rejects.toThrow();
+    await expect(request1).rejects.toThrow('Request aborted');
     
     // Second request should complete
     const result = await request2;
@@ -60,8 +74,27 @@ describe('NYT API - Cancel Tests', () => {
   test('handles cancellation with multiple requests', async () => {
     const controllers = Array.from({ length: 3 }, () => new AbortController());
     
-    // Mock axios to return promises that never resolve
-    mockAxios.get.mockImplementation(() => new Promise(() => {}));
+    // Mock axios to check for abort signal
+    mockedAxios.get.mockImplementation((url, config) => {
+      return new Promise((resolve, reject) => {
+        // Check if signal is already aborted
+        if (config?.signal?.aborted) {
+          const error = new Error('Request aborted');
+          error.name = 'AbortError';
+          reject(error);
+          return;
+        }
+        
+        // Simulate a delay then check if aborted
+        setTimeout(() => {
+          if (config?.signal?.aborted) {
+            const error = new Error('Request aborted');
+            error.name = 'AbortError';
+            reject(error);
+          }
+        }, 10);
+      });
+    });
     
     const requests = controllers.map((controller, index) => 
       searchArticles(`query${index}`, controller.signal)
@@ -72,7 +105,7 @@ describe('NYT API - Cancel Tests', () => {
 
     // All requests should be rejected
     await Promise.all(requests.map(request => 
-      expect(request).rejects.toThrow()
+      expect(request).rejects.toThrow('Request aborted')
     ));
   });
 
@@ -81,7 +114,7 @@ describe('NYT API - Cancel Tests', () => {
     const signal = controller.signal;
 
     // Mock successful response
-    mockAxios.get.mockResolvedValueOnce({
+    mockedAxios.get.mockResolvedValueOnce({
       data: {
         response: {
           docs: [
@@ -102,7 +135,7 @@ describe('NYT API - Cancel Tests', () => {
     const result = await searchArticles('test query', signal);
 
     expect(result).toHaveLength(1);
-    expect(mockAxios.get).toHaveBeenCalledWith(
+    expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         params: expect.objectContaining({
@@ -111,5 +144,10 @@ describe('NYT API - Cancel Tests', () => {
         signal,
       })
     );
+  });
+
+  test('returns empty array for empty query', async () => {
+    const result = await searchArticles('', new AbortController().signal);
+    expect(result).toEqual([]);
   });
 });
