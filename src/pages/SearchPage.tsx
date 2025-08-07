@@ -354,7 +354,7 @@ const SearchPage: React.FC = () => {
         setHasMore(false);
       }
     } catch (error) {
-              // Error loading more articles
+      // Error loading more articles
       setHasMore(false);
     } finally {
       setLoadingMore(false);
@@ -448,7 +448,7 @@ const SearchPage: React.FC = () => {
 
   return (
     <div ref={containerRef}>
-      {/* Professional Search Row */}
+      {/* Search Input Row */}
       <div className="search-row">
         <div className="search-section">
           <form onSubmit={showAdvanced ? handleAdvancedSearch : handleSearch} className="searchbar">
@@ -461,50 +461,6 @@ const SearchPage: React.FC = () => {
                 onChange={handleChange}
                 aria-label="Search input"
               />
-              
-              {showAdvanced && (
-                <>
-                  <select
-                    className="input"
-                    value={advancedForm.sort}
-                    onChange={(e) => handleAdvancedChange('sort', e.target.value)}
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="relevance">Most Relevant</option>
-                    <option value="best">Best Match</option>
-                  </select>
-                  
-                  <select
-                    className="input"
-                    value={advancedForm.section}
-                    onChange={(e) => handleAdvancedChange('section', e.target.value)}
-                  >
-                    <option value="">All Sections</option>
-                    {SECTIONS.map(section => (
-                      <option key={section} value={section}>
-                        {section}
-                      </option>
-                    ))}
-                  </select>
-                  
-                  <input
-                    className="input"
-                    type="date"
-                    value={advancedForm.beginDate}
-                    onChange={(e) => handleAdvancedChange('beginDate', e.target.value)}
-                    placeholder="Start Date"
-                  />
-                  
-                  <input
-                    className="input"
-                    type="date"
-                    value={advancedForm.endDate}
-                    onChange={(e) => handleAdvancedChange('endDate', e.target.value)}
-                    placeholder="End Date"
-                  />
-                </>
-              )}
             </div>
             
             <div className="search-actions">
@@ -536,6 +492,55 @@ const SearchPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Advanced Search Options Row */}
+      {showAdvanced && (
+        <div className="advanced-search-row">
+          <div className="advanced-search-section">
+            <div className="advanced-search-inputs">
+              <select
+                className="input"
+                value={advancedForm.sort}
+                onChange={(e) => handleAdvancedChange('sort', e.target.value)}
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="relevance">Most Relevant</option>
+                <option value="best">Best Match</option>
+              </select>
+              
+              <select
+                className="input"
+                value={advancedForm.section}
+                onChange={(e) => handleAdvancedChange('section', e.target.value)}
+              >
+                <option value="">All Sections</option>
+                {SECTIONS.map(section => (
+                  <option key={section} value={section}>
+                    {section}
+                  </option>
+                ))}
+              </select>
+              
+              <input
+                className="input"
+                type="date"
+                value={advancedForm.beginDate}
+                onChange={(e) => handleAdvancedChange('beginDate', e.target.value)}
+                placeholder="Start Date"
+              />
+              
+              <input
+                className="input"
+                type="date"
+                value={advancedForm.endDate}
+                onChange={(e) => handleAdvancedChange('endDate', e.target.value)}
+                placeholder="End Date"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Loading Spinner */}
       {loading && <Spinner />}
