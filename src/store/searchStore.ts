@@ -59,14 +59,14 @@ export const useSearchStore = create<SearchState>()(
       setArticles: (a) => set({ 
         articles: a, 
         currentPage: 0, 
-        // If we get less than 5 results, there are no more pages (for testing)
-        hasMore: a.length === 5 
+        // If we get less than 6 results, there are no more pages (for testing)
+        hasMore: a.length === 6 
       }),
       appendArticles: (a) => set((state) => ({ 
         articles: [...state.articles, ...a],
         currentPage: state.currentPage + 1,
-        // For testing: 5 results per page
-        hasMore: a.length === 5
+        // For testing: 6 results per page
+        hasMore: a.length === 6
       })),
       setHasSearched: (v) => set({ hasSearched: v }),
       setScrollY: (y) => set({ scrollY: y }),
