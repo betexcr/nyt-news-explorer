@@ -19,17 +19,11 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
   const shape = schema._def.shape();
   const properties: string[] = [];
   
-  for (const [key, value] of Object.entries(shape)) {
+  for (const [propertyName, value] of Object.entries(shape)) {
     const zodValue = value as any;
-    const isOptional = zodValue._def.typeName === 'ZodOptional';
-    const optional = isOptional ? '?' : '';
-    
-    // Handle property names that need to be quoted
-    const propertyName = key.includes('-') ? `'${key}'` : key;
-    
+    const optional = zodValue._def.typeName === 'ZodOptional' ? '?' : '';
     let typeName = 'any';
     
-    // Handle different Zod types
     if (zodValue._def.typeName === 'ZodString') {
       typeName = 'string';
     } else if (zodValue._def.typeName === 'ZodNumber') {
@@ -75,6 +69,8 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
           typeName = 'Headline';
         } else if (innerKeys.includes('original')) {
           typeName = 'Byline';
+        } else if (innerKeys.includes('caption') || innerKeys.includes('credit') || innerKeys.includes('default') || innerKeys.includes('thumbnail')) {
+          typeName = 'Multimedia';
         } else {
           typeName = 'any';
         }
@@ -85,7 +81,7 @@ function generateTypeScriptFromZod(schema: any, name: string): string {
       // For nested objects, use existing type names
       const nestedShape = zodValue._def.shape();
       const nestedKeys = Object.keys(nestedShape);
-      if (nestedKeys.includes('url') && nestedKeys.includes('height') && nestedKeys.includes('width')) {
+      if (nestedKeys.includes('url') && nestedKeys.includes('height') && nestedKeys.includes('width') && !nestedKeys.includes('default') && !nestedKeys.includes('thumbnail')) {
         typeName = 'Image';
       } else if (nestedKeys.includes('main')) {
         typeName = 'Headline';

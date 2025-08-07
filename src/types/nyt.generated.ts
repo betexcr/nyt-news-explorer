@@ -1,5 +1,5 @@
 // Auto-generated TypeScript interfaces from Zod schemas
-// Generated on: 2025-08-07T01:07:04.321Z
+// Generated on: 2025-08-07T01:35:06.940Z
 // Do not edit manually - regenerate using: bun run gen:types
 
 export interface Image {
@@ -41,7 +41,7 @@ export interface Article {
   print_page?: number;
   print_section?: string;
   source?: string;
-  multimedia: Image;
+  multimedia: Multimedia;
   headline: Headline;
   keywords: Keyword[];
   pub_date: string;
@@ -74,7 +74,7 @@ export interface NytApiResponse {
 }
 
 export interface SearchParams {
-  'api-key': string;
+  api-key: string;
   q?: string;
   page?: number;
   sort?: any;
