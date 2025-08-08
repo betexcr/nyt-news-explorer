@@ -80,7 +80,8 @@ export const SearchParamsSchema = z.object({
   'api-key': z.string(),
   q: z.string().optional(),
   page: z.number().min(0).max(100).optional(),
-  sort: z.enum(['best', 'newest', 'oldest', 'relevance']).optional(),
+  // Using string here for TS 4.9 compatibility with current Zod version in CRA build
+  sort: z.string().optional(),
   begin_date: z.string().regex(/^\d{8}$/).optional(),
   end_date: z.string().regex(/^\d{8}$/).optional(),
   fq: z.string().optional(),
