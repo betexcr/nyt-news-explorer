@@ -269,6 +269,7 @@ const SearchPage: React.FC = () => {
   // Dynamic height calculation for virtualized list
   const [listHeight, setListHeight] = useState(600);
   const [itemHeight, setItemHeight] = useState(400);
+  const [cardMin, setCardMin] = useState<number>(300);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -442,7 +443,7 @@ const SearchPage: React.FC = () => {
     }
 
     return (
-      <div className="grid results">
+      <div className="grid results" style={{ ['--card-min' as any]: `${cardMin}px` }}>
         {articles.map((a) => (
           <ArticleCard key={a.web_url} article={a} />
         ))}
@@ -500,10 +501,26 @@ const SearchPage: React.FC = () => {
                 Showing {articles.length} results
               </span>
             </div>
-            <ViewToggle
-              viewMode={viewMode}
-              onViewChange={setViewMode}
-            />
+            <div className="results-controls">
+              <ViewToggle
+                viewMode={viewMode}
+                onViewChange={setViewMode}
+              />
+              {viewMode === 'grid' && (
+                <label className="size-control">
+                  Card size
+                  <input
+                    type="range"
+                    min={220}
+                    max={420}
+                    step={10}
+                    value={cardMin}
+                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                    aria-label="Card size"
+                  />
+                </label>
+              )}
+            </div>
           </div>
         )}
       </div>
