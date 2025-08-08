@@ -5,6 +5,7 @@ import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
 import '../styles/page-header.css';
+import '../styles/controls.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeArchive } from '../utils/normalize';
 
@@ -265,7 +266,7 @@ const ArchivePage: React.FC = () => {
         <div className="search-section">
           <section className="epoch-slider">
             <div className="controls">
-          <div className="control grow">
+          <div className="control grow" style={{ display: showCalendar ? 'none' : undefined }}>
             <label className="control-label">Year</label>
             <div className="slider-track pretty" ref={yearTrackRef} onMouseDown={handleYearTrackMouseDown}>
               <div
@@ -298,7 +299,7 @@ const ArchivePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="control grow">
+          <div className="control grow" style={{ display: showCalendar ? 'none' : undefined }}>
             <label className="control-label">Month</label>
             <div className="slider-track pretty" ref={trackRef} onMouseDown={handleTrackMouseDown}>
               <div
@@ -325,7 +326,7 @@ const ArchivePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Calendar toggle and size slider */}
+          {/* Calendar toggle */}
           <div className="control">
             <label className="switch" style={{ marginBottom: 0 }}>
               <input
@@ -338,21 +339,6 @@ const ArchivePage: React.FC = () => {
             </label>
           </div>
 
-              <div className="control">
-                <label className="size-control">
-                  Card size
-                  <input
-                    type="range"
-                    min={220}
-                    max={520}
-                    step={10}
-                    value={cardMin}
-                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                    aria-label="Card size"
-                  />
-                </label>
-              </div>
-
           <div className="control">
             <button
               className="retry-button"
@@ -364,8 +350,25 @@ const ArchivePage: React.FC = () => {
           </div>
             </div>
           </section>
+          {/* Size control pinned in its own card below */}
+          <div className="controls-card compact" role="region" aria-label="Archive size control">
+            <div className="controls-row" style={{ justifyContent: 'flex-end' }}>
+              <label className="size-control">
+                Card size
+                <input
+                  type="range"
+                  min={220}
+                  max={520}
+                  step={10}
+                  value={cardMin}
+                  onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                  aria-label="Card size"
+                />
+              </label>
+            </div>
+          </div>
           {showCalendar && (
-            <section aria-label="Calendar" className="calendar">
+      <section aria-label="Calendar" className="calendar compact">
               <div className="calendar-grid" role="grid">
                 {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
                   const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));

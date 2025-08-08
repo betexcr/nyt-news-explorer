@@ -9,6 +9,7 @@ import VirtualizedArticleList from "../components/VirtualizedArticleList";
 import ViewToggle from "../components/ViewToggle";
 import Spinner from "../components/Spinner";
 import "../styles/search.css";
+import "../styles/controls.css";
 import "../styles/page-header.css";
 
 type FromHomeState = { fromHome?: boolean };
@@ -472,11 +473,11 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Input Row */}
-      <div className="search-row">
-        <div className="search-section">
-          <form onSubmit={showAdvanced ? handleAdvancedSearch : handleSearch} className="searchbar">
-            <div className="search-inputs">
+      {/* Controls Card Row */}
+      <div className="controls-card" role="region" aria-label="Search controls">
+        <div className="controls-row">
+          <form onSubmit={showAdvanced ? handleAdvancedSearch : handleSearch} className="searchbar" style={{ flex: 1 }}>
+            <div className="search-inputs" style={{ flex: 1 }}>
               <input
                 className="input"
                 type="text"
@@ -500,15 +501,12 @@ const SearchPage: React.FC = () => {
               </button>
             </div>
           </form>
-        </div>
 
-        {hasSearched && articles && articles.length > 0 && (
-          <div className="results-section">
-            <div className="results-info">
-              <span className="results-count">
-                Showing {articles.length} results
-              </span>
-            </div>
+          {hasSearched && articles && (
+            <>
+            {articles.length > 0 && (
+              <span className="results-count">Showing {articles.length} results</span>
+            )}
             <div className="results-controls">
               <ViewToggle
                 viewMode={viewMode}
@@ -529,8 +527,9 @@ const SearchPage: React.FC = () => {
                 </label>
               )}
             </div>
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Advanced Search Options Row */}

@@ -5,6 +5,7 @@ import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import ViewToggle from '../components/ViewToggle';
 import '../styles/trending.css';
+import '../styles/controls.css';
 import '../styles/page-header.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeMostPopular } from '../utils/normalize';
@@ -96,7 +97,9 @@ const TrendingPage: React.FC = () => {
           <h1 className="page-title">Trending Articles</h1>
           <p className="page-subtitle">Most popular articles from The New York Times</p>
         </div>
-        <div className="header-controls">
+      </div>
+      <div className="controls-card" role="region" aria-label="Trending controls">
+        <div className="controls-row">
           <div className="period-selector">
             <label htmlFor="period-select">Time Period:</label>
             <select

@@ -1,0 +1,44 @@
+.controls-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0 1rem;
+  position: relative;
+}
+
+.controls-card.compact {
+  padding: 0.5rem 0.75rem;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: center;
+}
+
+.controls-card .size-control,
+.controls-card .period-selector,
+.controls-card .section-selector,
+.controls-card .results-controls,
+.controls-card .controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Pin size control to lower-right of the container */
+.controls-card .results-controls {
+  margin-left: auto;
+}
+.controls-card .size-control {
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .controls-card { padding: 0.5rem 0.75rem; }
+  .controls-row { gap: 0.5rem; }
+}
+
+

@@ -5,6 +5,7 @@ import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import ViewToggle from '../components/ViewToggle';
 import '../styles/top-stories.css';
+import '../styles/controls.css';
 import '../styles/page-header.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeTopStory } from '../utils/normalize';
@@ -115,8 +116,9 @@ const TopStoriesPage: React.FC = () => {
           <h1 className="page-title">Top Stories</h1>
           <p className="page-subtitle">Latest top stories from The New York Times</p>
         </div>
-        {/* Match Trending header controls: selector + view toggle */}
-        <div className="header-controls">
+      </div>
+      <div className="controls-card" role="region" aria-label="Top Stories controls">
+        <div className="controls-row">
           <div className="section-selector">
             <label htmlFor="section-select">Section:</label>
             <select

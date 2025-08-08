@@ -96,8 +96,9 @@
 
 /* Simple calendar */
 .calendar { margin-top: 0.5rem; }
+.calendar.compact { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem; max-width: 420px; margin: 0 auto; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
-.calendar-day { padding: 0.4rem 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.calendar-day { padding: 0.3rem 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .calendar-day.selected { background: var(--primary); color: var(--button-text); border-color: var(--primary); }
 .calendar-day.in-range { background: rgba(0,0,0,0.06); }
 
