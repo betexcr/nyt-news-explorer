@@ -165,8 +165,27 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="articles-grid">
-              {trendingArticles.map((article, index) => (
-                <article key={article.id} className="article-card trending-card">
+              {trendingArticles.map((article, index) => {
+                const href = getSafeUrl(article.url) || undefined;
+                const handleOpen = () => {
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                };
+                const handleKey = (e: React.KeyboardEvent) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && href) {
+                    e.preventDefault();
+                    handleOpen();
+                  }
+                };
+                return (
+                <article
+                  key={article.id}
+                  className="article-card trending-card"
+                  role={href ? 'link' : undefined}
+                  tabIndex={href ? 0 : -1}
+                  aria-label={href ? `Open: ${article.title}` : undefined}
+                  onClick={handleOpen}
+                  onKeyDown={handleKey}
+                >
                   <div className="article-image">
                     <img
                       src={getImageUrl(article)}
@@ -187,11 +206,7 @@ const HomePage: React.FC = () => {
                       <span className="date">{formatDate(article.published_date)}</span>
                     </div>
                     
-                    <h3 className="article-title">
-                      <a href={getSafeUrl(article.url) || undefined} target="_blank" rel="noopener noreferrer">
-                        {article.title}
-                      </a>
-                    </h3>
+                    <h3 className="article-title">{article.title}</h3>
                     
                     <p className="article-abstract">{article.abstract}</p>
                     
@@ -200,7 +215,7 @@ const HomePage: React.FC = () => {
                     </div>
                   </div>
                 </article>
-              ))}
+              );})}
             </div>
           </div>
 
@@ -212,8 +227,27 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="articles-grid">
-              {topStories.map((story, _index) => (
-                <article key={story.uri} className="article-card story-card">
+              {topStories.map((story, _index) => {
+                const href = getSafeUrl(story.url) || undefined;
+                const handleOpen = () => {
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                };
+                const handleKey = (e: React.KeyboardEvent) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && href) {
+                    e.preventDefault();
+                    handleOpen();
+                  }
+                };
+                return (
+                <article
+                  key={story.uri}
+                  className="article-card story-card"
+                  role={href ? 'link' : undefined}
+                  tabIndex={href ? 0 : -1}
+                  aria-label={href ? `Open: ${story.title}` : undefined}
+                  onClick={handleOpen}
+                  onKeyDown={handleKey}
+                >
                   <div className="article-image">
                     <img
                       src={getImageUrl(story)}
@@ -234,11 +268,7 @@ const HomePage: React.FC = () => {
                       <span className="date">{formatDate(story.published_date)}</span>
                     </div>
                     
-                    <h3 className="article-title">
-                      <a href={getSafeUrl(story.url) || undefined} target="_blank" rel="noopener noreferrer">
-                        {story.title}
-                      </a>
-                    </h3>
+                    <h3 className="article-title">{story.title}</h3>
                     
                     <p className="article-abstract">{story.abstract}</p>
                     
@@ -247,7 +277,7 @@ const HomePage: React.FC = () => {
                     </div>
                   </div>
                 </article>
-              ))}
+              );})}
             </div>
           </div>
         </div>

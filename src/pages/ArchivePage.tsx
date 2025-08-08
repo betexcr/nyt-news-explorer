@@ -85,7 +85,7 @@ const ArchivePage: React.FC = () => {
   }, []);
 
   // Drag logic
-  const dragging = useRef<'year' | 'month' | 'day' | null>(null);
+  const dragging = useRef<'year' | 'month' | null>(null);
 
   // Invariant: if we're at the first archive year, month cannot be before October
   useEffect(() => {
@@ -116,14 +116,6 @@ const ArchivePage: React.FC = () => {
         setYear(nextYear);
         // If we're at the start year, ensure month is not before October
         if (nextYear === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
-      } else if (dragging.current === 'day') {
-        if (!trackRef.current) return; // day uses native range, but keep for completeness
-        const bounds = trackRef.current.getBoundingClientRect();
-        const x = e.clientX - bounds.left;
-        const daysInMonth = new Date(year, month, 0).getDate();
-        const posPct = clamp(x / bounds.width, 0, 1);
-        const d = Math.round(1 + posPct * (daysInMonth - 1));
-        setDay(clamp(d, 1, daysInMonth));
       }
     };
     const onUp = () => (dragging.current = null);
