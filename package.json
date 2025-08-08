@@ -27,7 +27,7 @@
   "scripts": {
     "gen:types": "bun run scripts/gen-types.ts",
     "start": "bun run tsx scripts/start.ts",
-    "build": "react-scripts build",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
     "eject": "react-scripts eject",
     "test": "bun run test:cov",
     "test:cov": "react-scripts test --coverage --watchAll=false",
@@ -58,6 +58,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/react-router-dom": "^5.3.3",
+    "cross-env": "^10.0.0",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "get-port": "^7.1.0",

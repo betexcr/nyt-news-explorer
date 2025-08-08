@@ -13,7 +13,6 @@ const clamp = (val: number, min: number, max: number) => Math.min(max, Math.max(
 // Archive bounds
 const START_YEAR = 1851; // NYT archive starts in 1851
 const START_MONTH = 10; // October
-const START_DAY = 1; // 01
 const CURRENT_YEAR = new Date().getFullYear();
 const END_YEAR = CURRENT_YEAR;
 
