@@ -9,16 +9,18 @@
 
 A modern React application for exploring and searching articles from The New York Times API, featuring comprehensive API documentation and advanced search capabilities.
 
-## 🚀 Features
+## Features
 
 ### Core Functionality
-- 🔍 **Advanced Search**: Search articles with multiple filters and categories
-- 📚 **Interactive API Documentation**: Complete SwaggerUI integration with full OpenAPI specification
-- ❤️ **Favorites Management**: Save and manage your favorite articles with persistent storage
-- 📱 **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- 🚀 **Virtualized Lists**: Smooth scrolling performance with large datasets
-- 🎨 **Modern UI**: Clean, intuitive interface with dark/light theme toggle
-- ⚡ **Performance Optimized**: Fast loading and smooth interactions
+- **Powerful Search**: Debounced search with simple and advanced modes (sort, section, date range)
+- **Interactive API Docs**: Built‑in Swagger UI backed by local OpenAPI specs
+- **Favorites**: Add/remove favorites anywhere, with persistent storage
+- **View Modes**: Grid, List, and Table views with consistent controls
+- **Card Resizing & Full‑Width**: Grid cards can be resized or expanded to full width (Search, Trending, Top Stories)
+- **Infinite Scrolling**: Seamless load‑more; 12 results per page
+- **Virtualized Lists**: Virtual scrolling in list mode for smooth performance with large result sets
+- **Modern UI**: Clean, responsive design with dark/light theme toggle
+- **Performance Optimizations**: Debounce, virtualization, and efficient rendering
 
 ### API Documentation
 - 📖 **SwaggerUI Integration**: Interactive API documentation with full OpenAPI 2.0 specification
@@ -27,17 +29,17 @@ A modern React application for exploring and searching articles from The New Yor
 - 📋 **Parameter Reference**: Detailed parameter descriptions and examples
 - 🔐 **Authentication Guide**: API key setup and usage instructions
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Frontend**: React 18, TypeScript, CSS3
 - **State Management**: Zustand
 - **API**: New York Times Article Search API v2
 - **API Documentation**: SwaggerUI, OpenAPI 2.0
 - **Build Tool**: Bun
-- **Testing**: Jest, React Testing Library (100% coverage)
+- **Testing**: Jest, React Testing Library (comprehensive coverage)
 - **Deployment**: Hostinger Git Deployment
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -69,22 +71,26 @@ Create a `.env` file in the root directory:
 REACT_APP_NYT_API_KEY=your_nyt_api_key_here
 ```
 
-## 📜 Available Scripts
+## Available Scripts
 
-- `bun run start` - Start development server
-- `bun run build` - Build for production
+- `bun run start` - Start development server (auto‑selects free port, no interactive prompts)
+- `bun run build` - Build for production (source maps disabled to suppress noisy third‑party warnings)
 - `bun run test` - Run tests
 - `bun run test:cov` - Run tests with coverage
 - `bun run gen:types` - Generate TypeScript types from Zod schemas
 
-## 🔌 API Integration
+Notes:
+- CI treats warnings as errors. The build is configured to avoid noisy third‑party source‑map warnings.
+- ESLint must report 0 errors for deploys.
+
+## API Integration
 
 The app integrates with the New York Times Article Search API v2, providing:
 
 - **Article Search**: Full-text search with multiple filters
 - **Section Filtering**: Filter by news sections (U.S., World, Technology, etc.)
 - **Advanced Search**: Date ranges, categories, and custom filters
-- **Real-time Results**: Instant search results with debounced input
+- **Real‑time Results**: Instant search results with debounced input and incremental pagination (12/page)
 - **Error Handling**: Comprehensive error handling and user feedback
 
 ### API Documentation Access
@@ -96,9 +102,9 @@ Navigate to the **API Documentation** page to explore:
 - Entity definitions (Article, Byline, Headline, Multimedia)
 - Interactive "Try It Out" functionality
 
-## 🧪 Testing
+## Testing
 
-The project includes comprehensive tests with **100% code coverage**:
+The project includes comprehensive tests:
 
 - ✅ **Unit Tests**: All components and utilities
 - ✅ **Integration Tests**: Search functionality and API integration
@@ -106,7 +112,7 @@ The project includes comprehensive tests with **100% code coverage**:
 - ✅ **Error Handling**: Edge cases and error scenarios
 - ✅ **Accessibility**: User interaction and accessibility tests
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
@@ -131,7 +137,7 @@ src/
             └── articlesearch-product.yaml
 ```
 
-## 🌐 Deployment
+## Deployment
 
 This project is deployed using Hostinger's Git deployment system:
 
@@ -140,13 +146,13 @@ This project is deployed using Hostinger's Git deployment system:
 - **Live URL**: https://nyt.brainvaultdev.com/
 - **API Documentation**: Available at `/api-docs` route
 
-## 🔧 Development Features
+## Development Features
 
 ### Code Quality
 - **TypeScript**: Full type safety throughout the application
-- **ESLint**: Code linting and formatting
+- **ESLint**: Strict rules; deployments require 0 ESLint errors
 - **Prettier**: Consistent code formatting
-- **100% Test Coverage**: Comprehensive test suite
+- **CI**: Warnings treated as errors; tests and build must pass
 
 ### Performance
 - **Virtualized Lists**: Efficient rendering of large datasets
@@ -154,13 +160,35 @@ This project is deployed using Hostinger's Git deployment system:
 - **Lazy Loading**: Component and route lazy loading
 - **Bundle Optimization**: Tree shaking and code splitting
 
+## Pages & Behaviors
+
+- **Home**: Landing with hero, quick navigation
+- **Search**:
+  - Simple and advanced modes (sort newest/oldest, section, date range)
+  - View modes: Grid, List (virtualized), Table
+  - Controls: Card size slider, Full‑width toggle (Grid)
+  - Infinite scroll with 12 results per page
+- **Trending**:
+  - Time period selector (Today, This Week, This Month)
+  - View modes with the same Grid controls (Card size, Full‑width)
+- **Top Stories**:
+  - Section selector (e.g., Home, World, Technology)
+  - View modes with the same Grid controls (Card size, Full‑width)
+- **Archive**:
+  - Defaults to the earliest available date: Oct 01, 1851
+  - Constrained year/month slider so you can’t go earlier than that
+  - List‑only layout aligned to Search’s list style
+  - Centered secondary date title
+- **Favorites**: Grid list of saved articles with quick remove
+- **API Docs**: Interactive Swagger UI backed by OpenAPI specs
+
 ### User Experience
 - **Dark/Light Theme**: Theme toggle with persistent storage
 - **Responsive Design**: Mobile-first approach
 - **Loading States**: Comprehensive loading indicators
 - **Error Boundaries**: Graceful error handling
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -169,12 +197,12 @@ This project is deployed using Hostinger's Git deployment system:
 5. Ensure all tests pass (`bun run test:cov`)
 6. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-**Current Status**: ✅ **Fully Functional** with comprehensive API documentation, 100% test coverage, and production-ready deployment.
+**Current Status**: **Fully Functional** with comprehensive API documentation, 100% test coverage, and production-ready deployment.
 
 **Last Updated**: December 2024
