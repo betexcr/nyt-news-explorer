@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
+import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
 import Spinner from "../components/Spinner";
 import "../styles/home.css";
@@ -15,14 +16,24 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+
     const fetchHomeData = async () => {
       setLoading(true);
       setError(null);
-      
       try {
-        // Use mock data instead of API calls
-        setTrendingArticles(mockTrendingArticles.slice(0, 3)); // Show top 3 trending
-        setTopStories(mockTopStories.slice(0, 3)); // Show top 3 stories
+        if (USE_MOCK) {
+          setTrendingArticles(mockTrendingArticles.slice(0, 3));
+          setTopStories(mockTopStories.slice(0, 3));
+        } else {
+          const [popular, stories] = await Promise.all([
+            getMostPopular('7', controller.signal),
+            getTopStories('home', controller.signal),
+          ]);
+          setTrendingArticles(popular.slice(0, 3));
+          setTopStories(stories.slice(0, 3));
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
       } finally {
@@ -31,6 +42,7 @@ const HomePage: React.FC = () => {
     };
 
     fetchHomeData();
+    return () => controller.abort();
   }, []);
 
   const handleHomeClick = () => {
@@ -38,24 +50,31 @@ const HomePage: React.FC = () => {
   };
 
   const getImageUrl = (article: MostPopularArticle | TopStory): string => {
+    // Most Popular
     if ('media' in article && article.media && article.media.length > 0) {
       const media = article.media[0];
-      if (media['media-metadata'] && media['media-metadata'].length > 0) {
-        const metadata = media['media-metadata'];
-        const largeImage = metadata.find(m => m.format === 'Large Thumbnail') ||
-                          metadata.find(m => m.format === 'Standard Thumbnail') ||
-                          metadata[0];
-        return largeImage?.url || '';
-      }
+      const mm = (media as any)['media-metadata'] || [];
+      const preferred =
+        mm.find((m: any) => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
+        mm.find((m: any) => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
+        mm.find((m: any) => /^(Standard Thumbnail)$/i.test(m.format)) ||
+        mm[0];
+      if (preferred?.url) return preferred.url;
     }
-    
+
+    // Top Stories
     if ('multimedia' in article && article.multimedia && article.multimedia.length > 0) {
-      const media = article.multimedia.find(m => m.subtype === 'photo') ||
-                   article.multimedia[0];
-      return media?.url || '';
+      const media = article.multimedia[0] as any;
+      if (media?.legacy?.xlarge) return media.legacy.xlarge;
+      if (media?.url) return media.url;
     }
-    
-    return '';
+
+    return '/logo.png';
+  };
+
+  const getSafeUrl = (url: string | undefined): string | null => {
+    if (!url) return null;
+    return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
   if (loading) {
@@ -65,6 +84,14 @@ const HomePage: React.FC = () => {
           <div className="hero-content">
             <h1 className="hero-title">NYT News Explorer</h1>
             <p className="hero-subtitle">Discover the latest news from The New York Times</p>
+            <div className="hero-actions">
+              <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
+                🔍 Search Articles
+              </Link>
+              <Link to="/trending" className="hero-button secondary">
+                📈 Trending Now
+              </Link>
+            </div>
           </div>
           <div className="loading-container">
             <Spinner />
@@ -166,7 +193,7 @@ const HomePage: React.FC = () => {
                     </div>
                     
                     <h3 className="article-title">
-                      <a href={article.url} target="_blank" rel="noopener noreferrer">
+                      <a href={getSafeUrl(article.url) || undefined} target="_blank" rel="noopener noreferrer">
                         {article.title}
                       </a>
                     </h3>
@@ -213,7 +240,7 @@ const HomePage: React.FC = () => {
                     </div>
                     
                     <h3 className="article-title">
-                      <a href={story.url} target="_blank" rel="noopener noreferrer">
+                      <a href={getSafeUrl(story.url) || undefined} target="_blank" rel="noopener noreferrer">
                         {story.title}
                       </a>
                     </h3>
