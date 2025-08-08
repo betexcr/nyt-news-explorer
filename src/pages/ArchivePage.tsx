@@ -80,6 +80,13 @@ const ArchivePage: React.FC = () => {
   // Drag logic
   const dragging = useRef<'year' | 'month' | 'day' | null>(null);
 
+  // Invariant: if we're at the first archive year, month cannot be before October
+  useEffect(() => {
+    if (year === START_YEAR && month < START_MONTH) {
+      setMonth(START_MONTH);
+    }
+  }, [year, month]);
+
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!dragging.current) return;
@@ -230,9 +237,6 @@ const ArchivePage: React.FC = () => {
         <div>
           <h1 className="page-title">NYT Archive Explorer</h1>
           <p className="page-subtitle">Browse decades of history from {START_YEAR} to {END_YEAR}</p>
-        </div>
-        <div className="header-controls">
-          <div className="range-label">{openRangeLabel}</div>
         </div>
       </header>
 
