@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getArchive, NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
-import ViewToggle from '../components/ViewToggle';
 import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
 import { useSearchStore } from '../store/searchStore';
@@ -13,6 +12,8 @@ const clamp = (val: number, min: number, max: number) => Math.min(max, Math.max(
 
 // Archive bounds
 const START_YEAR = 1851; // NYT archive starts in 1851
+const START_MONTH = 10; // October
+const START_DAY = 1; // 01
 const CURRENT_YEAR = new Date().getFullYear();
 const END_YEAR = CURRENT_YEAR;
 
@@ -25,7 +26,7 @@ function valueToPosition(value: number, min: number, max: number, trackWidth: nu
 const ArchivePage: React.FC = () => {
   // Picker state
   const [year, setYear] = useState<number>(START_YEAR);
-  const [month, setMonth] = useState<number>(1);
+  const [month, setMonth] = useState<number>(10);
   const [day, setDay] = useState<number | null>(1); // start with oldest possible day filter
   const [loading, setLoading] = useState<boolean>(false);
   // Keep local error handling but do not surface in UI
@@ -34,7 +35,7 @@ const ArchivePage: React.FC = () => {
   // Applied query (set when user presses Search)
   const [query, setQuery] = useState<{ year: number; month: number; day: number | null } | null>({
     year: START_YEAR,
-    month: 1,
+    month: 10,
     day: 1,
   });
 
@@ -87,15 +88,20 @@ const ArchivePage: React.FC = () => {
         const bounds = trackRef.current.getBoundingClientRect();
         const x = e.clientX - bounds.left;
         const posPct = clamp(x / bounds.width, 0, 1);
-        const m = Math.round(1 + posPct * 11);
-        setMonth(clamp(m, 1, 12));
+        let nextMonth = Math.round(1 + posPct * 11);
+        nextMonth = clamp(nextMonth, 1, 12);
+        // Enforce earliest available archive date: Oct 1851
+        if (year === START_YEAR && nextMonth < START_MONTH) nextMonth = START_MONTH;
+        setMonth(nextMonth);
       } else if (dragging.current === 'year') {
         if (!yearTrackRef.current) return;
         const bounds = yearTrackRef.current.getBoundingClientRect();
         const x = e.clientX - bounds.left;
         const posPct = clamp(x / bounds.width, 0, 1);
-        const y = Math.round(START_YEAR + posPct * (END_YEAR - START_YEAR));
-        setYear(clamp(y, START_YEAR, END_YEAR));
+        const nextYear = clamp(Math.round(START_YEAR + posPct * (END_YEAR - START_YEAR)), START_YEAR, END_YEAR);
+        setYear(nextYear);
+        // If we're at the start year, ensure month is not before October
+        if (nextYear === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
       } else if (dragging.current === 'day') {
         if (!trackRef.current) return; // day uses native range, but keep for completeness
         const bounds = trackRef.current.getBoundingClientRect();
@@ -212,7 +218,11 @@ const ArchivePage: React.FC = () => {
     if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
-  const { viewMode, setViewMode } = useSearchStore();
+  const { setViewMode } = useSearchStore();
+  useEffect(() => {
+    // Force list view in archive
+    setViewMode('list');
+  }, [setViewMode]);
 
   return (
     <div className="archive-page">
@@ -223,7 +233,6 @@ const ArchivePage: React.FC = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div className="range-label">{openRangeLabel}</div>
-          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
         </div>
       </header>
 
@@ -249,7 +258,7 @@ const ArchivePage: React.FC = () => {
               <div className="year-ticks" aria-hidden>
                 {useMemo(() => {
                   const ticks: number[] = [];
-                  const startDecade = Math.floor(START_YEAR / 10) * 10;
+                   const startDecade = Math.floor(START_YEAR / 10) * 10;
                   const endDecade = Math.floor(END_YEAR / 10) * 10;
                   for (let y = startDecade; y <= endDecade; y += 10) ticks.push(y);
                   return ticks;
@@ -293,27 +302,7 @@ const ArchivePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="control day">
-            <div className="switch">
-              <input id="day-toggle" type="checkbox" checked={day !== null} onChange={(e) => {
-                if (!e.target.checked) setDay(null); else setDay(1);
-              }} />
-              <label htmlFor="day-toggle">Day filter</label>
-            </div>
-            {day !== null && (
-              <div className="day-slider">
-                <input
-                  type="range"
-                  min={1}
-                  max={new Date(year, month, 0).getDate()}
-                  value={day}
-                  onChange={(e) => setDay(clamp(parseInt(e.target.value, 10) || 1, 1, new Date(year, month, 0).getDate()))}
-                  aria-label="Day"
-                />
-                <div className="day-readout">{String(day).padStart(2,'0')}</div>
-              </div>
-            )}
-          </div>
+          <div className="control day" style={{ visibility: 'hidden', height: 0, padding: 0, margin: 0 }} />
 
           <div className="control">
             <button
@@ -332,7 +321,7 @@ const ArchivePage: React.FC = () => {
       {loading ? (
         <div style={{ padding: '2rem' }}><Spinner /></div>
       ) : (
-        <section className={viewMode === 'list' ? 'archive-list' : 'archive-grid'}>
+        <section className={'archive-list'}>
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
