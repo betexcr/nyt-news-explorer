@@ -242,8 +242,11 @@ const ArchivePage: React.FC = () => {
         <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
       </section>
 
-      <section className="epoch-slider">
-        <div className="controls">
+      {/* Align controls layout to match Search page (header outside functionality) */}
+      <div className="search-row">
+        <div className="search-section">
+          <section className="epoch-slider">
+            <div className="controls">
           <div className="control grow">
             <label className="control-label">Year</label>
             <div className="slider-track pretty" ref={yearTrackRef} onMouseDown={handleYearTrackMouseDown}>
@@ -315,8 +318,10 @@ const ArchivePage: React.FC = () => {
               Search
             </button>
           </div>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
 
       {/* Error messages hidden per request */}
 
