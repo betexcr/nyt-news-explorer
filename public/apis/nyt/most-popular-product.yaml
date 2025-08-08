@@ -10,5 +10,17 @@ schemes:
   - https
 produces:
   - application/json
-paths: {}
+paths:
+  '/viewed/{period}.json':
+    get:
+      summary: Most viewed articles on NYTimes.com.
+      parameters:
+        - name: period
+          in: path
+          required: true
+          type: integer
+          enum: [1, 7, 30]
+      responses:
+        '200':
+          description: Success
 

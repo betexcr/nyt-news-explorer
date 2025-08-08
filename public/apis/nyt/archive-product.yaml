@@ -10,5 +10,20 @@ schemes:
   - https
 produces:
   - application/json
-paths: {}
+paths:
+  '/{year}/{month}.json':
+    get:
+      summary: Archive month
+      parameters:
+        - name: year
+          in: path
+          required: true
+          type: integer
+        - name: month
+          in: path
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Success
 
