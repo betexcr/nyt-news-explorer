@@ -1,10 +1,10 @@
-RewriteEngine On
-RewriteBase /nyt/
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [L]
-
-# Prevent WordPress rules from affecting this directory
-<IfModule mod_headers.c>
-  Header set X-Robots-Tag "noindex, nofollow"
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /nyt/
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /nyt/index.html [L]
 </IfModule>
+Options -MultiViews
+RewriteEngine On
