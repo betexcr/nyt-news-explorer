@@ -36,6 +36,8 @@
 .controls { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
 .control { display: flex; flex-direction: column; gap: 0.35rem; min-width: 160px; }
 .control.grow { flex: 1 1 320px; min-width: 260px; }
+.control.grow.year { flex-basis: 100%; }
+.control.grow.month { flex-basis: 100%; }
 .control.day { min-width: 200px; }
 .control-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
 
@@ -78,6 +80,14 @@
 
 @media (max-width: 768px) {
   .archive-list .card-image { width: 150px; height: 96px; }
+}
+
+/* Large screens: split year/month 6/6 columns */
+@media (min-width: 1024px) {
+  .controls { display: grid; grid-template-columns: repeat(12, 1fr); gap: 0.75rem 1rem; align-items: end; }
+  .control.grow.year { grid-column: span 6; }
+  .control.grow.month { grid-column: span 6; }
+  .control { min-width: 0; }
 }
 .archive-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
 .favorite-inline { background: rgba(0,0,0,0.06); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 0.25rem 0.6rem; cursor: pointer; font-size: 0.85rem; }

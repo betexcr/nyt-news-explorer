@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
+import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 import Spinner from "../components/Spinner";
 import "../styles/home.css";
@@ -13,6 +14,7 @@ const HomePage: React.FC = () => {
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
 
@@ -28,13 +30,23 @@ const HomePage: React.FC = () => {
         if (USE_MOCK) {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
+          setTodayInHistory([]);
         } else {
-          const [popular, stories] = await Promise.all([
+          const now = new Date();
+          const month = now.getMonth() + 1; // 1-12
+          const day = now.getDate();
+          const [popular, stories, archiveDocs] = await Promise.all([
             getMostPopular('7', controller.signal),
             getTopStories('home', controller.signal),
+            getArchive(Math.max(now.getFullYear() - 1, 1851), month, controller.signal),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
+          const filtered = archiveDocs.filter(d => {
+            const dt = new Date(d.pub_date);
+            return dt.getMonth() + 1 === month && dt.getDate() === day;
+          }).slice(0, 6);
+          setTodayInHistory(filtered);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
@@ -157,6 +169,34 @@ const HomePage: React.FC = () => {
       {/* Featured Content Section */}
       <section className="featured-content">
         <div className="content-grid">
+          {/* A day like today */}
+          <div className="content-section today-like-section" style={{ gridColumn: '1 / -1' }}>
+            <div className="section-header">
+              <h2>📅 A day like today…</h2>
+              <Link to="/archive" className="view-all-link">Go to Archive →</Link>
+            </div>
+            {todayInHistory.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No highlights available for today.</p>
+            ) : (
+              <div className="articles-grid">
+                {todayInHistory.map((a) => (
+                  <article key={a.uri} className="article-card story-card">
+                    <div className="article-content">
+                      <div className="article-meta">
+                        <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
+                        <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
+                      </div>
+                      <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
+                      <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
+                      <div className="article-footer">
+                        <span className="byline">{a.byline?.original || ''}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
           {/* Trending Articles */}
           <div className="content-section trending-section">
             <div className="section-header">

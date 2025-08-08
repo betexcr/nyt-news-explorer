@@ -28,10 +28,9 @@ const ArchivePage: React.FC = () => {
   // Picker state
   const [year, setYear] = useState<number>(START_YEAR);
   const [month, setMonth] = useState<number>(10);
-  // Calendar/day selection
-  const [showCalendar, setShowCalendar] = useState<boolean>(false);
+  // Calendar/day selection (always visible)
   const [dayStart, setDayStart] = useState<number | null>(1); // default to 1 for initial oldest search
-  const [dayEnd, setDayEnd] = useState<number | null>(null);
+  const [dayEnd, setDayEnd] = useState<number | null>(15);
   const [loading, setLoading] = useState<boolean>(false);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
@@ -44,7 +43,7 @@ const ArchivePage: React.FC = () => {
     year: START_YEAR,
     month: 10,
     dayStart: 1,
-    dayEnd: null,
+    dayEnd: 15,
   });
 
   // Month slider track
@@ -266,7 +265,7 @@ const ArchivePage: React.FC = () => {
         <div className="search-section">
           <section className="epoch-slider">
             <div className="controls">
-          <div className="control grow" style={{ display: showCalendar ? 'none' : undefined }}>
+          <div className="control grow year">
             <label className="control-label">Year</label>
             <div className="slider-track pretty" ref={yearTrackRef} onMouseDown={handleYearTrackMouseDown}>
               <div
@@ -299,7 +298,7 @@ const ArchivePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="control grow" style={{ display: showCalendar ? 'none' : undefined }}>
+          <div className="control grow month">
             <label className="control-label">Month</label>
             <div className="slider-track pretty" ref={trackRef} onMouseDown={handleTrackMouseDown}>
               <div
@@ -324,19 +323,6 @@ const ArchivePage: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Calendar toggle */}
-          <div className="control">
-            <label className="switch" style={{ marginBottom: 0 }}>
-              <input
-                type="checkbox"
-                checked={showCalendar}
-                onChange={(e) => setShowCalendar(e.target.checked)}
-                aria-label="Show calendar"
-              />
-              Show calendar
-            </label>
           </div>
 
           <div className="control">
@@ -367,7 +353,7 @@ const ArchivePage: React.FC = () => {
               </label>
             </div>
           </div>
-          {showCalendar && (
+          {
       <section aria-label="Calendar" className="calendar compact">
               <div className="calendar-grid" role="grid">
                 {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
@@ -387,7 +373,7 @@ const ArchivePage: React.FC = () => {
                 })}
               </div>
             </section>
-          )}
+          }
         </div>
       </div>
 
