@@ -4,17 +4,17 @@
 .archive-subtitle { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
 .range-label { color: var(--muted); font-weight: 600; }
 
-.era-title-wrap { margin: 0.25rem 0 0.75rem; display: flex; justify-content: center; }
+.era-title-wrap { margin: 0.25rem 0 0.75rem; display: flex; justify-content: center; background: transparent; }
 .era-title { margin: 0; font-size: clamp(1.35rem, 1.1rem + 1.2vw, 2rem); line-height: 1.15; color: var(--text); text-align: center; }
 .era-title.victorian { font-family: 'Old Standard TT', 'Times New Roman', serif; letter-spacing: 0.5px; font-weight: 700; }
 .era-title.modern { font-family: inherit; font-weight: 800; }
 /* Decade-specific fonts across all eras */
-/* 1850s - 1890s (pre-1900) */
-.era-title.decade-1850s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.5px; }
-.era-title.decade-1860s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.5px; }
-.era-title.decade-1870s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.5px; }
-.era-title.decade-1880s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.5px; }
-.era-title.decade-1890s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.5px; }
+/* 1850s - 1890s (pre-1900) – distinct per decade */
+.era-title.decade-1850s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 800; letter-spacing: 0.6px; }
+.era-title.decade-1860s { font-family: 'Libre Baskerville', 'Baskerville', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.4px; }
+.era-title.decade-1870s { font-family: 'Cormorant Garamond', 'Garamond', 'Times New Roman', serif; font-weight: 700; letter-spacing: 0.3px; }
+.era-title.decade-1880s { font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif; font-weight: 800; letter-spacing: 0.2px; }
+.era-title.decade-1890s { font-family: 'Playfair Display', 'Georgia', serif; font-style: italic; font-weight: 700; letter-spacing: 0.25px; }
 /* 1900 - 1990s */
 .era-title.decade-1900s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; }
 .era-title.decade-1910s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; }
@@ -26,10 +26,11 @@
 .era-title.decade-1970s { font-family: 'Rubik', 'Helvetica Neue', Arial, sans-serif; letter-spacing: 1px; }
 .era-title.decade-1980s { font-family: 'Orbitron', 'Verdana', 'Tahoma', sans-serif; letter-spacing: 1px; }
 .era-title.decade-1990s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; }
-/* 2000s - 2020s */
-.era-title.decade-2000s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; }
-.era-title.decade-2010s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; }
-.era-title.decade-2020s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 900; }
+/* 2000s - 2030s – distinct per decade */
+.era-title.decade-2000s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 700; letter-spacing: 0.2px; }
+.era-title.decade-2010s { font-family: 'Roboto', 'Helvetica Neue', Arial, system-ui, sans-serif; font-weight: 700; letter-spacing: 0.1px; }
+.era-title.decade-2020s { font-family: 'Work Sans', 'Inter', 'Segoe UI', system-ui, sans-serif; font-weight: 800; letter-spacing: 0.3px; text-transform: none; }
+.era-title.decade-2030s { font-family: 'Rubik', 'Inter', 'Segoe UI', system-ui, sans-serif; font-weight: 900; letter-spacing: 0.4px; }
 
 .epoch-slider { margin: 0.75rem 0 1.25rem; }
 .controls { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }

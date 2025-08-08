@@ -6,6 +6,13 @@
   gap: 2rem;
 }
 
+/* Ensure page header is never styled as a card/panel */
+.page-header, .page-header * {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
 .page-title {
   margin: 0 0 0.25rem 0;
   font-size: 2.2rem;
