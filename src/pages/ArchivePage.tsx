@@ -144,6 +144,16 @@ const ArchivePage: React.FC = () => {
     return '/logo.png';
   };
 
+  const getSafeUrl = (url?: string): string | null => {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      return /^https?:$/i.test(u.protocol) ? u.toString() : null;
+    } catch {
+      return null;
+    }
+  };
+
   const { favorites, addFavorite, removeFavorite } = useSearchStore();
   const isFav = (a: ArchiveArticle) => favorites.some(f => f.web_url === a.web_url);
   const toggleFav = (a: ArchiveArticle) => {
@@ -162,58 +172,65 @@ const ArchivePage: React.FC = () => {
       </header>
 
       <section className="epoch-slider">
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <label htmlFor="year-select">Year:</label>
-          <select id="year-select" value={year} onChange={(e) => setYear(parseInt(e.target.value, 10))}>
-            {yearOptions.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <label style={{ marginLeft: '1rem' }}>Month:</label>
-          <div className="slider-track" ref={trackRef} onMouseDown={handleTrackMouseDown}>
-            <div
-              className="slider-selection"
-              style={{
-                left: `${(valueToPosition(month, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%`,
-                width: 0,
-              }}
-            />
-            <div
-              className="slider-handle from"
-              style={{ left: `${(valueToPosition(month, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}
-              role="slider"
-              aria-valuemin={1}
-              aria-valuemax={12}
-              aria-valuenow={month}
-              aria-label="Month"
-            />
-            <div className="decade-labels">
-              {[1,3,5,7,9,11].map((m) => (
-                <span key={m} style={{ left: `${(valueToPosition(m, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}>
-                  {m}
-                </span>
-              ))}
+        <div className="controls">
+          <div className="control">
+            <label className="control-label" htmlFor="year-select">Year:</label>
+            <div className="select-wrap">
+              <select id="year-select" value={year} onChange={(e) => setYear(parseInt(e.target.value, 10))}>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <span className="select-caret" aria-hidden>▾</span>
             </div>
           </div>
-          <label style={{ marginLeft: '1rem' }}>Day (optional):</label>
-          <input
-            type="number"
-            min={1}
-            max={new Date(year, month, 0).getDate()}
-            value={day ?? ''}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (!v) { setDay(null); return; }
-              const d = parseInt(v, 10) || 1;
-              const max = new Date(year, month, 0).getDate();
-              setDay(clamp(d, 1, max));
-            }}
-            placeholder="—"
-            style={{ width: 64 }}
-          />
-        </div>
-        <div className="slider-actions">
-          <button className="retry-button" onClick={() => setRefreshTick((p) => p + 1)}>Refresh</button>
+
+          <div className="control grow">
+            <label className="control-label">Month</label>
+            <div className="slider-track pretty" ref={trackRef} onMouseDown={handleTrackMouseDown}>
+              <div
+                className="slider-handle from shadow"
+                style={{ left: `${(valueToPosition(month, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}
+                role="slider"
+                aria-valuemin={1}
+                aria-valuemax={12}
+                aria-valuenow={month}
+                aria-label="Month"
+                tabIndex={0}
+              />
+              <div className="month-ticks" aria-hidden>
+                {['J','F','M','A','M','J','J','A','S','O','N','D'].map((lbl, i) => (
+                  <span key={lbl} style={{ left: `${(valueToPosition(i+1, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}>{lbl}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="control day">
+            <div className="switch">
+              <input id="day-toggle" type="checkbox" checked={day !== null} onChange={(e) => {
+                if (!e.target.checked) setDay(null); else setDay(1);
+              }} />
+              <label htmlFor="day-toggle">Day filter</label>
+            </div>
+            {day !== null && (
+              <div className="day-slider">
+                <input
+                  type="range"
+                  min={1}
+                  max={new Date(year, month, 0).getDate()}
+                  value={day}
+                  onChange={(e) => setDay(clamp(parseInt(e.target.value, 10) || 1, 1, new Date(year, month, 0).getDate()))}
+                  aria-label="Day"
+                />
+                <div className="day-readout">{String(day).padStart(2,'0')}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="control">
+            <button className="retry-button" onClick={() => setRefreshTick((p) => p + 1)}>Refresh</button>
+          </div>
         </div>
       </section>
 
@@ -228,36 +245,56 @@ const ArchivePage: React.FC = () => {
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
-            articles.map((a) => (
-              <article key={a.uri} className="archive-card">
-                <div className="card-image">
-                  <img
-                    src={getImage(a)}
-                    alt={a.headline?.main || a.abstract || 'NYT archive'}
-                    onError={(e) => {
-                      const t = e.currentTarget as HTMLImageElement;
-                      t.src = '/logo.png';
-                    }}
-                  />
-                  <button
-                    onClick={() => toggleFav(a)}
-                    className="favorite-btn"
-                    aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                    title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                  >
-                    {isFav(a) ? '♥' : '♡'}
-                  </button>
-                </div>
-                <div className="card-body">
-                  <div className="card-meta">
-                    <span className="section">{a.section_name}</span>
-                    <span className="date">{new Date(a.pub_date).getFullYear()}</span>
+            articles.map((a) => {
+              const href = getSafeUrl(a.web_url) || undefined;
+              const date = new Date(a.pub_date);
+              const keywords = (a.keywords || []).slice(0, 3).map(k => k.value).filter(Boolean);
+              return (
+                <article key={a.uri} className="archive-card" tabIndex={0}>
+                  <div className="card-image">
+                    <img
+                      src={getImage(a)}
+                      alt={a.headline?.main || a.abstract || 'NYT archive'}
+                      onError={(e) => {
+                        const t = e.currentTarget as HTMLImageElement;
+                        t.src = '/logo.png';
+                      }}
+                    />
+                    <button
+                      onClick={() => toggleFav(a)}
+                      className="favorite-btn"
+                      aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                      title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      {isFav(a) ? '♥' : '♡'}
+                    </button>
                   </div>
-                  <h3 className="card-title">{a.headline?.main || a.abstract}</h3>
-                  <p className="card-abstract">{a.snippet || a.lead_paragraph || ''}</p>
-                </div>
-              </article>
-            ))
+                  <div className="card-body">
+                    <div className="card-meta">
+                      <span className="badge section">{a.section_name || a.news_desk || 'Archive'}</span>
+                      <span className="dot" aria-hidden>•</span>
+                      <time className="date" dateTime={a.pub_date}>{date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</time>
+                      {a.word_count ? (<><span className="dot" aria-hidden>•</span><span className="badge wc">{a.word_count} words</span></>) : null}
+                    </div>
+                    <h3 className="card-title">{a.headline?.main || a.abstract}</h3>
+                    {a.byline?.original && <div className="byline">{a.byline.original}</div>}
+                    <p className="card-abstract">{a.snippet || a.lead_paragraph || ''}</p>
+                    {keywords.length > 0 && (
+                      <div className="chips">
+                        {keywords.map((kw) => (
+                          <span key={kw} className="chip">{kw}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="card-actions">
+                      {href && (
+                        <a className="read-link" href={href} target="_blank" rel="noopener noreferrer">Read on NYTimes →</a>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })
           )}
         </section>
       )}
