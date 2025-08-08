@@ -2,7 +2,7 @@
   "name": "nyt-news-explorer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://brainvaultdev.com",
+  "homepage": "https://nyt.brainvaultdev.com",
   "dependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^16.18.126",
