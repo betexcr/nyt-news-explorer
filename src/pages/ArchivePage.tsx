@@ -4,6 +4,7 @@ import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
+import '../styles/page-header.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeArchive } from '../utils/normalize';
 
@@ -225,12 +226,12 @@ const ArchivePage: React.FC = () => {
 
   return (
     <div className="archive-page">
-      <header className="archive-header">
+      <header className="page-header">
         <div>
-          <h1 className="archive-title">NYT Archive Explorer</h1>
-          <p className="archive-subtitle">Browse decades of history from {START_YEAR} to {END_YEAR}</p>
+          <h1 className="page-title">NYT Archive Explorer</h1>
+          <p className="page-subtitle">Browse decades of history from {START_YEAR} to {END_YEAR}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="header-controls">
           <div className="range-label">{openRangeLabel}</div>
         </div>
       </header>

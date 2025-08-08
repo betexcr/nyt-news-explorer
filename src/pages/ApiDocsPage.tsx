@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import SwaggerUIComponent from '../components/SwaggerUI';
+import '../styles/page-header.css';
 
 const ApiDocsPage: React.FC = () => {
   return (
@@ -11,8 +12,12 @@ const ApiDocsPage: React.FC = () => {
       </Helmet>
       
       <div className="api-docs-container">
-        <h1>NYT API Documentation</h1>
-        <p className="api-docs-description">Select a spec from the dropdown to view its endpoints and schemas.</p>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">NYT API Documentation</h1>
+            <p className="page-subtitle">Select a spec to view endpoints and schemas</p>
+          </div>
+        </div>
         
         <SwaggerUIComponent className="swagger-ui-container" />
       </div>

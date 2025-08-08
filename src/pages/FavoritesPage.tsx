@@ -2,6 +2,7 @@ import React from "react";
 import { useSearchStore } from "../store/searchStore";
 import ArticleCard from "../components/ArticleCard";
 import type { NytArticle } from "../types/nyt";
+import "../styles/page-header.css";
 
 const FavoritesPage: React.FC = () => {
   const { favorites, removeFavorite } = useSearchStore();
@@ -14,8 +15,13 @@ const FavoritesPage: React.FC = () => {
     return (
       <div className="container">
         <main style={{ paddingTop: "70px" }}>
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Favorites</h1>
+              <p className="page-subtitle">Your saved articles</p>
+            </div>
+          </div>
           <section className="panel" style={{ padding: "2rem", textAlign: "center" }}>
-            <h1 style={{ marginTop: 0, marginBottom: "1rem" }}>Favorites</h1>
             <p style={{ color: "var(--muted)", marginBottom: "2rem" }}>
               You haven't added any articles to your favorites yet.
             </p>
@@ -31,10 +37,13 @@ const FavoritesPage: React.FC = () => {
   return (
     <div className="container">
       <main style={{ paddingTop: "70px" }}>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Favorites ({favorites.length})</h1>
+            <p className="page-subtitle">Your saved articles</p>
+          </div>
+        </div>
         <section className="panel" style={{ padding: "1rem 1.25rem" }}>
-          <h1 style={{ marginTop: 0, marginBottom: "1rem" }}>
-            Favorites ({favorites.length})
-          </h1>
           <div className="grid results">
             {favorites.map((article) => (
               <div key={article.web_url} style={{ position: "relative" }}>
