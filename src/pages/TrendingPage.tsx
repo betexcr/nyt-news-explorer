@@ -3,6 +3,7 @@ import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '.
 import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
+import ViewToggle from '../components/ViewToggle';
 import '../styles/trending.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeMostPopular } from '../utils/normalize';
@@ -65,7 +66,7 @@ const TrendingPage: React.FC = () => {
     return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
-  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const { favorites, addFavorite, removeFavorite, viewMode, setViewMode } = useSearchStore();
   const isFav = (a: MostPopularArticle) => favorites.some(f => f.web_url === a.url);
   const toggleFav = (a: MostPopularArticle) => {
     const normalized = normalizeMostPopular(a);
@@ -129,14 +130,17 @@ const TrendingPage: React.FC = () => {
         </div>
       )}
 
-      <div className="trending-grid">
+      <div className="trending-grid" style={{ display: viewMode === 'list' ? 'block' : undefined }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
+        </div>
         {articles.map((article, index) => (
-          <article key={article.id} className="trending-card">
+          <article key={article.id} className="trending-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="trending-card-rank">
               <span className="rank-number">#{index + 1}</span>
             </div>
             
-            <div className="trending-card-image">
+            <div className="trending-card-image" style={viewMode === 'list' ? { width: 240, height: 160, flex: '0 0 auto' } : undefined}>
               <img
                 src={getImageUrl(article)}
                 alt={article.title}
@@ -155,7 +159,7 @@ const TrendingPage: React.FC = () => {
               </button>
             </div>
             
-            <div className="trending-card-content">
+            <div className="trending-card-content" style={viewMode === 'list' ? { padding: '1rem 1rem 1rem 0' } : undefined}>
               <div className="trending-card-meta">
                 <span className="section">{article.section}</span>
                 <span className="date">{formatDate(article.published_date)}</span>

@@ -50,6 +50,7 @@
 .retry-button { background: var(--primary); color: var(--button-text); border: none; border-radius: 10px; padding: 0.5rem 0.8rem; cursor: pointer; font-weight: 700; }
 
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.archive-list { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 1rem; }
 .archive-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .archive-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
 .card-image { aspect-ratio: 3/2; background: #f0f0f0; overflow: hidden; }

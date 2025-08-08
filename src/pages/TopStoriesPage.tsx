@@ -3,6 +3,7 @@ import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-a
 import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
+import ViewToggle from '../components/ViewToggle';
 import '../styles/top-stories.css';
 import { useSearchStore } from '../store/searchStore';
 import { normalizeTopStory } from '../utils/normalize';
@@ -84,7 +85,7 @@ const TopStoriesPage: React.FC = () => {
     return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
-  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const { favorites, addFavorite, removeFavorite, viewMode, setViewMode } = useSearchStore();
   const isFav = (story: TopStory) => favorites.some(f => f.web_url === story.url);
   const toggleFav = (story: TopStory) => {
     const normalized = normalizeTopStory(story);
@@ -148,9 +149,12 @@ const TopStoriesPage: React.FC = () => {
         </div>
       )}
 
-      <div className="top-stories-grid">
+      <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
+        </div>
         {stories.map((story, index) => (
-          <article key={story.uri} className="top-story-card">
+          <article key={story.uri} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
               <img
                 src={getImageUrl(story)}
@@ -173,7 +177,7 @@ const TopStoriesPage: React.FC = () => {
               </button>
             </div>
             
-            <div className="top-story-card-content">
+            <div className="top-story-card-content" style={viewMode === 'list' ? { padding: '1rem 1rem 1rem 0' } : undefined}>
               <div className="top-story-card-meta">
                 <span className="section">{story.section}</span>
                 <span className="date">{formatDate(story.published_date)}</span>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getArchive, NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
+import ViewToggle from '../components/ViewToggle';
 import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
 import { useSearchStore } from '../store/searchStore';
@@ -184,6 +185,8 @@ const ArchivePage: React.FC = () => {
     if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
+  const { viewMode, setViewMode } = useSearchStore();
+
   return (
     <div className="archive-page">
       <header className="archive-header">
@@ -191,7 +194,10 @@ const ArchivePage: React.FC = () => {
           <h1 className="archive-title">NYT Archive Explorer</h1>
           <p className="archive-subtitle">Browse decades of history from {START_YEAR} to {END_YEAR}</p>
         </div>
-        <div className="range-label">{openRangeLabel}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="range-label">{openRangeLabel}</div>
+          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
+        </div>
       </header>
 
       <section className="era-title-wrap">
@@ -274,7 +280,7 @@ const ArchivePage: React.FC = () => {
       {loading ? (
         <div style={{ padding: '2rem' }}><Spinner /></div>
       ) : (
-        <section className="archive-grid">
+        <section className={viewMode === 'list' ? 'archive-list' : 'archive-grid'}>
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
