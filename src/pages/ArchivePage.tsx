@@ -24,15 +24,19 @@ function valueToPosition(value: number, min: number, max: number, trackWidth: nu
 
 const ArchivePage: React.FC = () => {
   // Picker state
-  const [year, setYear] = useState<number>(1900);
+  const [year, setYear] = useState<number>(START_YEAR);
   const [month, setMonth] = useState<number>(1);
-  const [day, setDay] = useState<number | null>(null); // optional day filter, client-side only
+  const [day, setDay] = useState<number | null>(1); // start with oldest possible day filter
   const [loading, setLoading] = useState<boolean>(false);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
   // Applied query (set when user presses Search)
-  const [query, setQuery] = useState<{ year: number; month: number; day: number | null } | null>(null);
+  const [query, setQuery] = useState<{ year: number; month: number; day: number | null } | null>({
+    year: START_YEAR,
+    month: 1,
+    day: 1,
+  });
 
   // Month slider track
   const trackRef = useRef<HTMLDivElement | null>(null);

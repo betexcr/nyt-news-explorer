@@ -113,21 +113,24 @@ const TopStoriesPage: React.FC = () => {
           <h1>Top Stories</h1>
           <p>Latest top stories from The New York Times</p>
         </div>
-        
-        <div className="section-selector">
-          <label htmlFor="section-select">Section:</label>
-          <select
-            id="section-select"
-            value={selectedSection}
-            onChange={(e) => setSelectedSection(e.target.value)}
-            className="section-select"
-          >
-            {TOP_STORIES_SECTIONS.map((section) => (
-              <option key={section} value={section}>
-                {getSectionLabel(section)}
-              </option>
-            ))}
-          </select>
+        {/* Match Trending header controls: selector + view toggle */}
+        <div className="header-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="section-selector">
+            <label htmlFor="section-select">Section:</label>
+            <select
+              id="section-select"
+              value={selectedSection}
+              onChange={(e) => setSelectedSection(e.target.value)}
+              className="section-select"
+            >
+              {TOP_STORIES_SECTIONS.map((section) => (
+                <option key={section} value={section}>
+                  {getSectionLabel(section)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
         </div>
       </div>
 
@@ -140,9 +143,6 @@ const TopStoriesPage: React.FC = () => {
       )}
 
       <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
-          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-        </div>
         {stories.map((story, _index) => (
           <article key={story.uri} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
