@@ -74,15 +74,10 @@ async function makeApiRequest<T>(
     if (error.name === 'AbortError') {
       throw new NytApiError('Request was cancelled', 0, 'ABORTED');
     }
-    
     const status = error.response?.status;
-    const message = error.response?.data?.fault?.faultstring || error.message;
-    
-    throw new NytApiError(
-      `API request failed: ${message}`,
-      status,
-      error.code
-    );
+    const message = error.response?.data?.message || error.response?.data?.fault?.faultstring || error.message;
+    const code = error.code || (status === 403 ? 'FORBIDDEN' : undefined);
+    throw new NytApiError(`API request failed: ${message}`, status, code);
   }
 }
 

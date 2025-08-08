@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { getArchive } from '../api/nyt-apis';
+import { getArchive, NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
+import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
 
 // Utility: clamp
@@ -102,7 +103,7 @@ const ArchivePage: React.FC = () => {
       setError(null);
       try {
         if (!USE_KEY) {
-          setArticles([]);
+          setArticles(mockArchiveArticles);
           return;
         }
         const months: Array<{ y: number; m: number }> = [];
@@ -124,7 +125,13 @@ const ArchivePage: React.FC = () => {
         });
         setArticles(unique.slice(0, 60));
       } catch (err: any) {
-        if (err.code !== 'ABORTED') setError(err.message || 'Failed to fetch archive');
+        if (err.code === 'ABORTED') return;
+        if ((err as NytApiError).status === 403) {
+          setError('Archive API denied (403). Showing sample data.');
+          setArticles(mockArchiveArticles);
+        } else {
+          setError(err.message || 'Failed to fetch archive');
+        }
       } finally {
         setLoading(false);
       }
