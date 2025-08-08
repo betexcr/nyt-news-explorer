@@ -118,6 +118,9 @@ const HomePage: React.FC = () => {
             <Link to="/trending" className="hero-button secondary">
               📈 Trending Now
             </Link>
+            <Link to="/archive" className="hero-button secondary">
+              🗄️ Explore Archive
+            </Link>
           </div>
         </div>
         
@@ -276,6 +279,18 @@ const HomePage: React.FC = () => {
             <div className="action-icon">📰</div>
             <h3>Top Stories</h3>
             <p>Latest top stories by section</p>
+          </Link>
+          
+          <Link to="/archive" className="action-card">
+            <div className="action-icon">🗄️</div>
+            <h3>Archive</h3>
+            <p>Browse history back to Oct 1, 1851 (list view)</p>
+          </Link>
+          
+          <Link to="/favorites" className="action-card">
+            <div className="action-icon">⭐</div>
+            <h3>Favorites</h3>
+            <p>Your saved articles</p>
           </Link>
           
           <Link to="/api-docs" className="action-card">
