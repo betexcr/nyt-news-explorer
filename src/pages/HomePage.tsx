@@ -278,7 +278,7 @@ const HomePage: React.FC = () => {
           <Link to="/archive" className="action-card">
             <div className="action-icon">🗄️</div>
             <h3>Archive</h3>
-            <p>Browse history back to Oct 1, 1851 (list view)</p>
+            <p>Browse history back to Oct 1, 1851</p>
           </Link>
           
           <Link to="/favorites" className="action-card">
