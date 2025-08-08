@@ -66,9 +66,9 @@ const TopStoriesPage: React.FC = () => {
       // Try to get the largest image available
       const media = story.multimedia.find(m => m.subtype === 'photo') ||
                    story.multimedia[0];
-      return media?.url || '';
+      return media?.url || '/logo.png';
     }
-    return '';
+    return '/logo.png';
   };
 
   if (loading && stories.length === 0) {
@@ -137,7 +137,7 @@ const TopStoriesPage: React.FC = () => {
                 alt={story.title}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
+                  target.src = '/logo.png';
                 }}
               />
               <div className="story-badge">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 
@@ -10,12 +10,25 @@ const SwaggerUIComponent: React.FC<SwaggerUIProps> = ({ className }) => {
   const [spec, setSpec] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [api, setApi] = useState<string>('article-search');
+
+  const apiOptions = useMemo(
+    () => [
+      { id: 'article-search', label: 'Article Search', path: '/apis/nyt/articlesearch-product.yaml' },
+      { id: 'top-stories', label: 'Top Stories', path: '/apis/nyt/top-stories-product.yaml' },
+      { id: 'most-popular', label: 'Most Popular', path: '/apis/nyt/most-popular-product.yaml' },
+      { id: 'books', label: 'Books', path: '/apis/nyt/books-product.yaml' },
+      { id: 'archive', label: 'Archive', path: '/apis/nyt/archive-product.yaml' },
+      { id: 'movies', label: 'Movie Reviews', path: '/apis/nyt/movie-reviews-api.yaml' },
+    ],
+    []
+  );
 
   useEffect(() => {
     const loadSpec = async () => {
       try {
-        // Load the YAML file from public directory
-        const response = await fetch('/api-spec.yaml');
+        const current = apiOptions.find((o) => o.id === api) || apiOptions[0];
+        const response = await fetch(current.path);
         if (!response.ok) {
           throw new Error(`Failed to load specification: ${response.statusText}`);
         }
@@ -33,8 +46,10 @@ const SwaggerUIComponent: React.FC<SwaggerUIProps> = ({ className }) => {
       }
     };
 
+    setLoading(true);
+    setError(null);
     loadSpec();
-  }, []);
+  }, [api, apiOptions]);
 
   if (loading) {
     return (
@@ -68,6 +83,17 @@ const SwaggerUIComponent: React.FC<SwaggerUIProps> = ({ className }) => {
 
   return (
     <div className={className}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+        <div style={{ fontWeight: 700 }}>NYT APIs</div>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: 'var(--muted)', fontSize: 12 }}>Spec:</span>
+          <select value={api} onChange={(e) => setApi(e.target.value)} style={{ padding: '0.35rem 0.5rem', borderRadius: 8, border: '1px solid var(--border)' }}>
+            {apiOptions.map((o) => (
+              <option key={o.id} value={o.id}>{o.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
       <SwaggerUI 
         spec={spec}
         docExpansion="list"

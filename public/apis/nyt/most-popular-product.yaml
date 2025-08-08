@@ -1,0 +1,14 @@
+swagger: '2.0'
+basePath: /svc/mostpopular/v2
+host: api.nytimes.com
+info:
+  version: 2.0.0
+  title: Most Popular
+  description: |
+    See `/src/external-apis/nyt/most-popular-product.yaml` for full source. This is a stub placeholder to load in Swagger UI.
+schemes:
+  - https
+produces:
+  - application/json
+paths: {}
+

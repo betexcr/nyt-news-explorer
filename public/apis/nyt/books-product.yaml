@@ -1,0 +1,14 @@
+swagger: '2.0'
+basePath: /svc/books/v3
+host: api.nytimes.com
+info:
+  version: 3.0.0
+  title: Books API
+  description: |
+    See `/src/external-apis/nyt/books-product.yaml` for full source. This is a stub placeholder to load in Swagger UI.
+schemes:
+  - https
+produces:
+  - application/json
+paths: {}
+

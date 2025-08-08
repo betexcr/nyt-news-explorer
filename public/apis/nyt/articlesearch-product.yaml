@@ -1,0 +1,14 @@
+swagger: '2.0'
+basePath: /svc/search/v2
+host: api.nytimes.com
+info:
+  version: 2.0.0
+  title: Article Search
+  description: |
+    Use the Article Search API to look up articles by keyword. See `/src/external-apis/nyt/articlesearch-product.yaml` for source.
+schemes:
+  - https
+produces:
+  - application/json
+paths: {}
+

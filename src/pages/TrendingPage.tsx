@@ -42,15 +42,16 @@ const TrendingPage: React.FC = () => {
     if (article.media && article.media.length > 0) {
       const media = article.media[0];
       if (media['media-metadata'] && media['media-metadata'].length > 0) {
-        // Try to get the largest image available
         const metadata = media['media-metadata'];
-        const largeImage = metadata.find(m => m.format === 'Large Thumbnail') ||
+        const largeImage = metadata.find(m => m.format === 'Large') ||
+                          metadata.find(m => m.format === 'mediumThreeByTwo210') ||
+                          metadata.find(m => m.format === 'Large Thumbnail') ||
                           metadata.find(m => m.format === 'Standard Thumbnail') ||
                           metadata[0];
-        return largeImage?.url || '';
+        return largeImage?.url || '/logo.png';
       }
     }
-    return '';
+    return '/logo.png';
   };
 
   if (loading && articles.length === 0) {

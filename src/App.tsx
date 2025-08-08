@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import TrendingPage from "./pages/TrendingPage";
 import TopStoriesPage from "./pages/TopStoriesPage";
+import MovieReviewsPage from "./pages/MovieReviewsPage";
 import DetailPage from "./pages/DetailPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
@@ -25,6 +26,7 @@ function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/top-stories" element={<TopStoriesPage />} />
+            <Route path="/movies" element={<MovieReviewsPage />} />
             <Route path="/detail" element={<DetailPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/api-docs" element={<ApiDocsPage />} />

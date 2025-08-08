@@ -7,15 +7,12 @@ const ApiDocsPage: React.FC = () => {
     <div className="api-docs-page">
       <Helmet>
         <title>API Documentation - NYT News Explorer</title>
-        <meta name="description" content="New York Times Article Search API Documentation" />
+        <meta name="description" content="New York Times API Documentation (Article Search, Top Stories, Most Popular, Books, Archive, Movies)" />
       </Helmet>
       
       <div className="api-docs-container">
-        <h1>NYT Article Search API Documentation</h1>
-        <p className="api-docs-description">
-          This page displays the complete API documentation for the New York Times Article Search API.
-          You can explore the available endpoints, parameters, response schemas, and entity definitions below.
-        </p>
+        <h1>NYT API Documentation</h1>
+        <p className="api-docs-description">Select a spec from the dropdown to view its endpoints and schemas.</p>
         
         <SwaggerUIComponent className="swagger-ui-container" />
       </div>
