@@ -54,11 +54,10 @@ body {
   line-height: 1.6;
   color: var(--text);
   background-color: var(--bg);
-  background-image:
-    radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.0) 140px);
-  background-size: 6px 6px, 100% 200px;
-  background-position: 0 0, 0 0;
+  /* Subtle speckle for texture without visible banding */
+  background-image: radial-gradient(rgba(0,0,0,0.015) 0.5px, transparent 0.5px);
+  background-size: 10px 10px;
+  background-position: 0 0;
 }
 a {
   color: inherit;
