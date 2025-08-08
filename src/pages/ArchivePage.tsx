@@ -27,16 +27,23 @@ const ArchivePage: React.FC = () => {
   // Picker state
   const [year, setYear] = useState<number>(START_YEAR);
   const [month, setMonth] = useState<number>(10);
-  const [day, setDay] = useState<number | null>(1); // start with oldest possible day filter
+  // Calendar/day selection
+  const [showCalendar, setShowCalendar] = useState<boolean>(false);
+  const [dayStart, setDayStart] = useState<number | null>(1); // default to 1 for initial oldest search
+  const [dayEnd, setDayEnd] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
+  const [cardMin, setCardMin] = useState<number>(300);
   // Applied query (set when user presses Search)
-  const [query, setQuery] = useState<{ year: number; month: number; day: number | null } | null>({
+  const [query, setQuery] = useState<
+    { year: number; month: number; dayStart: number | null; dayEnd: number | null } | null
+  >({
     year: START_YEAR,
     month: 10,
-    day: 1,
+    dayStart: 1,
+    dayEnd: null,
   });
 
   // Month slider track
@@ -144,8 +151,21 @@ const ArchivePage: React.FC = () => {
           return;
         }
         const docs = await getArchive(query.year, query.month, controller.signal);
-        // Optional client-side day filtering
-        const filtered = query.day ? docs.filter(d => new Date(d.pub_date).getDate() === query.day) : docs;
+        // Optional client-side day filtering or range filtering
+        const filtered = (() => {
+          const s = query.dayStart;
+          const e = query.dayEnd;
+          if (s != null && e != null) {
+            return docs.filter(d => {
+              const dn = new Date(d.pub_date).getDate();
+              return dn >= s && dn <= e;
+            });
+          }
+          if (s != null) {
+            return docs.filter(d => new Date(d.pub_date).getDate() === s);
+          }
+          return docs;
+        })();
         setArticles(filtered.slice(0, 60));
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
@@ -182,9 +202,15 @@ const ArchivePage: React.FC = () => {
 
   const eraTitle = useMemo(() => {
     const base = `${monthNamesLong[clamp(month,1,12)-1]} ${year}`;
-    if (day) return `${monthNamesLong[clamp(month,1,12)-1]} ${String(day).padStart(2, '0')}, ${year}`;
+    if (dayStart != null && dayEnd != null) {
+      if (dayStart === dayEnd) {
+        return `${monthNamesLong[clamp(month,1,12)-1]} ${String(dayStart).padStart(2, '0')}, ${year}`;
+      }
+      return `${base} (days ${String(dayStart).padStart(2, '0')}–${String(dayEnd).padStart(2, '0')})`;
+    }
+    if (dayStart != null) return `${monthNamesLong[clamp(month,1,12)-1]} ${String(dayStart).padStart(2, '0')}, ${year}`;
     return base;
-  }, [month, year, day, monthNamesLong]);
+  }, [month, year, dayStart, dayEnd, monthNamesLong]);
 
   const getEraClass = (y: number): string => {
     const decade = Math.floor(y / 10) * 10; // e.g. 1850, 1860, ... 2020
@@ -194,17 +220,7 @@ const ArchivePage: React.FC = () => {
     return decadeClass;
   };
 
-  const getImage = (a: ArchiveArticle): string => {
-    const mm: any[] = (a as any).multimedia || [];
-    const first = mm[0];
-    if (first?.url) {
-      const u: string = first.url;
-      if (/^https?:\/\//i.test(u)) return u;
-      const cleaned = u.replace(/^\/+/, '');
-      return `https://static01.nyt.com/${cleaned}`;
-    }
-    return '/logo.png';
-  };
+  // No preview image for archive cards per requirements
 
   const getSafeUrl = (url?: string): string | null => {
     if (!url) return null;
@@ -223,11 +239,21 @@ const ArchivePage: React.FC = () => {
     if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
-  const { setViewMode } = useSearchStore();
-  useEffect(() => {
-    // Force list view in archive
-    setViewMode('list');
-  }, [setViewMode]);
+  // Archive uses a dedicated cards grid; no global view mode
+
+  const daysInSelectedMonth = useMemo(() => new Date(year, month, 0).getDate(), [year, month]);
+
+  const onCalendarDayClick = (d: number) => {
+    if (dayStart == null || (dayStart != null && dayEnd != null)) {
+      setDayStart(d);
+      setDayEnd(null);
+      return;
+    }
+    const start = Math.min(dayStart, d);
+    const end = Math.max(dayStart, d);
+    setDayStart(start);
+    setDayEnd(end);
+  };
 
   return (
     <div className="archive-page">
@@ -307,12 +333,38 @@ const ArchivePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="control day" style={{ visibility: 'hidden', height: 0, padding: 0, margin: 0 }} />
+          {/* Calendar toggle and size slider */}
+          <div className="control">
+            <label className="switch" style={{ marginBottom: 0 }}>
+              <input
+                type="checkbox"
+                checked={showCalendar}
+                onChange={(e) => setShowCalendar(e.target.checked)}
+                aria-label="Show calendar"
+              />
+              Show calendar
+            </label>
+          </div>
+
+              <div className="control">
+                <label className="size-control">
+                  Card size
+                  <input
+                    type="range"
+                    min={220}
+                    max={520}
+                    step={10}
+                    value={cardMin}
+                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                    aria-label="Card size"
+                  />
+                </label>
+              </div>
 
           <div className="control">
             <button
               className="retry-button"
-              onClick={() => setQuery({ year, month, day })}
+              onClick={() => setQuery({ year, month, dayStart, dayEnd })}
               aria-label="Search archive"
             >
               Search
@@ -320,6 +372,27 @@ const ArchivePage: React.FC = () => {
           </div>
             </div>
           </section>
+          {showCalendar && (
+            <section aria-label="Calendar" className="calendar">
+              <div className="calendar-grid" role="grid">
+                {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
+                  const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));
+                  const inRange = dayStart != null && dayEnd != null && d > dayStart && d < dayEnd;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`calendar-day${isSelected ? ' selected' : ''}${inRange ? ' in-range' : ''}`}
+                      aria-pressed={isSelected || inRange}
+                      onClick={() => onCalendarDayClick(d)}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
@@ -328,7 +401,7 @@ const ArchivePage: React.FC = () => {
       {loading ? (
         <div style={{ padding: '2rem' }}><Spinner /></div>
       ) : (
-        <section className={'archive-list'}>
+        <section className={'archive-grid'} style={{ ['--card-min' as any]: `${cardMin}px` }}>
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
@@ -338,24 +411,6 @@ const ArchivePage: React.FC = () => {
               const keywords = (a.keywords || []).slice(0, 3).map(k => k.value).filter(Boolean);
               return (
                 <article key={a.uri} className="archive-card" tabIndex={0}>
-                  <div className="card-image">
-                    <img
-                      src={getImage(a)}
-                      alt={a.headline?.main || a.abstract || 'NYT archive'}
-                      onError={(e) => {
-                        const t = e.currentTarget as HTMLImageElement;
-                        t.src = '/logo.png';
-                      }}
-                    />
-                    <button
-                      onClick={() => toggleFav(a)}
-                      className="favorite-btn"
-                      aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                      title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                    >
-                      {isFav(a) ? '♥' : '♡'}
-                    </button>
-                  </div>
                   <div className="card-body">
                     <div className="card-meta">
                       <span className="badge section">{a.section_name || a.news_desk || 'Archive'}</span>
@@ -374,6 +429,14 @@ const ArchivePage: React.FC = () => {
                       </div>
                     )}
                     <div className="card-actions">
+                      <button
+                        onClick={() => toggleFav(a)}
+                        className="favorite-inline"
+                        aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                        title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        {isFav(a) ? '♥ Favorite' : '♡ Favorite'}
+                      </button>
                       {href && (
                         <a className="read-link" href={href} target="_blank" rel="noopener noreferrer">Read on NYTimes →</a>
                       )}
