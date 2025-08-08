@@ -187,12 +187,11 @@ const ArchivePage: React.FC = () => {
   }, [month, year, day, monthNamesLong]);
 
   const getEraClass = (y: number): string => {
-    if (y < 1900) return 'victorian';
-    if (y < 2000) {
-      const decade = Math.floor(y / 10) * 10; // 1900, 1910, ..., 1990
-      return `decade-${decade}s`;
-    }
-    return 'modern';
+    const decade = Math.floor(y / 10) * 10; // e.g. 1850, 1860, ... 2020
+    const decadeClass = `decade-${decade}s`;
+    if (y < 1900) return `victorian ${decadeClass}`;
+    if (y >= 2000) return `modern ${decadeClass}`;
+    return decadeClass;
   };
 
   const getImage = (a: ArchiveArticle): string => {
