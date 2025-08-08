@@ -10,10 +10,11 @@ describe('ViewToggle', () => {
     mockOnViewChange.mockClear();
   });
 
-  test('renders both toggle buttons', () => {
+  test('renders all toggle buttons', () => {
     render(<ViewToggle viewMode="grid" onViewChange={mockOnViewChange} />);
     
     expect(screen.getByLabelText('Grid view')).toBeInTheDocument();
+    expect(screen.getByLabelText('List view')).toBeInTheDocument();
     expect(screen.getByLabelText('Table view')).toBeInTheDocument();
   });
 
@@ -37,6 +38,18 @@ describe('ViewToggle', () => {
     expect(gridButton).not.toHaveClass('active');
   });
 
+  test('shows list button as active when viewMode is list', () => {
+    render(<ViewToggle viewMode="list" onViewChange={mockOnViewChange} />);
+    
+    const listButton = screen.getByLabelText('List view');
+    const gridButton = screen.getByLabelText('Grid view');
+    const tableButton = screen.getByLabelText('Table view');
+    
+    expect(listButton).toHaveClass('active');
+    expect(gridButton).not.toHaveClass('active');
+    expect(tableButton).not.toHaveClass('active');
+  });
+
   test('calls onViewChange with grid when grid button is clicked', () => {
     render(<ViewToggle viewMode="table" onViewChange={mockOnViewChange} />);
     
@@ -55,6 +68,15 @@ describe('ViewToggle', () => {
     expect(mockOnViewChange).toHaveBeenCalledWith('table');
   });
 
+  test('calls onViewChange with list when list button is clicked', () => {
+    render(<ViewToggle viewMode="grid" onViewChange={mockOnViewChange} />);
+    
+    const listButton = screen.getByLabelText('List view');
+    fireEvent.click(listButton);
+    
+    expect(mockOnViewChange).toHaveBeenCalledWith('list');
+  });
+
   test('has correct title attributes', () => {
     render(<ViewToggle viewMode="grid" onViewChange={mockOnViewChange} />);
     
@@ -66,7 +88,7 @@ describe('ViewToggle', () => {
     const { container } = render(<ViewToggle viewMode="grid" onViewChange={mockOnViewChange} />);
     
     const svgs = container.querySelectorAll('svg');
-    expect(svgs).toHaveLength(2);
+    expect(svgs).toHaveLength(3);
   });
 
   test('buttons have correct CSS classes', () => {

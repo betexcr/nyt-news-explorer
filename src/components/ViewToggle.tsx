@@ -22,6 +22,16 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
           </svg>
         </button>
         <button
+          className={`button ${viewMode === 'list' ? 'active' : ''}`}
+          onClick={() => onViewChange('list')}
+          aria-label="List view"
+          title="List view"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h12v2H2v-2z"/>
+          </svg>
+        </button>
+        <button
           className={`button ${viewMode === 'table' ? 'active' : ''}`}
           onClick={() => onViewChange('table')}
           aria-label="Table view"

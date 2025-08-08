@@ -428,7 +428,7 @@ const SearchPage: React.FC = () => {
     }
 
     // Use virtualization for grid view when there are many articles
-    if (articles.length > 50) {
+    if (viewMode === 'list' || articles.length > 50) {
       return (
         <VirtualizedArticleList
           articles={articles}

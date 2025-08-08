@@ -35,21 +35,16 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
 
   const handleScroll = useCallback(({ scrollOffset, scrollUpdateWasRequested }: any) => {
     if (scrollUpdateWasRequested) return;
-    
-    const list = listRef.current;
-    if (!list) return;
 
-    // Access the outer element properly
-    const outerElement = (list as any).outerRef as HTMLElement;
-    if (!outerElement) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = outerElement;
+    // Fallback based on known itemHeight and list height to ensure scroll works in all modes
+    const totalContentHeight = articles.length * itemHeight;
+    const visibleHeight = height;
     const threshold = 200; // pixels from bottom to trigger load more
-    
-    if (scrollHeight - scrollTop - clientHeight < threshold && hasMore && !loadingMore) {
+
+    if (totalContentHeight - scrollOffset - visibleHeight < threshold && hasMore && !loadingMore) {
       onLoadMore();
     }
-  }, [hasMore, loadingMore, onLoadMore]);
+  }, [articles.length, itemHeight, height, hasMore, loadingMore, onLoadMore]);
 
   return (
     <div className="virtualized-list-container">
