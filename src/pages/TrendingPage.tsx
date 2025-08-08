@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
+import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
 import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
@@ -10,14 +10,19 @@ const TrendingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
+  const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
-  const fetchTrendingArticles = useCallback(async (period: '1' | '7' | '30') => {
+  const fetchTrendingArticles = useCallback(async (period: '1' | '7' | '30', signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Use mock data instead of API call
-      setArticles(mockTrendingArticles);
+      if (USE_MOCK) {
+        setArticles(mockTrendingArticles);
+      } else {
+        const data = await getMostPopular(period, signal);
+        setArticles(data);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch trending articles');
     } finally {
@@ -26,7 +31,9 @@ const TrendingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchTrendingArticles(selectedPeriod);
+    const controller = new AbortController();
+    fetchTrendingArticles(selectedPeriod, controller.signal);
+    return () => controller.abort();
   }, [selectedPeriod, fetchTrendingArticles]);
 
   const getPeriodLabel = (period: string) => {

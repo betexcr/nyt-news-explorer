@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
+import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
 import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
@@ -10,14 +10,19 @@ const TopStoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string>('home');
+  const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
-  const fetchTopStories = useCallback(async (section: string) => {
+  const fetchTopStories = useCallback(async (section: string, signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Use mock data instead of API call
-      setStories(mockTopStories);
+      if (USE_MOCK) {
+        setStories(mockTopStories);
+      } else {
+        const data = await getTopStories(section, signal);
+        setStories(data);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch top stories');
     } finally {
@@ -26,7 +31,9 @@ const TopStoriesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchTopStories(selectedSection);
+    const controller = new AbortController();
+    fetchTopStories(selectedSection, controller.signal);
+    return () => controller.abort();
   }, [selectedSection, fetchTopStories]);
 
   const getSectionLabel = (section: string) => {

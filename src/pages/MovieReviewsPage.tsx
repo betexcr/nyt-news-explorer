@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import type { MovieReview } from '../api/nyt-apis';
+import { getMovieReviews, type MovieReview } from '../api/nyt-apis';
 import { mockMovieReviews } from '../api/mock-data';
 import '../styles/movies.css';
 
@@ -8,15 +8,18 @@ const MovieReviewsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<'all' | 'picks'>('all');
+  const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
-  const fetchReviews = useCallback(async (t: 'all' | 'picks') => {
+  const fetchReviews = useCallback(async (t: 'all' | 'picks', signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      // Use mock data for stability; switch to real API by uncommenting
-      // const data = await getMovieReviews(t);
-      // setReviews(data);
-      setReviews(mockMovieReviews);
+      if (USE_MOCK) {
+        setReviews(mockMovieReviews);
+      } else {
+        const data = await getMovieReviews(t, signal);
+        setReviews(data);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch movie reviews');
     } finally {
@@ -25,7 +28,9 @@ const MovieReviewsPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchReviews(type);
+    const controller = new AbortController();
+    fetchReviews(type, controller.signal);
+    return () => controller.abort();
   }, [type, fetchReviews]);
 
   const getImageSrc = (r: MovieReview): string => {

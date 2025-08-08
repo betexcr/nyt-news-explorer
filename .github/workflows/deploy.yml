@@ -46,7 +46,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./build/
-          server-dir: domains/brainvaultdev.com/public_html/nyt/
+          server-dir: domains/brainvaultdev.com/nyt/
           protocol: ftp
           log-level: verbose
           dangerous-clean-slate: true
