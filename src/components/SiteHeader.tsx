@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useSearchStore } from "../store/searchStore";
 
@@ -9,6 +9,7 @@ export const SiteHeader: React.FC = () => {
   const optionsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const reset = useSearchStore((state) => state.reset);
+  const location = useLocation();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleOptions = (e: React.MouseEvent) => {
@@ -96,7 +97,7 @@ export const SiteHeader: React.FC = () => {
         <nav 
           style={{ 
             alignItems: "center", 
-            gap: "1rem",
+            gap: "0.5rem",
             display: "none" // Hidden on mobile
           }}
           className="desktop-nav"
@@ -104,58 +105,82 @@ export const SiteHeader: React.FC = () => {
           <Link
             to="/"
             style={{
-              color: "var(--textMuted)",
+              color: location.pathname === "/" ? "white" : "var(--textMuted)",
               textDecoration: "none",
               fontWeight: 600,
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
               transition: "all 0.2s ease",
+              fontSize: "0.9rem",
+              background: location.pathname === "/" ? "var(--primary)" : "transparent",
             }}
-            className="nav-link"
+            className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
           >
             Home
           </Link>
           <Link
-            to="/search"
+            to="/trending"
             style={{
-              color: "var(--textMuted)",
+              color: location.pathname === "/trending" ? "white" : "var(--textMuted)",
               textDecoration: "none",
               fontWeight: 600,
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
               transition: "all 0.2s ease",
+              fontSize: "0.9rem",
+              background: location.pathname === "/trending" ? "var(--primary)" : "transparent",
             }}
-            className="nav-link"
+            className={`nav-link ${location.pathname === "/trending" ? "active" : ""}`}
+          >
+            Trending
+          </Link>
+          <Link
+            to="/top-stories"
+            style={{
+              color: location.pathname === "/top-stories" ? "white" : "var(--textMuted)",
+              textDecoration: "none",
+              fontWeight: 600,
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
+              transition: "all 0.2s ease",
+              fontSize: "0.9rem",
+              background: location.pathname === "/top-stories" ? "var(--primary)" : "transparent",
+            }}
+            className={`nav-link ${location.pathname === "/top-stories" ? "active" : ""}`}
+          >
+            Top Stories
+          </Link>
+          <Link
+            to="/search"
+            style={{
+              color: location.pathname === "/search" ? "white" : "var(--textMuted)",
+              textDecoration: "none",
+              fontWeight: 600,
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
+              transition: "all 0.2s ease",
+              fontSize: "0.9rem",
+              background: location.pathname === "/search" ? "var(--primary)" : "transparent",
+            }}
+            className={`nav-link ${location.pathname === "/search" ? "active" : ""}`}
           >
             Search
           </Link>
           <Link
             to="/favorites"
             style={{
-              color: "var(--textMuted)",
+              color: location.pathname === "/favorites" ? "white" : "var(--textMuted)",
               textDecoration: "none",
               fontWeight: 600,
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "6px",
               transition: "all 0.2s ease",
+              fontSize: "0.9rem",
+              background: location.pathname === "/favorites" ? "var(--primary)" : "transparent",
             }}
-            className="nav-link"
+            className={`nav-link ${location.pathname === "/favorites" ? "active" : ""}`}
           >
             Favorites
-          </Link>
-          <Link
-            to="/api-docs"
-            style={{
-              color: "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
-              transition: "all 0.2s ease",
-            }}
-            className="nav-link"
-          >
-            API Docs
           </Link>
           
           {/* Options Dropdown */}
@@ -211,6 +236,26 @@ export const SiteHeader: React.FC = () => {
                   <div style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                     Quick Actions
                   </div>
+                  <Link
+                    to="/api-docs"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "left",
+                      background: "transparent",
+                      border: "none",
+                      padding: "0.5rem",
+                      borderRadius: "6px",
+                      color: "var(--text)",
+                      cursor: "pointer",
+                      fontSize: "0.875rem",
+                      transition: "background 0.2s ease",
+                      textDecoration: "none",
+                    }}
+                    onClick={() => setIsOptionsOpen(false)}
+                  >
+                    API Documentation
+                  </Link>
                   <button
                     style={{
                       width: "100%",
@@ -313,6 +358,36 @@ export const SiteHeader: React.FC = () => {
               Home
             </Link>
             <Link
+              to="/trending"
+              style={{
+                color: "var(--text)",
+                textDecoration: "none",
+                fontWeight: 600,
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                transition: "background 0.2s ease",
+              }}
+              onClick={() => setIsMenuOpen(false)}
+              className="mobile-nav-link"
+            >
+              Trending
+            </Link>
+            <Link
+              to="/top-stories"
+              style={{
+                color: "var(--text)",
+                textDecoration: "none",
+                fontWeight: 600,
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                transition: "background 0.2s ease",
+              }}
+              onClick={() => setIsMenuOpen(false)}
+              className="mobile-nav-link"
+            >
+              Top Stories
+            </Link>
+            <Link
               to="/search"
               style={{
                 color: "var(--text)",
@@ -342,21 +417,6 @@ export const SiteHeader: React.FC = () => {
             >
               Favorites
             </Link>
-            <Link
-              to="/api-docs"
-              style={{
-                color: "var(--text)",
-                textDecoration: "none",
-                fontWeight: 600,
-                padding: "0.75rem 1rem",
-                borderRadius: "8px",
-                transition: "background 0.2s ease",
-              }}
-              onClick={() => setIsMenuOpen(false)}
-              className="mobile-nav-link"
-            >
-              API Docs
-            </Link>
             
             <div style={{ 
               borderTop: "1px solid var(--border)", 
@@ -367,6 +427,32 @@ export const SiteHeader: React.FC = () => {
                 Settings
               </div>
               <ThemeToggle />
+            </div>
+            
+            <div style={{ 
+              borderTop: "1px solid var(--border)", 
+              marginTop: "0.75rem", 
+              paddingTop: "0.75rem" 
+            }}>
+              <div style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                Developer
+              </div>
+              <Link
+                to="/api-docs"
+                style={{
+                  color: "var(--text)",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  padding: "0.75rem 1rem",
+                  borderRadius: "8px",
+                  transition: "background 0.2s ease",
+                  display: "block",
+                }}
+                onClick={() => setIsMenuOpen(false)}
+                className="mobile-nav-link"
+              >
+                API Documentation
+              </Link>
             </div>
             
             <div style={{ 

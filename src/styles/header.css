@@ -18,6 +18,26 @@
   color: var(--text) !important;
 }
 
+/* Active navigation link */
+.nav-link.active {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* News website style navigation */
+.desktop-nav {
+  display: flex !important;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-link {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
 /* Dropdown Options */
 .options-dropdown button:hover {
   background: var(--bg) !important;

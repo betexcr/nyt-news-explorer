@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SiteHeader } from "./components/SiteHeader";
-import ApiNavigation from "./components/ApiNavigation";
 import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import TrendingPage from "./pages/TrendingPage";
@@ -12,14 +11,12 @@ import ApiDocsPage from "./pages/ApiDocsPage";
 import "./index.css";
 import "./styles/header.css";
 import "./styles/api-docs.css";
-import "./styles/api-navigation.css";
 
 
 function App() {
   return (
     <Router>
       <SiteHeader />
-      <ApiNavigation />
       <main style={{ paddingTop: "70px" }}>
         <div className="container">
           <Routes>
