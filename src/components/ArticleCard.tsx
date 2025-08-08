@@ -36,9 +36,12 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
     search: `?${createSearchParams({ url: article.web_url || '' }).toString()}`,
   };
 
+  // Store page-specific scroll position (Search page handles its own restoration)
   const onClick = () => {
     try {
-      useSearchStore.getState().setScrollY(window.scrollY || 0);
+      const y = window.scrollY || 0;
+      sessionStorage.setItem('search-page-scroll', String(y));
+      useSearchStore.getState().setScrollY(y);
     } catch {}
   };
 

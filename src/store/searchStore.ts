@@ -162,16 +162,10 @@ export const useSearchStore = create<SearchState>()(
         favorites: s.favorites,
       }),
       onRehydrateStorage: () => (state) => {
-        // Ensure loading states are false after rehydration
+        // Ensure loading states are false after rehydration; do not perform site-wide scroll restoration
         if (state) {
           state.loading = false;
           state.loadingMore = false;
-          // Ensure scroll position is restored
-          if (state.scrollY > 0) {
-            setTimeout(() => {
-              window.scrollTo(0, state.scrollY);
-            }, 100);
-          }
         }
       },
     }
