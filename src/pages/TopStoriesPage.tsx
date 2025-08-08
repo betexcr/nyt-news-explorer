@@ -4,6 +4,8 @@ import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import '../styles/top-stories.css';
+import { useSearchStore } from '../store/searchStore';
+import { normalizeTopStory } from '../utils/normalize';
 
 const TopStoriesPage: React.FC = () => {
   const [stories, setStories] = useState<TopStory[]>([]);
@@ -82,6 +84,13 @@ const TopStoriesPage: React.FC = () => {
     return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
+  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const isFav = (story: TopStory) => favorites.some(f => f.web_url === story.url);
+  const toggleFav = (story: TopStory) => {
+    const normalized = normalizeTopStory(story);
+    if (isFav(story)) removeFavorite(normalized.web_url); else addFavorite(normalized);
+  };
+
   if (loading && stories.length === 0) {
     return (
       <div className="top-stories-page">
@@ -154,6 +163,14 @@ const TopStoriesPage: React.FC = () => {
               <div className="story-badge">
                 <span className="badge-text">Top Story</span>
               </div>
+              <button
+                onClick={() => toggleFav(story)}
+                className="favorite-btn"
+                aria-label={isFav(story) ? 'Remove from favorites' : 'Add to favorites'}
+                title={isFav(story) ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                {isFav(story) ? '♥' : '♡'}
+              </button>
             </div>
             
             <div className="top-story-card-content">

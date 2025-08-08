@@ -4,6 +4,8 @@ import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import '../styles/trending.css';
+import { useSearchStore } from '../store/searchStore';
+import { normalizeMostPopular } from '../utils/normalize';
 
 const TrendingPage: React.FC = () => {
   const [articles, setArticles] = useState<MostPopularArticle[]>([]);
@@ -61,6 +63,13 @@ const TrendingPage: React.FC = () => {
   const getSafeUrl = (url: string | undefined): string | null => {
     if (!url) return null;
     return /^(https?:)?\/\//i.test(url) ? url : null;
+  };
+
+  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const isFav = (a: MostPopularArticle) => favorites.some(f => f.web_url === a.url);
+  const toggleFav = (a: MostPopularArticle) => {
+    const normalized = normalizeMostPopular(a);
+    if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
   if (loading && articles.length === 0) {
@@ -136,6 +145,14 @@ const TrendingPage: React.FC = () => {
                   target.style.display = 'none';
                 }}
               />
+              <button
+                onClick={() => toggleFav(article)}
+                className="favorite-btn"
+                aria-label={isFav(article) ? 'Remove from favorites' : 'Add to favorites'}
+                title={isFav(article) ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                {isFav(article) ? '♥' : '♡'}
+              </button>
             </div>
             
             <div className="trending-card-content">

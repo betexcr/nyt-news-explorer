@@ -4,6 +4,8 @@ import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
 import '../styles/archive.css';
+import { useSearchStore } from '../store/searchStore';
+import { normalizeArchive } from '../utils/normalize';
 
 // Utility: clamp
 const clamp = (val: number, min: number, max: number) => Math.min(max, Math.max(min, val));
@@ -155,8 +157,20 @@ const ArchivePage: React.FC = () => {
   const getImage = (a: ArchiveArticle): string => {
     const mm: any[] = (a as any).multimedia || [];
     const first = mm[0];
-    if (first?.url) return first.url;
+    if (first?.url) {
+      const u: string = first.url;
+      if (/^https?:\/\//i.test(u)) return u;
+      const cleaned = u.replace(/^\/+/, '');
+      return `https://static01.nyt.com/${cleaned}`;
+    }
     return '/logo.png';
+  };
+
+  const { favorites, addFavorite, removeFavorite } = useSearchStore();
+  const isFav = (a: ArchiveArticle) => favorites.some(f => f.web_url === a.web_url);
+  const toggleFav = (a: ArchiveArticle) => {
+    const normalized = normalizeArchive(a);
+    if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
   return (
@@ -223,7 +237,22 @@ const ArchivePage: React.FC = () => {
             articles.map((a) => (
               <article key={a.uri} className="archive-card">
                 <div className="card-image">
-                  <img src={getImage(a)} alt={a.headline?.main || a.abstract || 'NYT archive'} />
+                  <img
+                    src={getImage(a)}
+                    alt={a.headline?.main || a.abstract || 'NYT archive'}
+                    onError={(e) => {
+                      const t = e.currentTarget as HTMLImageElement;
+                      t.src = '/logo.png';
+                    }}
+                  />
+                  <button
+                    onClick={() => toggleFav(a)}
+                    className="favorite-btn"
+                    aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                    title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                  >
+                    {isFav(a) ? '♥' : '♡'}
+                  </button>
                 </div>
                 <div className="card-body">
                   <div className="card-meta">
