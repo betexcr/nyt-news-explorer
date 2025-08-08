@@ -22,14 +22,13 @@
 }
 
 .hero-title {
-  font-size: 3.5rem;
-  font-weight: 800;
+  font-size: 3.25rem;
+  font-weight: 900;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary), #667eea);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text);
   line-height: 1.1;
+  letter-spacing: -0.5px;
+  text-rendering: optimizeLegibility;
 }
 
 .hero-subtitle {
@@ -58,9 +57,9 @@
 }
 
 .hero-button.primary {
-  background: linear-gradient(135deg, var(--primary), #667eea);
-  color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: var(--primary);
+  color: var(--button-text);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
 .hero-button.primary:hover {
@@ -71,7 +70,7 @@
 .hero-button.secondary {
   background: var(--panel);
   color: var(--text);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
 }
 
 .hero-button.secondary:hover {
@@ -170,7 +169,7 @@
 }
 
 .article-card {
-  background: var(--background);
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -204,28 +203,28 @@
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-  color: white;
+  background: #d13d3d;
+  color: #fff;
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 2px 4px rgba(209, 61, 61, 0.35);
 }
 
 .story-badge {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
-  color: white;
+  background: #2b5d5a;
+  color: #fff;
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(78, 205, 196, 0.3);
+  box-shadow: 0 2px 4px rgba(43, 93, 90, 0.35);
 }
 
 .article-content {
@@ -241,8 +240,8 @@
 }
 
 .section {
-  background: rgba(102, 126, 234, 0.1);
-  color: var(--primary);
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
   font-weight: 600;

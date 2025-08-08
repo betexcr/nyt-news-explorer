@@ -82,14 +82,22 @@ export const SiteHeader: React.FC = () => {
         }}
       >
         {/* Logo/Brand */}
-        <Link to="/search" style={{ textDecoration: "none", color: "var(--text)" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span
-              style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.02em" }}
-            >
-              NYT News Explorer
-            </span>
-            <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by Alberto Muñoz</span>
+        <Link to="/" style={{ textDecoration: "none", color: "var(--text)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src="/logo.webp"
+              srcSet="/logo.webp 1x, /logo@2x.webp 2x"
+              alt="NYT News Explorer"
+              style={{ width: 28, height: 28 }}
+            />
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span
+                style={{ fontSize: 22, fontWeight: 800, letterSpacing: "0.02em" }}
+              >
+                NYT News Explorer
+              </span>
+              <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by Alberto Muñoz</span>
+            </div>
           </div>
         </Link>
 

@@ -1,24 +1,30 @@
 :root {
-  --bg: #f7f7f8;
+  /* Newspaper-inspired palette */
+  --bg: #f5f2ea;
   --panel: #ffffff;
-  --text: #111213;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --primary: #0f172a;
-  --radius: 12px;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.06);
+  --text: #111111;
+  --muted: #5a5a5a;
+  --border: #dcd7c9;
+  --primary: #111111;
+  --primary-hover: #2b2b2b;
+  --button-text: #ffffff;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", Arial, "Noto Sans";
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.06);
   --maxw: 1100px;
 }
 
 :root[data-theme="dark"] {
-  --bg: #0b0c0f;
-  --panel: #12141a;
-  --text: #e4e5e7;
-  --muted: #a1a1aa;
-  --border: #2a2f3d;
-  --primary: #4B5563;  
-  --primary-hover: #6b7280;  
-  --button-text: #ffffff;
+  --bg: #0f1114;
+  --panel: #14171c;
+  --text: #e6e7e9;
+  --muted: #a3a3ad;
+  --border: #2a2f36;
+  --primary: #e6e7e9;
+  --primary-hover: #ffffff;
+  --button-text: #0f1114;
 }
 
 [data-theme="dark"] .button {
@@ -44,10 +50,15 @@ body,
 }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
-    "Helvetica Neue", Arial, "Noto Sans";
-  background: var(--bg);
+  font-family: var(--font-serif);
+  line-height: 1.6;
   color: var(--text);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.0) 140px);
+  background-size: 6px 6px, 100% 200px;
+  background-position: 0 0, 0 0;
 }
 a {
   color: inherit;
@@ -93,8 +104,8 @@ a {
   justify-content: center;
   border: 1px solid var(--border);
   background: var(--primary);
-  color: #fff;
-  border-radius: 8px;
+  color: var(--button-text);
+  border-radius: 6px;
   padding: 0.55rem 1rem;
   font-size: 0.95rem;
   font-weight: 500;
@@ -104,8 +115,8 @@ a {
 }
 
 .button:hover {
-  filter: brightness(1.05); 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: var(--primary-hover);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
 .button:active {
@@ -150,6 +161,21 @@ img.thumb {
   width: 100%;
   height: auto;
   object-fit: contain;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid var(--border);
+}
+
+/* Typography for a newspaper feel */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.title, .headline {
+  font-family: var(--font-serif);
+}
+
+a:hover {
+  text-decoration: underline;
 }
