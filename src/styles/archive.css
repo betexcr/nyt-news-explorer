@@ -58,14 +58,14 @@
 .archive-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 
 /* Make archive list view resemble the Search list layout */
-.archive-list .archive-card { flex-direction: row; gap: 1rem; align-items: stretch; }
-.archive-list .card-image { width: 240px; height: 160px; flex: 0 0 auto; }
-.archive-list .card-body { padding: 1rem 1rem 1rem 0; }
-.archive-list .card-title { font-size: 1.05rem; }
-.archive-list .card-abstract { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.archive-list .archive-card { flex-direction: row; gap: 0.75rem; align-items: stretch; }
+.archive-list .card-image { width: 200px; height: 120px; flex: 0 0 auto; }
+.archive-list .card-body { padding: 0.6rem 0.75rem 0.6rem 0; }
+.archive-list .card-title { font-size: 1rem; margin: 0.15rem 0; }
+.archive-list .card-abstract { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 @media (max-width: 768px) {
-  .archive-list .card-image { width: 180px; height: 120px; }
+  .archive-list .card-image { width: 150px; height: 96px; }
 }
 .archive-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
 .card-image { position: relative; aspect-ratio: 3/2; background: #f0f0f0; overflow: hidden; }
