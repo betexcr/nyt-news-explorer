@@ -1,0 +1,258 @@
+swagger: "2.0"
+basePath: /svc/archive/v1
+host: api.nytimes.com
+info:
+  version: 2.0.0
+  title: Archive
+  description: |
+    The Archive API returns an array of NYT articles for a given month, going back to 1851.  Its response fields are the same as the Article Search API. The Archive API is very useful if you want to build your own database of NYT article metadata. You simply pass the API the year and month and it returns a JSON object with all articles for that month.  The API response size can be large (~20mb) and isn't meant to be called from the browser.
+
+    ```
+    /{year}/{month}.json
+    ```
+
+    ## Example Call
+    ```
+    https://api.nytimes.com/svc/archive/v1/2024/1.json?api-key=yourkey
+    ```
+
+    ## Working with the Data
+    The [jq](https://jqlang.github.io/jq/) command is very helpful with viewing, filtering, and transforming the JSON data.
+
+    ```
+    curl -s -o nyt-2024-1.json https://api.nytimes.com/svc/archive/v1/2024/1.json?api-key=yourkey
+    jq . nyt-2024-1.json | more
+    ```
+
+    For example you can use `jq` along with `sort` and `uniq` to get article section counts.
+    ```
+    jq -r '.response.docs[].section_name' nyt-2024-1.json | sort | uniq -c | sort -rn
+    767 U.S.
+    497 World
+    ...
+    ```
+
+    Or use `jq` to get URLs for articles in the "Politics" subsection.
+    ```
+    jq -r '.response.docs[] | select(.subsection_name == "Politics") | .web_url' nyt-2024-1.json
+    ```
+
+    Or print the headline and byline for articles with the "Restaurants" keyword.
+    ```
+    jq -r '.response.docs[] | select(.keywords[].value == "Restaurants") | "\(.headline.main) \(.byline.original)"' nyt-2024-1.json
+    ```
+
+    Or use [imgcat](https://pypi.org/project/imgcat/) to show images from "Food" articles in [iTerm2](https://iterm2.com/).
+    ```
+    jq -r '.response.docs[] | select(.section_name == "Food") | .multimedia[] | select(.crop_name == "articleLarge") | .url' nyt-2024-1.json | head -n 10 | xargs -n1 -I\{\} /bin/bash -c 'URL="https://static01.nyt.com/{}"; echo "$URL"; sleep 5; curl -s "$URL" | imgcat'
+    ```
+
+schemes:
+  - https
+produces:
+  - application/json
+security:
+  - apikey: []
+paths:
+  "/{year}/{month}.json":
+    get:
+      summary: Returns an array of articles for a given month.
+      description: |
+        Pass in year and month and get back JSON with all articles for that month. The response can be big (~20 megabytes) and contain thousands of articles, depending on the year and month.
+      parameters:
+        - name: year
+          in: path
+          description: "Year: 1851-2019"
+          required: true
+          type: integer
+          default: 2018
+        - name: month
+          in: path
+          description: "Year: 1-12"
+          required: true
+          type: integer
+          default: 9
+      tags:
+        - Archive
+      responses:
+        "200":
+          description: An array of articles.
+          schema:
+            type: object
+            properties:
+              copyright:
+                type: string
+              response:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      hits:
+                        type: integer
+                  docs:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Article"
+        "401":
+          description: Unauthorized request, check api-key is set.
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+        "429":
+          description: Too many requests.  You reached your per minute or per day rate limit.
+definitions:
+  Article:
+    type: object
+    properties:
+      web_url:
+        type: string
+        description: Article URL.
+      snippet:
+        type: string
+      print_page:
+        type: integer
+        description: Page in print (e.g. 1).
+      print_section:
+        type: string
+        description: Section in print (e.g. A).
+      source:
+        type: string
+      multimedia:
+        type: array
+        items:
+          $ref: "#/definitions/Multimedia"
+      headline:
+        $ref: "#/definitions/Headline"
+      keywords:
+        type: array
+        items:
+          $ref: "#/definitions/Keyword"
+      pub_date:
+        type: string
+        description: Publication date.
+      document_type:
+        type: string
+        description: Document type (article, multimedia).
+      news_desk:
+        type: string
+        description: Desk in the newsroom that worked on the story (Foreign, Metro, Sports, ...).
+      section_name:
+        type: string
+        description: Section that the article appeared in (New York, Sports, World, ...).
+      byline:
+        $ref: "#/definitions/Byline"
+      type_of_material:
+        type: string
+        description: Type of asset (Correction, News, Op-Ed, Review, Video, ...).
+      _id:
+        type: string
+      word_count:
+        type: integer
+        description: Number of words in the article.
+      uri:
+        type: string
+        description: Uniquely identifies an asset.
+  Byline:
+    type: object
+    properties:
+      original:
+        type: string
+      person:
+        type: array
+        items:
+          $ref: "#/definitions/Person"
+      organization:
+        type: string
+  Headline:
+    type: object
+    properties:
+      main:
+        type: string
+      kicker:
+        type: string
+      content_kicker:
+        type: string
+      print_headline:
+        type: string
+      name:
+        type: string
+      seo:
+        type: string
+      sub:
+        type: string
+  Keyword:
+    type: object
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+      rank:
+        type: integer
+      major:
+        type: string
+  Multimedia:
+    type: object
+    properties:
+      rank:
+        type: integer
+      subtype:
+        type: string
+      caption:
+        type: string
+      credit:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+      height:
+        type: integer
+      width:
+        type: integer
+      legacy:
+        type: object
+        properties:
+          xlarge:
+            type: string
+          xlargewidth:
+            type: integer
+          xlargeheight:
+            type: integer
+      crop_name:
+        type: string
+  Person:
+    type: object
+    properties:
+      firstname:
+        type: string
+      middlename:
+        type: string
+      lastname:
+        type: string
+      qualifier:
+        type: string
+      title:
+        type: string
+      role:
+        type: string
+      organization:
+        type: string
+      rank:
+        type: integer
+securityDefinitions:
+  apikey:
+    type: apiKey
+    name: api-key
+    in: query

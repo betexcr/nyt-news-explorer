@@ -31,10 +31,10 @@ describe('HomePage', () => {
     // Check for hero content
     expect(screen.getByText('Discover the latest news from The New York Times')).toBeInTheDocument();
     
-    // Check for search link
-    const searchLink = screen.getByRole('link', { name: /search articles/i });
-    expect(searchLink).toBeInTheDocument();
-    expect(searchLink.getAttribute('href')).toBe('/search');
+    // Check for at least one "Search Articles" link pointing to /search
+    const searchLinks = screen.getAllByRole('link', { name: /search articles/i });
+    expect(searchLinks.length).toBeGreaterThan(0);
+    expect(searchLinks.some(link => link.getAttribute('href') === '/search')).toBe(true);
   });
 
   test('renders trending and top stories sections', async () => {

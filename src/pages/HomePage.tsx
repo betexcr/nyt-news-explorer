@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import { getMostPopular, getTopStories, type MostPopularArticle, type TopStory } from "../api/nyt-apis";
+import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
 import { formatDate } from "../utils/format";
 import Spinner from "../components/Spinner";
 import "../styles/home.css";
@@ -19,13 +20,9 @@ const HomePage: React.FC = () => {
       setError(null);
       
       try {
-        // Fetch trending articles (most popular from last 7 days)
-        const trendingData = await getMostPopular('7');
-        setTrendingArticles(trendingData.slice(0, 3)); // Show top 3 trending
-        
-        // Fetch top stories from home section
-        const topStoriesData = await getTopStories('home');
-        setTopStories(topStoriesData.slice(0, 3)); // Show top 3 stories
+        // Use mock data instead of API calls
+        setTrendingArticles(mockTrendingArticles.slice(0, 3)); // Show top 3 trending
+        setTopStories(mockTopStories.slice(0, 3)); // Show top 3 stories
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
       } finally {

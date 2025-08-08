@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
+import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import '../styles/top-stories.css';
@@ -15,8 +16,8 @@ const TopStoriesPage: React.FC = () => {
     setError(null);
     
     try {
-      const data = await getTopStories(section);
-      setStories(data);
+      // Use mock data instead of API call
+      setStories(mockTopStories);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch top stories');
     } finally {

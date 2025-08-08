@@ -1,0 +1,348 @@
+swagger: '2.0'
+basePath: /svc/books/v3
+host: api.nytimes.com
+schemes:
+  - https
+info:
+  version: 3.0.0
+  title: Books API
+  description: |
+    The Books API provides information about books on [The New York Times Best Sellers lists](https://www.nytimes.com/books/best-sellers/).
+    Some lists are weekly (e.g. hardcover fiction) and some lists are monthly (e.g. audio fiction). New lists are published on the web on Wednesday around 7pm eastern time. They show up in print eleven days later in [The New York Times Book Review](https://www.nytimes.com/section/books/review).
+
+    The Book API provides two services:
+      * an overview service to get all the Best Sellers lists for a given week, and
+      * a list service to get one specific Best Sellers list for a given week or month depending on the list type.
+
+    ### Example Calls
+
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=yourkey&published_date=2025-05-04>
+    - <https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json?api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/2025-05-04/hardcover-fiction.json?api-key=yourkey>
+
+    ## Recent API Changes
+
+    **Note:** On May 15, 2025 the Books API changed.
+    - The list and overview services return the full list of books, so pagination is no longer required.
+    - The book reviews service was removed. Use the [Article Search API](https://developer.nytimes.com/docs/articlesearch-product/1/overview) instead.
+    - The best-sellers history service was removed.
+    - The list names service was removed.
+    - The v2 version of the services were removed.
+    - The services XML response format is deprecated.
+    - If you find issues, please email <code@nytimes.com>.
+
+    ## Usage
+
+    The overview service contains all the lists and all their books for a given week. So you only need to make 1 call to get a week's worth of data and 52 calls to get a year's worth data. You can use this to populate a local database on your side. Once populated you would only need to make 1 call a week to keep it up-to-date. New lists come out at around 7pm on Wednesday eastern time.
+
+    If you call the overview endpoint with no date, it will return the current lists. In the response it has the publish date of the previous list, so you can use that to walk through all the weeks.
+
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?published_date=2025-05-18&api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?published_date=2025-05-11&api-key=yourkey>
+
+    Currently we are in the process of backfilling the data, so we only have lists from 2017 to today. We will be adding lists from June 2008 until today soon.
+
+    ## Best Sellers List Service
+
+    The `lists/{date}/{name}.json` service returns the books on the Best Sellers list for the specified date and list name. The date is when the list was or will be in print, which is eleven days after it is first on the web.
+
+    ```
+    /lists/2025-05-04/hardcover-fiction.json
+    ```
+
+    Use "current" for {date} to get the latest list.
+
+    ```
+    /lists/current/hardcover-fiction.json
+    ```
+
+    ### Example Calls
+
+    - <https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json?api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/2025-05-04/hardcover-fiction.json?api-key=yourkey>
+
+    ## Best Sellers Overview Service
+
+    The `lists/overview.json` service returns all the Best Sellers lists and their books for a specified print date. If no date is specified it returns the most current lists.
+
+    ```
+    /lists/overview.json
+    /lists/overview.json?published_date={date}
+    ```
+
+    ### Example Calls
+
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=yourkey>
+    - <https://api.nytimes.com/svc/books/v3/lists/overview.json?api-key=yourkey&published_date=2025-05-04>
+
+paths:
+  '/lists/{date}/{list}.json':
+    get:
+      summary: Best Sellers List
+      description: Get Best Sellers data for a given list name and date.
+      operationId: GET_lists-date-list-json
+      produces:
+        - application/json
+      parameters:
+        - name: date
+          in: path
+          description: |-
+            YYYY-MM-DD or "current"
+
+            The date the best sellers list was in the print [The New York Times Book Review](https://www.nytimes.com/section/books/review).  Use "current" to get latest list.
+          required: true
+          type: string
+          pattern: '^(\d{4}-\d{2}-\d{2}|current)$'
+        - name: list
+          in: path
+          description: Name of the Best Sellers List (e.g. hardcover-fiction). You can get the  list of names from the /lists/overview.json service.
+          required: true
+          type: string
+      responses:
+        '200':
+          description: 'Best Sellers list books.'
+          schema:
+            $ref: '#/definitions/ListResponse'
+          examples:
+            application/json:
+              status: OK
+              copyright: Copyright (c) 2025 The New York Times Company. All Rights Reserved.
+              num_results: 15
+              results:
+                list_name: Hardcover Fiction
+                list_name_encoded: hardcover-fiction
+                display_name: Hardcover Fiction
+                bestsellers_date: '2025-05-04'
+                previous_published_date: '2025-05-11'
+                published_date: '2025-05-18'
+                next_published_date: '2025-05-25'
+                normal_list_ends_at: 15
+                updated: WEEKLY
+                books:
+                  - rank: 1
+                    rank_last_week: 1
+                    weeks_on_list: 2
+                    asterisk: 0
+                    dagger: 0
+                    primary_isbn13: '9780593441299'
+                    publisher: Berkley
+                    description: 'A writer looking for her big break competes against a Pulitzer winner to tell the story of an octogenarian with a storied past.'
+                    title: Great Big Beautiful Life
+                    author: Emily Henry
+                    contributor: Emily Henry
+                    contributor_note: ''
+                    book_image: 'https://static01.nyt.com/bestsellers/images/9780593441299.jpg'
+                    amazon_product_url: 'https://www.amazon.com/dp/059344129X?tag=thenewyorktim-20'
+                    age_group: ''
+                    book_review_link: ''
+                    sunday_review_link: ''
+                corrections: []
+        '401':
+          description: Unauthorized request. Make sure api-key is set.
+        '429':
+          description: Too many requests. You reached your per minute or per day rate limit.
+      security:
+        - api-key: []
+  '/lists/overview.json':
+    get:
+      summary: Best Sellers Overview
+      description: Get all books for all the Best Sellers lists for specified print date.
+      operationId: GET_lists-overview-json
+      produces:
+        - application/json
+      parameters:
+        - name: published_date
+          in: query
+          description: |-
+            YYYY-MM-DD
+
+            The overview published date when the list was or will be in the print [The New York Times Book Review](https://www.nytimes.com/section/books/review).
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          required: false
+      responses:
+        '200':
+          description: 'Overview of Best Sellers lists.'
+          schema:
+            $ref: '#/definitions/OverviewResponse'
+          examples:
+            application/json:
+              status: OK
+              copyright: Copyright (c) 2025 The New York Times Company. All Rights Reserved.
+              num_results: 250
+              results:
+                bestsellers_date: '2025-05-04'
+                previous_published_date: '2025-05-11'
+                published_date: '2025-05-18'
+                next_published_date: '2025-05-25'
+                lists:
+                  - list_id: 1
+                    list_name: Hardcover Fiction
+                    list_name_encoded: hardcover-fiction
+                    display_name: Hardcover Fiction
+                    updated: WEEKLY
+                    books:
+                      - rank: 1
+                        rank_last_week: 1
+                        weeks_on_list: 2
+                        asterisk: 0
+                        dagger: 0
+                        primary_isbn13: '9780593441299'
+                        publisher: Berkley
+                        description: 'A writer looking for her big break competes against a Pulitzer winner to tell the story of an octogenarian with a storied past.'
+                        title: Great Big Beautiful Life
+                        author: Emily Henry
+                        contributor: Emily Henry
+                        contributor_note: ''
+                        book_image: 'https://static01.nyt.com/bestsellers/images/9780593441299.jpg'
+                        amazon_product_url: 'https://www.amazon.com/dp/059344129X?tag=thenewyorktim-20'
+                        age_group: ''
+                        book_review_link: ''
+                        sunday_review_link: ''
+        '401':
+          description: Unauthorized request. Make sure api-key is set.
+        '429':
+          description: Too many requests. You reached your per minute or per day rate limit.
+      security:
+        - api-key: []
+definitions:
+  ListResponse:
+    type: object
+    properties:
+      status:
+        type: string
+      copyright:
+        type: string
+      num_results:
+        type: integer
+      results:
+        type: object
+        properties:
+          display_name:
+            type: string
+            description: Display name for the list.
+          list_name_encoded:
+            type: string
+            description: List name encoded for the URL path.
+          published_date:
+            type: string
+            description: When the list was in print.
+          updated:
+            type: string
+            description: How often the list is updated (WEEKLY or MONTHLY).
+          previous_published_date:
+            type: string
+            description: Date of previous list if exists.
+          next_published_date:
+            type: string
+            description: Date of next list if exists.
+          books:
+            type: array
+            items:
+              $ref: '#/definitions/Book'
+          corrections:
+            type: array
+            items:
+              type: object
+              properties:
+                text:
+                  type: string
+                correction_date:
+                  type: string
+  OverviewResponse:
+    type: object
+    properties:
+      status:
+        type: string
+      copyright:
+        type: string
+      num_results:
+        type: integer
+      results:
+        type: object
+        properties:
+          published_date:
+            type: string
+            description: When the lists were in print.
+          previous_published_date:
+            type: string
+            description: Date of previous overview if exists.
+          next_published_date:
+            type: string
+            description: Date of next overview if exists.
+          lists:
+            type: array
+            items:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  description: Display name for the list.
+                list_name_encoded:
+                  type: string
+                  description: List name encoded for the URL path.
+                updated:
+                  type: string
+                  description: How often the list is updated (WEEKLY or MONTHLY).
+                books:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Book'
+  Book:
+    type: object
+    properties:
+      rank:
+        type: integer
+        description: Rank on the list.
+      rank_last_week:
+        type: integer
+        description: Rank on list last week.
+      weeks_on_list:
+        type: integer
+        description: Number of weeks on list.
+      asterisk:
+        type: integer
+        description: Book's sales are barely distinguishable from those of the book above it.
+      dagger:
+        type: integer
+        description: Some retailers report receiving bulk orders.
+      primary_isbn13:
+        type: string
+        description: The book's ID, which is usually an ISBN 13.
+      publisher:
+        type: string
+        description: Publisher name.
+      description:
+        type: string
+        description: A short description of the book.
+      title:
+        type: string
+        description: The book title.
+      author:
+        type: string
+        description: The book author.
+      contributor:
+        type: string
+        description: The book author.
+      book_image:
+        type: string
+        description: Book cover image.
+      amazon_product_url:
+        type: string
+        description: A link to the book on Amazon.
+      age_group:
+        type: string
+        description: Book age group.
+      book_review_link:
+        type: string
+        description: Link to NYT book review.
+      sunday_review_link:
+        type: string
+        description: Link to NYT Sunday book review.
+securityDefinitions:
+  api-key:
+    name: api-key
+    type: apiKey
+    in: query

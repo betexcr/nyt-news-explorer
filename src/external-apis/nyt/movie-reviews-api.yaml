@@ -1,0 +1,329 @@
+swagger: '2.0'
+basePath: /svc/movies/v2
+host: api.nytimes.com
+schemes:
+  - https
+info:
+  version: 2.0.0
+  title: Movie Reviews API
+  description: |
+    **NOTE: The Movie Reviews API has been shutdown.**
+
+    As an alternative, use the [Article Search API](https://developer.nytimes.com/docs/articlesearch-product/1/overview) to get New York Times movie reviews using the following filter query:
+
+    ```
+    section_name:"Movies" AND type_of_material:"Review"
+    ```
+
+    <https://api.nytimes.com/svc/search/v2/articlesearch.json?fq=section_name%3A"Movies"%20AND%20type_of_material%3A"Review"&sort=newest&page=0&api-key{your-key}>
+
+    ## Movie Reviews API (DEPRECATED)
+    Search New York Times movie reviews by keyword and opening date and filter by Critics' Picks.
+
+    Get movie reviews that are critics' picks:
+
+    ```
+    /reviews/picks.json
+    ```
+
+    Get movie reviews with "lebowski" in the title:
+
+    ```
+    /reviews/search.json?query=lebowski
+    ```
+
+    Get movie reviews with "big" in the title that opened in the U.S. between 1980 and 1990:
+
+    ```
+    /reviews/search.json?query=big&opening-date=1980-01-01:1990-01-01
+    ```
+
+    Get all movie reviews by A. O. Scott:
+
+    ```
+    /critics/A.%20O.%20Scott.json
+    ```
+
+    Get movie critic names:
+
+    ```
+    /critics/all.json
+    ```
+
+    ## Example Call
+    ```
+    https://api.nytimes.com/svc/movies/v2/reviews/search.json?query=godfather&api-key=yourkey
+    ```
+produces:
+  - application/json
+security:
+  - apikey: []
+paths:
+  '/critics/{reviewer}.json':
+    get:
+      summary: Get movie critics name, bio and image.
+      description: |
+        Get movie critics. You can either specify the reviewer name or use "all", "full-time", or "part-time".
+      tags:
+        - Movies
+      parameters:
+        - name: reviewer
+          in: path
+          description: Reviewer name or "all" for all reviewers, "full-time" for full-time reviewers, or "part-time" for part-time reviewers.
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Array of movie critics.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              copyright:
+                type: string
+              num_results:
+                type: integer
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Critic'
+        '401':
+          description: Unauthorized request.  Make sure api-key is set.
+        '429':
+          description: Too many requests.  You reached your per minute or per day rate limit.
+  '/reviews/{type}.json':
+    get:
+      summary: Get movie reviews.
+      description: |
+        Get movie reviews.  Can filter to only return Critics' Picks.
+        Supports ordering results by-publication-date or by-opening-date.
+        Use offset to paginate thru results, 20 at a time.
+      tags:
+        - Movies
+      parameters:
+        - name: type
+          description: Filter by critics' pick or not.
+          in: path
+          required: true
+          type: string
+          enum:
+            - all
+            - picks
+        - name: offset
+          in: query
+          description: Sets the starting point of the result set.  Needs to be multiple of 20.
+          required: false
+          default: 0
+          type: integer
+        - name: order
+          in: query
+          description: How to order the results.
+          required: false
+          type: string
+          enum:
+            - by-opening-date
+            - by-publication-date
+      responses:
+        '200':
+          description: Array of movie reviews.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                description: Status of call, should be OK.
+              copyright:
+                type: string
+                description: Copyright text.
+              has_more:
+                type: boolean
+                description: Whether there are more results to paginate thru.
+              num_results:
+                type: integer
+                description: Number of movies returned in the API response results array.
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Review'
+        '401':
+          description: Unauthorized request.  Make sure api-key is set.
+        '429':
+          description: Too many requests.  You reached your per minute or per day rate limit.
+  '/reviews/search.json':
+    get:
+      summary: Search for movie reviews.
+      description: |
+        Search for movie reviews.  Supports filtering by Critics' Pick.
+      parameters:
+        - name: critics-pick
+          in: query
+          description: Set to Y to only show critics' picks.  Otherwise shows both.
+          type: string
+          enum:
+            - Y
+          required: false
+        - name: offset
+          in: query
+          description: Sets the starting point of the result set (0, 20, ...).  Used to paginate thru results. Defaults to 0. The has_more field indicates the response has more results.
+          type: integer
+          multipleOf: 20
+        - name: opening-date
+          in: query
+          description: U.S. opening date range. Start and end dates separated by colon (e.g. 1930-01-01:1940-01-01).
+          type: string
+          required: false
+        - name: order
+          in: query
+          description: Field to order results by (e.g. by-publication-date).
+          type: string
+          enum:
+            - by-opening-date
+            - by-publication-date
+          required: false
+        - name: publication-date
+          in: query
+          description: Review publication date range. Start and end dates separated by colon (e.g. 1930-01-01:1940-01-01).
+          type: string
+          required: false
+        - name: reviewer
+          in: query
+          description: Filter by reviewer byline (e.g. Stephen Holden).
+          type: string
+          required: false
+        - name: query
+          in: query
+          description: Search keyword (e.g. lebowski).
+          type: string
+          required: false
+      tags:
+        - Movies
+      responses:
+        '200':
+          description: Array of movie reviews.
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              copyright:
+                type: string
+              has_more:
+                type: boolean
+              num_results:
+                type: integer
+              results:
+                type: array
+                items:
+                  $ref: '#/definitions/Review'
+        '401':
+          description: Unauthorized request.  Make sure api-key is set.
+        '429':
+          description: Too many requests.  You reached your per minute or per day rate limit.
+definitions:
+  Critic:
+    type: object
+    properties:
+      display_name:
+        type: string
+        description: Critic's name (e.g. A. O. Scott).
+      sort_name:
+        type: string
+        description: Field used when sorting.
+      status:
+        type: string
+        description: Status of the critic (full-time, part-time, or null).
+      bio:
+        type: string
+        description: Short bio of critic.
+      seo-name:
+        type: string
+        description: Critic name for URL (spaces are replaced with hyphens and periods removed).
+      multimedia:
+        type: object
+        description: Image of critic.
+        properties:
+          resource:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Type of resource (always set to image).
+              src:
+                type: string
+                description: URL of image.
+              height:
+                type: integer
+                description: Image height.
+              width:
+                type: integer
+                description: Image width.
+              credit:
+                type: string
+                description: Image photo credit.
+  Link:
+    type: object
+    properties:
+      type:
+        type: string
+        description: Type of asset linked to. Always article.
+      url:
+        type: string
+        description: Review URL.
+      suggested_link_text:
+        type: string
+        description: Suggested text for link.
+  MultiMedia:
+    type: object
+    properties:
+      type:
+        type: string
+        description: Image crop name.
+      src:
+        type: string
+        description: Image URL.
+      width:
+        type: integer
+        description: Image width.
+      height:
+        type: integer
+        description: Image height.
+  Review:
+    type: object
+    properties:
+      display_title:
+        type: string
+        description: Movie title.
+      mpaa_rating:
+        type: string
+        description: Movie MPAA rating (e.g. PG-13).
+      critics_pick:
+        type: integer
+        description: Set to 1 if a critics' pick and 0 if not.
+      byline:
+        type: string
+        description: Author of the review (e.g. Manohla Dargis).
+      headline:
+        type: string
+        description: Headline of the review.
+      summary_short:
+        type: string
+        description: Short summary about the review.
+      publication_date:
+        type: string
+        description: Review publication date.
+      opening_date:
+        type: string
+        description: Movie U.S. opening date.
+      date_updated:
+        type: string
+        description: Last modified date of the review.
+      link:
+        $ref: '#/definitions/Link'
+      multimedia:
+        $ref: '#/definitions/MultiMedia'
+securityDefinitions:
+  apikey:
+    type: apiKey
+    name: api-key
+    in: query
