@@ -217,7 +217,7 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="articles-grid">
-              {topStories.map((story, index) => (
+              {topStories.map((story, _index) => (
                 <article key={story.uri} className="article-card story-card">
                   <div className="article-image">
                     <img
