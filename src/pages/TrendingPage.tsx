@@ -41,17 +41,21 @@ const TrendingPage: React.FC = () => {
   const getImageUrl = (article: MostPopularArticle): string => {
     if (article.media && article.media.length > 0) {
       const media = article.media[0];
-      if (media['media-metadata'] && media['media-metadata'].length > 0) {
-        const metadata = media['media-metadata'];
-        const largeImage = metadata.find(m => m.format === 'Large') ||
-                          metadata.find(m => m.format === 'mediumThreeByTwo210') ||
-                          metadata.find(m => m.format === 'Large Thumbnail') ||
-                          metadata.find(m => m.format === 'Standard Thumbnail') ||
-                          metadata[0];
-        return largeImage?.url || '/logo.png';
-      }
+      const mm = media['media-metadata'] || [];
+      // Prefer largest 3x2 image if present, otherwise fallbacks
+      const preferred =
+        mm.find(m => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
+        mm.find(m => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
+        mm.find(m => /^(Standard Thumbnail)$/i.test(m.format)) ||
+        mm[0];
+      if (preferred?.url) return preferred.url;
     }
     return '/logo.png';
+  };
+
+  const getSafeUrl = (url: string | undefined): string | null => {
+    if (!url) return null;
+    return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
   if (loading && articles.length === 0) {
@@ -136,14 +140,19 @@ const TrendingPage: React.FC = () => {
               </div>
               
               <h2 className="trending-card-title">
-                <a 
-                  href={article.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="title-link"
-                >
-                  {article.title}
-                </a>
+                {getSafeUrl(article.url) ? (
+                  <a
+                    href={getSafeUrl(article.url) as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="title-link"
+                    aria-label={`Open article: ${article.title}`}
+                  >
+                    {article.title}
+                  </a>
+                ) : (
+                  <span className="title-link" aria-disabled="true">{article.title}</span>
+                )}
               </h2>
               
               <p className="trending-card-abstract">
@@ -153,14 +162,21 @@ const TrendingPage: React.FC = () => {
               <div className="trending-card-footer">
                 <span className="byline">{article.byline}</span>
                 <div className="trending-card-actions">
-                  <a 
-                    href={article.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="read-more-button"
-                  >
-                    Read Article →
-                  </a>
+                  {getSafeUrl(article.url) ? (
+                    <a
+                      href={getSafeUrl(article.url) as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="read-more-button"
+                      aria-label={`Read full article: ${article.title}`}
+                    >
+                      Read Article →
+                    </a>
+                  ) : (
+                    <button className="read-more-button" disabled aria-disabled>
+                      Unavailable
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

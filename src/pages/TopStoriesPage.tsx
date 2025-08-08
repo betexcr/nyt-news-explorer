@@ -63,12 +63,18 @@ const TopStoriesPage: React.FC = () => {
 
   const getImageUrl = (story: TopStory): string => {
     if (story.multimedia && story.multimedia.length > 0) {
-      // Try to get the largest image available
-      const media = story.multimedia.find(m => m.subtype === 'photo') ||
-                   story.multimedia[0];
-      return media?.url || '/logo.png';
+      const media = story.multimedia[0];
+      // Prefer legacy xlarge when available, otherwise media.url
+      const legacy = (media as any).legacy;
+      if (legacy?.xlarge) return legacy.xlarge;
+      if (media.url) return media.url;
     }
     return '/logo.png';
+  };
+
+  const getSafeUrl = (url: string | undefined): string | null => {
+    if (!url) return null;
+    return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
   if (loading && stories.length === 0) {
@@ -152,14 +158,19 @@ const TopStoriesPage: React.FC = () => {
               </div>
               
               <h2 className="top-story-card-title">
-                <a 
-                  href={story.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="title-link"
-                >
-                  {story.title}
-                </a>
+                {getSafeUrl(story.url) ? (
+                  <a
+                    href={getSafeUrl(story.url) as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="title-link"
+                    aria-label={`Open full story: ${story.title}`}
+                  >
+                    {story.title}
+                  </a>
+                ) : (
+                  <span className="title-link" aria-disabled="true">{story.title}</span>
+                )}
               </h2>
               
               <p className="top-story-card-abstract">
@@ -169,14 +180,21 @@ const TopStoriesPage: React.FC = () => {
               <div className="top-story-card-footer">
                 <span className="byline">{story.byline}</span>
                 <div className="top-story-card-actions">
-                  <a 
-                    href={story.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="read-more-button"
-                  >
-                    Read Story →
-                  </a>
+                  {getSafeUrl(story.url) ? (
+                    <a
+                      href={getSafeUrl(story.url) as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="read-more-button"
+                      aria-label={`Read full story: ${story.title}`}
+                    >
+                      Read Story →
+                    </a>
+                  ) : (
+                    <button className="read-more-button" disabled aria-disabled>
+                      Unavailable
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

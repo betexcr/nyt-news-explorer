@@ -32,6 +32,11 @@ const MovieReviewsPage: React.FC = () => {
     return r.multimedia?.src || '/logo.png';
   };
 
+  const getSafeUrl = (url: string | undefined): string | null => {
+    if (!url) return null;
+    return /^(https?:)?\/\//i.test(url) ? url : null;
+  };
+
   return (
     <div className="movies-page">
       <div className="movies-header">
@@ -92,9 +97,21 @@ const MovieReviewsPage: React.FC = () => {
               <p className="movie-card-summary">{r.summary_short}</p>
               <div className="movie-card-footer">
                 <span className="byline">{r.byline}</span>
-                <a href={r.link.url} target="_blank" rel="noopener noreferrer" className="read-more-button">
-                  Read Review →
-                </a>
+                {getSafeUrl(r.link?.url) ? (
+                  <a
+                    href={getSafeUrl(r.link?.url) as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="read-more-button"
+                    aria-label={`Read full review: ${r.display_title}`}
+                  >
+                    Read Review →
+                  </a>
+                ) : (
+                  <button className="read-more-button" disabled aria-disabled>
+                    Unavailable
+                  </button>
+                )}
               </div>
             </div>
           </article>
