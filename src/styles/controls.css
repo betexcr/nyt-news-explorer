@@ -18,6 +18,13 @@
   align-items: center;
 }
 
+.advanced-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 .controls-card .size-control,
 .controls-card .period-selector,
 .controls-card .section-selector,
@@ -39,6 +46,7 @@
 @media (max-width: 768px) {
   .controls-card { padding: 0.5rem 0.75rem; }
   .controls-row { gap: 0.5rem; }
+  .advanced-controls { grid-template-columns: 1fr 1fr; }
 }
 
 

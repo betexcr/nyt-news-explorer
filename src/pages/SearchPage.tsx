@@ -500,6 +500,54 @@ const SearchPage: React.FC = () => {
                 {showAdvanced ? 'Simple' : 'Advanced'}
               </button>
             </div>
+
+            {showAdvanced && (
+              <div className="advanced-controls" aria-label="Advanced options">
+                <select
+                  className="input"
+                  value={advancedForm.sort}
+                  onChange={(e) => handleAdvancedChange('sort', e.target.value)}
+                  aria-label="Sort order"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="relevance">Most Relevant</option>
+                  <option value="best">Best Match</option>
+                </select>
+
+                <select
+                  className="input"
+                  value={advancedForm.section}
+                  onChange={(e) => handleAdvancedChange('section', e.target.value)}
+                  aria-label="Section"
+                >
+                  <option value="">All Sections</option>
+                  {SECTIONS.map(section => (
+                    <option key={section} value={section}>
+                      {section}
+                    </option>
+                  ))}
+                </select>
+
+                <input
+                  className="input"
+                  type="date"
+                  value={advancedForm.beginDate}
+                  onChange={(e) => handleAdvancedChange('beginDate', e.target.value)}
+                  placeholder="Start Date"
+                  aria-label="Start date"
+                />
+
+                <input
+                  className="input"
+                  type="date"
+                  value={advancedForm.endDate}
+                  onChange={(e) => handleAdvancedChange('endDate', e.target.value)}
+                  placeholder="End Date"
+                  aria-label="End date"
+                />
+              </div>
+            )}
           </form>
 
           {hasSearched && articles && (
@@ -532,54 +580,7 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Advanced Search Options Row */}
-      {showAdvanced && (
-        <div className="advanced-search-row">
-          <div className="advanced-search-section">
-            <div className="advanced-search-inputs">
-              <select
-                className="input"
-                value={advancedForm.sort}
-                onChange={(e) => handleAdvancedChange('sort', e.target.value)}
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="relevance">Most Relevant</option>
-                <option value="best">Best Match</option>
-              </select>
-              
-              <select
-                className="input"
-                value={advancedForm.section}
-                onChange={(e) => handleAdvancedChange('section', e.target.value)}
-              >
-                <option value="">All Sections</option>
-                {SECTIONS.map(section => (
-                  <option key={section} value={section}>
-                    {section}
-                  </option>
-                ))}
-              </select>
-              
-              <input
-                className="input"
-                type="date"
-                value={advancedForm.beginDate}
-                onChange={(e) => handleAdvancedChange('beginDate', e.target.value)}
-                placeholder="Start Date"
-              />
-              
-              <input
-                className="input"
-                type="date"
-                value={advancedForm.endDate}
-                onChange={(e) => handleAdvancedChange('endDate', e.target.value)}
-                placeholder="End Date"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Advanced Search Options now integrated above */}
 
       {/* Loading Spinner */}
       {loading && <Spinner />}
