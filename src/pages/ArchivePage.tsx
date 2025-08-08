@@ -179,7 +179,6 @@ const ArchivePage: React.FC = () => {
     ['January','February','March','April','May','June','July','August','September','October','November','December']
   ), []);
 
-  const openRangeLabel = `${year}-${String(month).padStart(2, '0')}${day ? '-' + String(day).padStart(2, '0') : ''}`;
 
   const eraTitle = useMemo(() => {
     const base = `${monthNamesLong[clamp(month,1,12)-1]} ${year}`;
