@@ -25,7 +25,7 @@ const MovieReviewsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [USE_MOCK]);
 
   useEffect(() => {
     const controller = new AbortController();
