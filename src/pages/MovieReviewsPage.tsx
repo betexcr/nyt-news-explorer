@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getMovieReviews, type MovieReview } from '../api/nyt-apis';
 import { mockMovieReviews } from '../api/mock-data';
 import '../styles/movies.css';
@@ -8,30 +8,29 @@ const MovieReviewsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<'all' | 'picks'>('all');
+  const [refreshTick, setRefreshTick] = useState<number>(0);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
-
-  const fetchReviews = useCallback(async (t: 'all' | 'picks', signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (USE_MOCK) {
-        setReviews(mockMovieReviews);
-      } else {
-        const data = await getMovieReviews(t, signal);
-        setReviews(data);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch movie reviews');
-    } finally {
-      setLoading(false);
-    }
-  }, [USE_MOCK]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchReviews(type, controller.signal);
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (USE_MOCK) {
+          setReviews(mockMovieReviews);
+        } else {
+          const data = await getMovieReviews(type, controller.signal);
+          setReviews(data);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch movie reviews');
+      } finally {
+        setLoading(false);
+      }
+    })();
     return () => controller.abort();
-  }, [type, fetchReviews]);
+  }, [type, USE_MOCK, refreshTick]);
 
   const getImageSrc = (r: MovieReview): string => {
     return r.multimedia?.src || '/logo.png';
@@ -67,7 +66,7 @@ const MovieReviewsPage: React.FC = () => {
       {error && (
         <div className="error-message">
           <p>⚠️ {error}</p>
-          <button className="retry-button" onClick={() => fetchReviews(type)}>Try Again</button>
+          <button className="retry-button" onClick={() => setRefreshTick((t) => t + 1)}>Try Again</button>
         </div>
       )}
 

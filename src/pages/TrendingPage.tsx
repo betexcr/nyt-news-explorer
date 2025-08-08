@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
 import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
@@ -10,31 +10,29 @@ const TrendingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
+  const [refreshTick, setRefreshTick] = useState<number>(0);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
-
-  const fetchTrendingArticles = useCallback(async (period: '1' | '7' | '30', signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      if (USE_MOCK) {
-        setArticles(mockTrendingArticles);
-      } else {
-        const data = await getMostPopular(period, signal);
-        setArticles(data);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch trending articles');
-    } finally {
-      setLoading(false);
-    }
-  }, [USE_MOCK]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchTrendingArticles(selectedPeriod, controller.signal);
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (USE_MOCK) {
+          setArticles(mockTrendingArticles);
+        } else {
+          const data = await getMostPopular(selectedPeriod, controller.signal);
+          setArticles(data);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch trending articles');
+      } finally {
+        setLoading(false);
+      }
+    })();
     return () => controller.abort();
-  }, [selectedPeriod, fetchTrendingArticles]);
+  }, [selectedPeriod, USE_MOCK, refreshTick]);
 
   const getPeriodLabel = (period: string) => {
     switch (period) {
@@ -108,7 +106,7 @@ const TrendingPage: React.FC = () => {
         <div className="error-message">
           <p>⚠️ {error}</p>
           <button 
-            onClick={() => fetchTrendingArticles(selectedPeriod)}
+            onClick={() => setRefreshTick((t) => t + 1)}
             className="retry-button"
           >
             Try Again

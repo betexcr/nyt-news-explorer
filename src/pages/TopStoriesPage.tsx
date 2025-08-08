@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
 import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
@@ -10,31 +10,29 @@ const TopStoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string>('home');
+  const [refreshTick, setRefreshTick] = useState<number>(0);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
-
-  const fetchTopStories = useCallback(async (section: string, signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      if (USE_MOCK) {
-        setStories(mockTopStories);
-      } else {
-        const data = await getTopStories(section, signal);
-        setStories(data);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch top stories');
-    } finally {
-      setLoading(false);
-    }
-  }, [USE_MOCK]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchTopStories(selectedSection, controller.signal);
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (USE_MOCK) {
+          setStories(mockTopStories);
+        } else {
+          const data = await getTopStories(selectedSection, controller.signal);
+          setStories(data);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch top stories');
+      } finally {
+        setLoading(false);
+      }
+    })();
     return () => controller.abort();
-  }, [selectedSection, fetchTopStories]);
+  }, [selectedSection, USE_MOCK, refreshTick]);
 
   const getSectionLabel = (section: string) => {
     const labels: Record<string, string> = {
@@ -127,7 +125,7 @@ const TopStoriesPage: React.FC = () => {
         <div className="error-message">
           <p>⚠️ {error}</p>
           <button 
-            onClick={() => fetchTopStories(selectedSection)}
+            onClick={() => setRefreshTick((t) => t + 1)}
             className="retry-button"
           >
             Try Again
