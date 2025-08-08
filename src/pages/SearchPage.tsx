@@ -269,7 +269,6 @@ const SearchPage: React.FC = () => {
   const [listHeight, setListHeight] = useState(600);
   const [itemHeight, setItemHeight] = useState(400);
   const [cardMin, setCardMin] = useState<number>(300);
-  const [fullWidth, setFullWidth] = useState<boolean>(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -443,7 +442,7 @@ const SearchPage: React.FC = () => {
     }
 
     return (
-      <div className="grid results" style={{ ['--card-min' as any]: fullWidth ? '100%' : `${cardMin}px` }}>
+      <div className="grid results" style={{ ['--card-min' as any]: `${cardMin}px` }}>
         {articles.map((a) => (
           <ArticleCard key={a.web_url} article={a} />
         ))}
@@ -507,30 +506,18 @@ const SearchPage: React.FC = () => {
                 onViewChange={setViewMode}
               />
               {viewMode === 'grid' && (
-                <>
-                  <label className="size-control">
-                    Card size
-                    <input
-                      type="range"
-                      min={220}
-                      max={520}
-                      step={10}
-                      value={cardMin}
-                      onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                      aria-label="Card size"
-                      disabled={fullWidth}
-                    />
-                  </label>
-                  <label className="size-control" style={{ marginLeft: '.5rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={fullWidth}
-                      onChange={(e) => setFullWidth(e.target.checked)}
-                      aria-label="Full width"
-                    />
-                    Full width
-                  </label>
-                </>
+                <label className="size-control">
+                  Card size
+                  <input
+                    type="range"
+                    min={220}
+                    max={520}
+                    step={10}
+                    value={cardMin}
+                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                    aria-label="Card size"
+                  />
+                </label>
               )}
             </div>
           </div>

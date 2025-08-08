@@ -16,7 +16,6 @@ const TopStoriesPage: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState<string>('home');
   const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
-  const [fullWidth, setFullWidth] = useState<boolean>(false);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
   useEffect(() => {
@@ -135,30 +134,18 @@ const TopStoriesPage: React.FC = () => {
           </div>
           <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
           {viewMode === 'grid' && (
-            <>
-              <label className="size-control">
-                Card size
-                <input
-                  type="range"
-                  min={220}
-                  max={520}
-                  step={10}
-                  value={cardMin}
-                  onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                  aria-label="Card size"
-                  disabled={fullWidth}
-                />
-              </label>
-              <label className="size-control" style={{ marginLeft: '.5rem' }}>
-                <input
-                  type="checkbox"
-                  checked={fullWidth}
-                  onChange={(e) => setFullWidth(e.target.checked)}
-                  aria-label="Full width"
-                />
-                Full width
-              </label>
-            </>
+            <label className="size-control">
+              Card size
+              <input
+                type="range"
+                min={220}
+                max={520}
+                step={10}
+                value={cardMin}
+                onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                aria-label="Card size"
+              />
+            </label>
           )}
         </div>
       </div>
@@ -171,7 +158,7 @@ const TopStoriesPage: React.FC = () => {
         </div>
       )}
 
-      <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined, ['--card-min' as any]: fullWidth ? '100%' : `${cardMin}px` }}>
+      <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined, ['--card-min' as any]: `${cardMin}px` }}>
         {stories.map((story, _index) => (
           <article key={story.uri} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
