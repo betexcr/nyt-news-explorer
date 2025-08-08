@@ -112,4 +112,12 @@
 .calendar-day.selected { background: var(--primary); color: var(--button-text); border-color: var(--primary); }
 .calendar-day.in-range { background: rgba(0,0,0,0.06); }
 
+/* Pin archive size control to bottom-right of its card */
+.archive-page .controls-card.compact { position: relative; min-height: 56px; }
+.archive-page .controls-card.compact .size-control {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+}
+
 
