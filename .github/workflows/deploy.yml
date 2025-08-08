@@ -31,6 +31,8 @@ jobs:
         run: bun run gen:types
 
       - name: Build React App
+        env:
+          REACT_APP_NYT_API_KEY: ${{ secrets.REACT_APP_NYT_API_KEY }}
         run: |
           echo "Building React app..."
           bun run build
