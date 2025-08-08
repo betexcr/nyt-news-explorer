@@ -79,8 +79,8 @@ export async function searchArticles(
   });
   
   const docs = response?.data?.response?.docs;
-  // For testing: only return first 6 results to simulate smaller page size
-  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 6) : [];
+  // For testing: return first 12 results to simulate page size
+  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 12) : [];
   
   return limitedDocs as NytArticle[];
 }
@@ -120,8 +120,8 @@ export async function searchArticlesAdv(params: {
   const response = await axios.get(BASE_URL, { params: query, signal });
   const docs = response?.data?.response?.docs;
   
-  // For testing: only return first 6 results to simulate smaller page size
-  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 6) : [];
+  // For testing: return first 12 results to simulate page size
+  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 12) : [];
   
   return limitedDocs as NytArticle[];
 }

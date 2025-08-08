@@ -357,11 +357,11 @@ const SearchPage: React.FC = () => {
         ...advancedForm
       });
 
-      // For testing: 6 results per page
+      // For testing: 12 results per page
       if (result.length > 0) {
         appendArticles(result);
-        // If we get less than 6 results, we've reached the end
-        if (result.length < 6) {
+        // If we get less than 12 results, we've reached the end
+        if (result.length < 12) {
           setHasMore(false);
         }
       } else {
@@ -378,7 +378,7 @@ const SearchPage: React.FC = () => {
 
   // Add scroll detection for regular grid view
   useEffect(() => {
-    if (!hasMore || loadingMore || !articles || articles.length < 6) return;
+    if (!hasMore || loadingMore || !articles || articles.length < 12) return;
 
     const handleScroll = () => {
       const scrollTop = window.scrollY;
