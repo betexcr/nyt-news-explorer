@@ -48,8 +48,8 @@ describe('ArchivePage', () => {
     );
 
     expect(screen.getByText(/NYT Archive Explorer/i)).toBeInTheDocument();
-    expect(screen.getByRole('slider', { name: /from decade/i })).toBeInTheDocument();
-    expect(screen.getByRole('slider', { name: /to decade/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Year:/i)).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: /Month/i })).toBeInTheDocument();
 
     // Wait for either data or an empty-state/rendered grid without throwing
     await waitFor(() => {
