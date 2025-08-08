@@ -150,7 +150,8 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month.toString().padStart(2, '0')}.json`;
+  // NYT Archive API expects month as 1-12 without zero padding
+  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
   const response = await makeApiRequest<ArchiveResponse>(url, {}, signal);
   return response.response.docs;
 }
