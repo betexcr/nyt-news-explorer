@@ -130,7 +130,30 @@ const ArchivePage: React.FC = () => {
     dragging.current = 'month';
   };
 
+  const monthNamesShort = useMemo(() => (
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  ), []);
+
+  const monthNamesLong = useMemo(() => (
+    ['January','February','March','April','May','June','July','August','September','October','November','December']
+  ), []);
+
   const openRangeLabel = `${year}-${String(month).padStart(2, '0')}${day ? '-' + String(day).padStart(2, '0') : ''}`;
+
+  const eraTitle = useMemo(() => {
+    const base = `${monthNamesLong[clamp(month,1,12)-1]} ${year}`;
+    if (day) return `${monthNamesLong[clamp(month,1,12)-1]} ${String(day).padStart(2, '0')}, ${year}`;
+    return base;
+  }, [month, year, day, monthNamesLong]);
+
+  const getEraClass = (y: number): string => {
+    if (y < 1900) return 'victorian';
+    if (y < 2000) {
+      const decade = Math.floor(y / 10) * 10; // 1900, 1910, ..., 1990
+      return `decade-${decade}s`;
+    }
+    return 'modern';
+  };
 
   const getImage = (a: ArchiveArticle): string => {
     const mm: any[] = (a as any).multimedia || [];
@@ -171,6 +194,10 @@ const ArchivePage: React.FC = () => {
         <div className="range-label">{openRangeLabel}</div>
       </header>
 
+      <section className="era-title-wrap">
+        <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
+      </section>
+
       <section className="epoch-slider">
         <div className="controls">
           <div className="control">
@@ -199,8 +226,14 @@ const ArchivePage: React.FC = () => {
                 tabIndex={0}
               />
               <div className="month-ticks" aria-hidden>
-                {['J','F','M','A','M','J','J','A','S','O','N','D'].map((lbl, i) => (
-                  <span key={lbl} style={{ left: `${(valueToPosition(i+1, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}>{lbl}</span>
+                {monthNamesShort.map((lbl, i) => (
+                  <span
+                    key={`month-${i+1}`}
+                    className={i + 1 === month ? 'current' : ''}
+                    style={{ left: `${(valueToPosition(i+1, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}
+                  >
+                    {lbl}
+                  </span>
                 ))}
               </div>
             </div>

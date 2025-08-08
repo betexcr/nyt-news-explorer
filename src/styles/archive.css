@@ -4,6 +4,22 @@
 .archive-subtitle { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
 .range-label { color: var(--muted); font-weight: 600; }
 
+.era-title-wrap { margin: 0.25rem 0 0.75rem; }
+.era-title { margin: 0; font-size: clamp(1.35rem, 1.1rem + 1.2vw, 2rem); line-height: 1.15; color: var(--text); text-align: left; }
+.era-title.victorian { font-family: 'Old Standard TT', 'Times New Roman', serif; letter-spacing: 0.5px; font-weight: 700; }
+.era-title.modern { font-family: inherit; font-weight: 800; }
+/* Decade-specific aesthetic tweaks for 1900-1990s */
+.era-title.decade-1900s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; }
+.era-title.decade-1910s { font-family: 'Old Standard TT', 'Times New Roman', serif; font-weight: 700; }
+.era-title.decade-1920s { font-family: 'Josefin Sans', 'Futura', 'Avenir', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+.era-title.decade-1930s { font-family: 'Cormorant Garamond', serif; font-weight: 700; }
+.era-title.decade-1940s { font-family: 'Merriweather', serif; font-weight: 800; }
+.era-title.decade-1950s { font-family: 'Playfair Display', serif; font-style: italic; }
+.era-title.decade-1960s { font-family: 'Work Sans', 'Helvetica Neue', Arial, sans-serif; letter-spacing: 2px; text-transform: uppercase; }
+.era-title.decade-1970s { font-family: 'Rubik', 'Helvetica Neue', Arial, sans-serif; letter-spacing: 1px; }
+.era-title.decade-1980s { font-family: 'Orbitron', 'Verdana', 'Tahoma', sans-serif; letter-spacing: 1px; }
+.era-title.decade-1990s { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; font-weight: 800; }
+
 .epoch-slider { margin: 0.75rem 0 1.25rem; }
 .controls { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
 .control { display: flex; flex-direction: column; gap: 0.35rem; min-width: 160px; }
@@ -19,8 +35,9 @@
 .slider-track.pretty::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120px 42px at var(--pos, 50%) 50%, rgba(0,0,0,0.06), transparent 60%); pointer-events: none; }
 .slider-handle { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 22px; height: 22px; background: var(--primary); border-radius: 50%; box-shadow: 0 6px 16px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.8); }
 .slider-handle.shadow { box-shadow: 0 8px 22px rgba(0,0,0,0.25); }
-.month-ticks { position: absolute; left: 0; right: 0; top: 100%; height: 18px; font-size: 10px; color: var(--muted); }
-.month-ticks span { position: absolute; transform: translateX(-50%); top: 4px; }
+.month-ticks { position: absolute; left: 0; right: 0; top: 100%; height: 20px; font-size: 12px; color: var(--muted-2, var(--muted)); font-weight: 700; }
+.month-ticks span { position: absolute; transform: translateX(-50%); top: 2px; opacity: 0.7; }
+.month-ticks span.current { color: var(--text); opacity: 1; text-shadow: 0 1px 0 rgba(0,0,0,0.04); }
 
 .day-slider { display: flex; align-items: center; gap: 0.5rem; }
 .day-slider input[type="range"] { width: 140px; accent-color: var(--primary); }
