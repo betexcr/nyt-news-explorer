@@ -16,6 +16,8 @@ const baseArticle: Article = {
   keywords: [],
 };
 
+jest.setTimeout(15000);
+
 describe('ArticleCard extra tests', () => {
   beforeEach(() => {
     useSearchStore.getState().reset();

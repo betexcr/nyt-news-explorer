@@ -90,9 +90,6 @@ const HomePage: React.FC = () => {
               <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
                 🔍 Search Articles
               </Link>
-              <Link to="/trending" className="hero-button secondary">
-                📈 Trending Now
-              </Link>
             </div>
           </div>
           <div className="loading-container">
@@ -114,9 +111,6 @@ const HomePage: React.FC = () => {
           <div className="hero-actions">
             <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
               🔍 Search Articles
-            </Link>
-            <Link to="/trending" className="hero-button secondary">
-              📈 Trending Now
             </Link>
             <Link to="/archive" className="hero-button secondary">
               🗄️ Explore Archive

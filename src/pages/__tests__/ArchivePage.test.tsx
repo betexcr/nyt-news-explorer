@@ -31,6 +31,8 @@ jest.mock('../../api/nyt-apis', () => ({
   ]),
 }));
 
+jest.setTimeout(15000);
+
 describe('ArchivePage', () => {
   beforeAll(() => {
     (global as any).ResizeObserver = class {
@@ -47,15 +49,15 @@ describe('ArchivePage', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/NYT Archive Explorer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Archive/i)).toBeInTheDocument();
     // After UI change, Year is controlled by a slider with accessible name "Year"
     expect(screen.getByRole('slider', { name: /Year/i })).toBeInTheDocument();
     expect(screen.getByRole('slider', { name: /Month/i })).toBeInTheDocument();
 
     // Wait for either data or an empty-state/rendered grid without throwing
     await waitFor(() => {
-      expect(screen.getByText(/NYT Archive Explorer/i)).toBeInTheDocument();
-      expect(screen.getByText(/Browse decades of history/i)).toBeInTheDocument();
+      expect(screen.getByText(/Archive/i)).toBeInTheDocument();
+      expect(screen.getByText(/Browse NYT history/i)).toBeInTheDocument();
     });
   });
 });

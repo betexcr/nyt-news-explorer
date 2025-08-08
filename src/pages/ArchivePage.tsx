@@ -234,8 +234,8 @@ const ArchivePage: React.FC = () => {
     <div className="archive-page">
       <header className="page-header">
         <div>
-          <h1 className="page-title">NYT Archive Explorer</h1>
-          <p className="page-subtitle">Browse decades of history from {START_YEAR} to {END_YEAR}</p>
+          <h1 className="page-title">Archive</h1>
+          <p className="page-subtitle">Browse NYT history from {START_YEAR} to {END_YEAR}</p>
         </div>
       </header>
 

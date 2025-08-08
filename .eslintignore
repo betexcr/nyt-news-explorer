@@ -1,0 +1,14 @@
+# Ignore dependencies and build artifacts
+node_modules/
+coverage/
+build/
+dist/
+
+# Public static assets
+public/
+
+# Project scripts (tooling only)
+scripts/
+
+# Generated types
+src/types/nyt.generated.ts

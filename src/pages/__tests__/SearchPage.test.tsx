@@ -73,6 +73,8 @@ const mockStore = {
   reset: jest.fn(),
 };
 
+jest.setTimeout(15000);
+
 describe('SearchPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();

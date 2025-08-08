@@ -5,7 +5,8 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['build/**', 'node_modules/**'],
+    // Ignore non-source folders and generated files
+    ignores: ['build/**', 'node_modules/**', 'coverage/**', 'public/**', 'scripts/**', 'src/types/nyt.generated.ts'],
   },
   {
     files: ['src/**/*.{ts,tsx,js,jsx}'],
@@ -38,5 +39,3 @@ export default [
     },
   },
 ];
-
-

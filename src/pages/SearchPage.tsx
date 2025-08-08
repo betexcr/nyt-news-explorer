@@ -9,6 +9,7 @@ import VirtualizedArticleList from "../components/VirtualizedArticleList";
 import ViewToggle from "../components/ViewToggle";
 import Spinner from "../components/Spinner";
 import "../styles/search.css";
+import "../styles/page-header.css";
 
 type FromHomeState = { fromHome?: boolean };
 
@@ -463,6 +464,14 @@ const SearchPage: React.FC = () => {
 
   return (
     <div ref={containerRef}>
+      {/* Page Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Search</h1>
+          <p className="page-subtitle">Find articles by keywords, section, and dates</p>
+        </div>
+      </div>
+
       {/* Search Input Row */}
       <div className="search-row">
         <div className="search-section">
