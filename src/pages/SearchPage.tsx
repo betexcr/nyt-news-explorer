@@ -306,7 +306,7 @@ const SearchPage: React.FC = () => {
         resizeObserver.observe(containerRef.current);
 
         return () => resizeObserver.disconnect();
-      } catch (error) {
+      } catch {
         // Fallback if ResizeObserver is not available or fails
         // Silently handle the error to avoid test warnings
       }
@@ -368,7 +368,7 @@ const SearchPage: React.FC = () => {
         // No more results
         setHasMore(false);
       }
-    } catch (error) {
+      } catch {
       // Error loading more articles
       setHasMore(false);
     } finally {

@@ -18,7 +18,7 @@ function Consumer() {
 describe('ThemeProvider behavior', () => {
   const origMatch = window.matchMedia;
   const origSetItem = Storage.prototype.setItem;
-  let setItemSpy: jest.SpyInstance;
+  let _setItemSpy: jest.SpyInstance;
 
   beforeEach(() => {
     document.documentElement.removeAttribute('data-theme');
@@ -33,7 +33,7 @@ describe('ThemeProvider behavior', () => {
       removeEventListener: () => {},
       dispatchEvent: () => false,
     } as any);
-    setItemSpy = jest.spyOn(Storage.prototype, 'setItem'); 
+    _setItemSpy = jest.spyOn(Storage.prototype, 'setItem'); 
   });
 
   afterEach(() => {
@@ -105,7 +105,7 @@ describe('ThemeProvider behavior', () => {
     const Outside = () => {
       try { 
         useTheme();
-      } catch (e) {
+      } catch {
         return <div data-testid="error">error</div>;
       }
       return null;

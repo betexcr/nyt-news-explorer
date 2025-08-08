@@ -13,7 +13,7 @@ const TopStoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string>('home');
-  const [refreshTick, setRefreshTick] = useState<number>(0);
+  const [refreshTick] = useState<number>(0);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
   useEffect(() => {
@@ -131,17 +131,7 @@ const TopStoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          <p>⚠️ {error}</p>
-          <button 
-            onClick={() => setRefreshTick((t) => t + 1)}
-            className="retry-button"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
+      {/* Error messages hidden per request */}
 
       {loading && stories.length > 0 && (
         <div className="loading-overlay">
@@ -153,7 +143,7 @@ const TopStoriesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
           <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
         </div>
-        {stories.map((story, index) => (
+        {stories.map((story, _index) => (
           <article key={story.uri} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
               <img

@@ -10,5 +10,31 @@ schemes:
   - https
 produces:
   - application/json
-paths: {}
+paths:
+  '/lists/{date}/{list}.json':
+    get:
+      summary: Best Sellers List
+      parameters:
+        - name: date
+          in: path
+          required: true
+          type: string
+        - name: list
+          in: path
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+  '/lists/overview.json':
+    get:
+      summary: Best Sellers Overview
+      parameters:
+        - name: published_date
+          in: query
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
 

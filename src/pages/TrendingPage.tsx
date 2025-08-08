@@ -13,7 +13,7 @@ const TrendingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
-  const [refreshTick, setRefreshTick] = useState<number>(0);
+  const [refreshTick] = useState<number>(0);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
   useEffect(() => {
@@ -94,35 +94,27 @@ const TrendingPage: React.FC = () => {
           <h1>Trending Articles</h1>
           <p>Most popular articles from The New York Times</p>
         </div>
-        
-        <div className="period-selector">
-          <label htmlFor="period-select">Time Period:</label>
-          <select
-            id="period-select"
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as '1' | '7' | '30')}
-            className="period-select"
-          >
-            {MOST_POPULAR_PERIODS.map((period) => (
-              <option key={period} value={period}>
-                {getPeriodLabel(period)}
-              </option>
-            ))}
-          </select>
+        <div className="header-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="period-selector">
+            <label htmlFor="period-select">Time Period:</label>
+            <select
+              id="period-select"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value as '1' | '7' | '30')}
+              className="period-select"
+            >
+              {MOST_POPULAR_PERIODS.map((period) => (
+                <option key={period} value={period}>
+                  {getPeriodLabel(period)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          <p>⚠️ {error}</p>
-          <button 
-            onClick={() => setRefreshTick((t) => t + 1)}
-            className="retry-button"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
+      {/* Error messages hidden per request */}
 
       {loading && articles.length > 0 && (
         <div className="loading-overlay">
@@ -131,9 +123,6 @@ const TrendingPage: React.FC = () => {
       )}
 
       <div className="trending-grid" style={{ display: viewMode === 'list' ? 'block' : undefined }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
-          <ViewToggle viewMode={viewMode} onViewChange={setViewMode} />
-        </div>
         {articles.map((article, index) => (
           <article key={article.id} className="trending-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="trending-card-rank">

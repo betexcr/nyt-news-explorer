@@ -28,29 +28,41 @@ const ArchivePage: React.FC = () => {
   const [month, setMonth] = useState<number>(1);
   const [day, setDay] = useState<number | null>(null); // optional day filter, client-side only
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  // Keep local error handling but do not surface in UI
+  const [, setError] = useState<string | null>(null);
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
-  const [refreshTick, setRefreshTick] = useState(0);
+  // Applied query (set when user presses Search)
+  const [query, setQuery] = useState<{ year: number; month: number; day: number | null } | null>(null);
 
+  // Month slider track
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [trackWidth, setTrackWidth] = useState<number>(0);
+  // Year slider track
+  const yearTrackRef = useRef<HTMLDivElement | null>(null);
+  const [yearTrackWidth, setYearTrackWidth] = useState<number>(0);
 
-  // Resize observer to keep track width accurate
+  // Resize observer to keep track widths accurate
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    const update = () => setTrackWidth(el.getBoundingClientRect().width);
+    const monthEl = trackRef.current;
+    const yearEl = yearTrackRef.current;
+    const update = () => {
+      if (monthEl) setTrackWidth(monthEl.getBoundingClientRect().width);
+      if (yearEl) setYearTrackWidth(yearEl.getBoundingClientRect().width);
+    };
     update();
     const RO: any = (typeof window !== 'undefined' && (window as any).ResizeObserver) || null;
+    let roMonth: any = null;
+    let roYear: any = null;
     if (RO) {
       try {
-        const ro = new RO(update);
-        if (ro && typeof ro.observe === 'function') {
-          ro.observe(el);
-          return () => {
-            if (typeof ro.disconnect === 'function') ro.disconnect();
-          };
-        }
+        roMonth = monthEl ? new RO(() => setTrackWidth(monthEl.getBoundingClientRect().width)) : null;
+        roYear = yearEl ? new RO(() => setYearTrackWidth(yearEl.getBoundingClientRect().width)) : null;
+        if (roMonth && typeof roMonth.observe === 'function' && monthEl) roMonth.observe(monthEl);
+        if (roYear && typeof roYear.observe === 'function' && yearEl) roYear.observe(yearEl);
+        return () => {
+          if (roMonth && typeof roMonth.disconnect === 'function') roMonth.disconnect();
+          if (roYear && typeof roYear.disconnect === 'function') roYear.disconnect();
+        };
       } catch {
         // fall through to window resize listener
       }
@@ -61,18 +73,29 @@ const ArchivePage: React.FC = () => {
   }, []);
 
   // Drag logic
-  const dragging = useRef<'month' | 'day' | null>(null);
+  const dragging = useRef<'year' | 'month' | 'day' | null>(null);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      if (!dragging.current || !trackRef.current) return;
-      const bounds = trackRef.current.getBoundingClientRect();
-      const x = e.clientX - bounds.left;
+      if (!dragging.current) return;
       if (dragging.current === 'month') {
+        if (!trackRef.current) return;
+        const bounds = trackRef.current.getBoundingClientRect();
+        const x = e.clientX - bounds.left;
         const posPct = clamp(x / bounds.width, 0, 1);
         const m = Math.round(1 + posPct * 11);
         setMonth(clamp(m, 1, 12));
+      } else if (dragging.current === 'year') {
+        if (!yearTrackRef.current) return;
+        const bounds = yearTrackRef.current.getBoundingClientRect();
+        const x = e.clientX - bounds.left;
+        const posPct = clamp(x / bounds.width, 0, 1);
+        const y = Math.round(START_YEAR + posPct * (END_YEAR - START_YEAR));
+        setYear(clamp(y, START_YEAR, END_YEAR));
       } else if (dragging.current === 'day') {
+        if (!trackRef.current) return; // day uses native range, but keep for completeness
+        const bounds = trackRef.current.getBoundingClientRect();
+        const x = e.clientX - bounds.left;
         const daysInMonth = new Date(year, month, 0).getDate();
         const posPct = clamp(x / bounds.width, 0, 1);
         const d = Math.round(1 + posPct * (daysInMonth - 1));
@@ -88,14 +111,11 @@ const ArchivePage: React.FC = () => {
     };
   }, [year, month]);
 
-  const yearOptions = useMemo(() => {
-    const list: number[] = [];
-    for (let y = START_YEAR; y <= END_YEAR; y++) list.push(y);
-    return list;
-  }, []);
+  // Note: year options replaced by a continuous year slider
 
-  // Fetch archive data for the selected year+month only to reduce quota usage
+  // Fetch archive data only when user presses Search (query is set)
   useEffect(() => {
+    if (!query) return;
     const controller = new AbortController();
     const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
     const run = async () => {
@@ -106,9 +126,9 @@ const ArchivePage: React.FC = () => {
           setArticles(mockArchiveArticles);
           return;
         }
-        const docs = await getArchive(year, month, controller.signal);
+        const docs = await getArchive(query.year, query.month, controller.signal);
         // Optional client-side day filtering
-        const filtered = day ? docs.filter(d => new Date(d.pub_date).getDate() === day) : docs;
+        const filtered = query.day ? docs.filter(d => new Date(d.pub_date).getDate() === query.day) : docs;
         setArticles(filtered.slice(0, 60));
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
@@ -124,11 +144,14 @@ const ArchivePage: React.FC = () => {
     };
     run();
     return () => controller.abort();
-  }, [year, month, day, refreshTick]);
+  }, [query]);
 
   const handleTrackMouseDown = (_e: React.MouseEvent) => {
     // Single handle for month selection
     dragging.current = 'month';
+  };
+  const handleYearTrackMouseDown = (_e: React.MouseEvent) => {
+    dragging.current = 'year';
   };
 
   const monthNamesShort = useMemo(() => (
@@ -206,15 +229,36 @@ const ArchivePage: React.FC = () => {
 
       <section className="epoch-slider">
         <div className="controls">
-          <div className="control">
-            <label className="control-label" htmlFor="year-select">Year:</label>
-            <div className="select-wrap">
-              <select id="year-select" value={year} onChange={(e) => setYear(parseInt(e.target.value, 10))}>
-                {yearOptions.map((y) => (
-                  <option key={y} value={y}>{y}</option>
+          <div className="control grow">
+            <label className="control-label">Year</label>
+            <div className="slider-track pretty" ref={yearTrackRef} onMouseDown={handleYearTrackMouseDown}>
+              <div
+                className="slider-handle from shadow"
+                style={{ left: `${(valueToPosition(year, START_YEAR, END_YEAR, yearTrackWidth) / Math.max(yearTrackWidth, 1)) * 100}%` }}
+                role="slider"
+                aria-valuemin={START_YEAR}
+                aria-valuemax={END_YEAR}
+                aria-valuenow={year}
+                aria-label="Year"
+                tabIndex={0}
+              />
+              <div className="year-ticks" aria-hidden>
+                {useMemo(() => {
+                  const ticks: number[] = [];
+                  const startDecade = Math.floor(START_YEAR / 10) * 10;
+                  const endDecade = Math.floor(END_YEAR / 10) * 10;
+                  for (let y = startDecade; y <= endDecade; y += 10) ticks.push(y);
+                  return ticks;
+                }, []).map((y) => (
+                  <span
+                    key={`year-${y}`}
+                    className={y === Math.floor(year / 10) * 10 ? 'current' : ''}
+                    style={{ left: `${(valueToPosition(y, START_YEAR, END_YEAR, yearTrackWidth) / Math.max(yearTrackWidth, 1)) * 100}%` }}
+                  >
+                    {y}
+                  </span>
                 ))}
-              </select>
-              <span className="select-caret" aria-hidden>▾</span>
+              </div>
             </div>
           </div>
 
@@ -268,14 +312,18 @@ const ArchivePage: React.FC = () => {
           </div>
 
           <div className="control">
-            <button className="retry-button" onClick={() => setRefreshTick((p) => p + 1)}>Refresh</button>
+            <button
+              className="retry-button"
+              onClick={() => setQuery({ year, month, day })}
+              aria-label="Search archive"
+            >
+              Search
+            </button>
           </div>
         </div>
       </section>
 
-      {error && (
-        <div className="error-message"><p>⚠️ {error}</p></div>
-      )}
+      {/* Error messages hidden per request */}
 
       {loading ? (
         <div style={{ padding: '2rem' }}><Spinner /></div>

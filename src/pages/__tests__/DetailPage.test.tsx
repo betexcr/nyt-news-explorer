@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DetailPage from '../DetailPage';
 import { getArticleByUrl } from '../../api/nyt';

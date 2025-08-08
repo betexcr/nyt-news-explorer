@@ -13,7 +13,8 @@ const HomePage: React.FC = () => {
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Keep local error handling but do not surface in UI
+  const [, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -21,6 +22,7 @@ const HomePage: React.FC = () => {
 
     const fetchHomeData = async () => {
       setLoading(true);
+      // Clear any previous error
       setError(null);
       try {
         if (USE_MOCK) {
@@ -153,11 +155,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {error && (
-        <div className="error-message">
-          <p>⚠️ {error}</p>
-        </div>
-      )}
+      {/* Error messages hidden per request */}
 
       {/* Featured Content Section */}
       <section className="featured-content">

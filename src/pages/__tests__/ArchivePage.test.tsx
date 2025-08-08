@@ -48,7 +48,8 @@ describe('ArchivePage', () => {
     );
 
     expect(screen.getByText(/NYT Archive Explorer/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Year:/i)).toBeInTheDocument();
+    // After UI change, Year is controlled by a slider with accessible name "Year"
+    expect(screen.getByRole('slider', { name: /Year/i })).toBeInTheDocument();
     expect(screen.getByRole('slider', { name: /Month/i })).toBeInTheDocument();
 
     // Wait for either data or an empty-state/rendered grid without throwing

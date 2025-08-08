@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
-import { act } from '@testing-library/react';
+ 
 import SearchPage from '../SearchPage';
 import { searchArticles, makeSearchController } from '../../api/nyt';
 import { useSearchStore } from '../../store/searchStore';

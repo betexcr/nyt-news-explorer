@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import SearchPage from '../SearchPage';
@@ -152,7 +152,6 @@ describe('SearchPage', () => {
   });
 
   test('handles search with loading state', async () => {
-    const user = userEvent.setup();
     
     // Mock loading state
     mockUseSearchStore.mockReturnValue({

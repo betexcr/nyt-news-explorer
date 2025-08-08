@@ -9,7 +9,7 @@ jest.mock('../../utils/theme', () => ({
   systemPrefersDark: jest.fn(),
 }));
 
-const { getStoredTheme, setTheme, applyTheme, systemPrefersDark } = require('../../utils/theme');
+const { getStoredTheme: _getStoredTheme, setTheme: _setTheme, applyTheme: _applyTheme, systemPrefersDark: _systemPrefersDark } = require('../../utils/theme');
 
 const TestComponent = () => {
   const { theme, toggle } = useTheme();

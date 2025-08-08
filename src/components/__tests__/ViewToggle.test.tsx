@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ViewToggle from '../ViewToggle';
-import type { ViewMode } from '../../store/searchStore';
 
 describe('ViewToggle', () => {
   const mockOnViewChange = jest.fn();

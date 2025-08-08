@@ -10,5 +10,16 @@ schemes:
   - https
 produces:
   - application/json
-paths: {}
+paths:
+  '/reviews/search.json':
+    get:
+      summary: Movie Reviews Search (Deprecated)
+      parameters:
+        - name: query
+          in: query
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
 

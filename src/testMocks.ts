@@ -40,7 +40,7 @@ jest.mock('swagger-ui-react/swagger-ui.css', () => ({}));
 
 /** Mock js-yaml for YAML parsing */
 jest.mock('js-yaml', () => ({
-  load: jest.fn((yaml) => {
+  load: jest.fn((_yaml) => {
     // Return a mock OpenAPI spec
     return {
       swagger: '2.0',
