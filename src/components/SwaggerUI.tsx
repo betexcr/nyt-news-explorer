@@ -19,7 +19,6 @@ const SwaggerUIComponent: React.FC<SwaggerUIProps> = ({ className }) => {
       { id: 'most-popular', label: 'Most Popular', path: '/apis/nyt/most-popular-product.yaml' },
       { id: 'books', label: 'Books', path: '/apis/nyt/books-product.yaml' },
       { id: 'archive', label: 'Archive', path: '/apis/nyt/archive-product.yaml' },
-      { id: 'movies', label: 'Movie Reviews', path: '/apis/nyt/movie-reviews-api.yaml' },
     ],
     []
   );

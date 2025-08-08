@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
-import type { MostPopularArticle, TopStory } from "../api/nyt-apis";
+import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
 import { formatDate } from "../utils/format";
 import Spinner from "../components/Spinner";

@@ -159,20 +159,20 @@ export const SiteHeader: React.FC = () => {
             Top Stories
           </Link>
           <Link
-            to="/movies"
+            to="/archive"
             style={{
-              color: location.pathname === "/movies" ? "white" : "var(--textMuted)",
+              color: location.pathname === "/archive" ? "white" : "var(--textMuted)",
               textDecoration: "none",
               fontWeight: 600,
               padding: "0.5rem 0.75rem",
               borderRadius: "6px",
               transition: "all 0.2s ease",
               fontSize: "0.9rem",
-              background: location.pathname === "/movies" ? "var(--primary)" : "transparent",
+              background: location.pathname === "/archive" ? "var(--primary)" : "transparent",
             }}
-            className={`nav-link ${location.pathname === "/movies" ? "active" : ""}`}
+            className={`nav-link ${location.pathname === "/archive" ? "active" : ""}`}
           >
-            Movies
+            Archive
           </Link>
           <Link
             to="/search"
@@ -412,7 +412,7 @@ export const SiteHeader: React.FC = () => {
               Top Stories
             </Link>
             <Link
-              to="/movies"
+              to="/archive"
               style={{
                 color: "var(--text)",
                 textDecoration: "none",
@@ -424,7 +424,7 @@ export const SiteHeader: React.FC = () => {
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
             >
-              Movies
+              Archive
             </Link>
             <Link
               to="/search"

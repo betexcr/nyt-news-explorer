@@ -1,5 +1,6 @@
 // Mock data for NYT APIs
-import type { MostPopularArticle, TopStory, MovieReview, Book, ArchiveArticle } from './nyt-apis';
+import type { MostPopularArticle, TopStory, Book, ArchiveArticle } from '../types/nyt.other';
+import type { MovieReview } from './nyt-apis';
 
 // Helper function to create complete MostPopularArticle objects
 const createMockMostPopularArticle = (data: Partial<MostPopularArticle>): MostPopularArticle => ({

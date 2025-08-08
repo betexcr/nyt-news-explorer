@@ -1,0 +1,26 @@
+.archive-page { padding: 1rem 0; }
+.archive-header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 0.5rem; }
+.archive-title { margin: 0; }
+.archive-subtitle { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+.range-label { color: var(--muted); font-weight: 600; }
+
+.epoch-slider { margin: 0.5rem 0 1rem; }
+.slider-track { position: relative; height: 36px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; cursor: ew-resize; }
+.slider-selection { position: absolute; top: 7px; bottom: 7px; background: rgba(0,0,0,0.08); border-radius: 999px; }
+.slider-handle { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; background: var(--primary); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+.decade-labels { position: absolute; left: 0; right: 0; top: 100%; display: grid; grid-auto-flow: column; font-size: 10px; color: var(--muted); }
+.decade-labels span { position: absolute; transform: translateX(-50%); white-space: nowrap; top: 6px; }
+.slider-actions { margin-top: 0.5rem; display: flex; gap: 0.5rem; }
+.retry-button { background: var(--primary); color: var(--button-text); border: none; border-radius: 8px; padding: 0.4rem 0.75rem; cursor: pointer; }
+
+.archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.archive-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.card-image { aspect-ratio: 3/2; background: #f0f0f0; overflow: hidden; }
+.card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-body { padding: 0.75rem; }
+.card-meta { font-size: 12px; color: var(--muted); display: flex; gap: 0.5rem; }
+.card-title { margin: 0.25rem 0; font-size: 1rem; }
+.card-abstract { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.empty-state { padding: 2rem; text-align: center; color: var(--muted); }
+
+
