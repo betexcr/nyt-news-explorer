@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
+import { TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
 import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';

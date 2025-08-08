@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { getMovieReviews, type MovieReview } from '../api/nyt-apis';
+import type { MovieReview } from '../api/nyt-apis';
 import { mockMovieReviews } from '../api/mock-data';
 import '../styles/movies.css';
 

@@ -73,7 +73,6 @@ const SearchPage: React.FC = () => {
     setHasMore,
     setAdvancedParams,
     reset,
-    clearCache,
   } = useSearchStore();
 
   
