@@ -149,17 +149,17 @@
 
 /* Floating size control outside content: bottom-right aligned on large screens */
 .archive-size-floating {
-  position: fixed;
-  right: max(16px, calc((100vw - 1200px) / 2 - 12px));
-  bottom: 16px;
-  z-index: 1100;
-  pointer-events: none; /* allow clicks only on inner control */
+  position: sticky;
+  top: 64px; /* sits near the top; below header */
+  z-index: 10;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
 }
 
 .archive-size-floating .size-control-floating {
   pointer-events: auto;
   background: rgba(0,0,0,0.04);
-  backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.5rem 0.75rem;
@@ -177,7 +177,7 @@
 }
 
 @media (max-width: 768px) {
-  .archive-size-floating { position: static; right: auto; bottom: auto; padding: 0 0.5rem; }
+  .archive-size-floating { position: static; padding: 0 0.5rem; margin-top: 0.5rem; }
   .archive-size-floating .size-control-floating { width: 100%; justify-content: space-between; }
 }
 
