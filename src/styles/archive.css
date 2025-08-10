@@ -68,6 +68,7 @@
 .retry-button { background: var(--primary); color: var(--button-text); border: none; border-radius: 10px; padding: 0.5rem 0.8rem; cursor: pointer; font-weight: 700; }
 
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 260px), 1fr)); gap: 1rem; margin-top: 1rem; }
+.archive-grid.single-column { grid-template-columns: 1fr; }
 .archive-list { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 1rem; }
 .archive-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 

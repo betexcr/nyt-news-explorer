@@ -263,7 +263,10 @@ const ArchivePage: React.FC = () => {
             />
           </label>
         </div>
-        <section className={'archive-grid'} style={{ ['--card-min' as any]: `${cardMin}px` }}>
+          <section
+            className={`archive-grid${cardMin >= 520 ? ' single-column' : ''}`}
+            style={{ ['--card-min' as any]: `${cardMin}px` }}
+          >
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
