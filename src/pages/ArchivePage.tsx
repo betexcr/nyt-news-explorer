@@ -202,14 +202,15 @@ const ArchivePage: React.FC = () => {
         </div>
       </header>
 
-      <section className="era-title-wrap">
-        <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
-      </section>
-
+      {/* Help description just below main title */}
       <p className="archive-help">
         Use the arrows to change months, adjust the year with the slider, and click one or two days to pick
         a single day or a day range. Press Search to load articles from the selected period.
       </p>
+
+      <section className="era-title-wrap">
+        <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
+      </section>
 
       {/* Calendar replaces sliders */}
       <section aria-label="Calendar" className="calendar compact">
