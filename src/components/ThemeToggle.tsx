@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { initTheme, setTheme, type Theme } from "../utils/theme";
+import { getStoredTheme, setTheme, type Theme } from "../utils/theme";
 
 const ThemeToggle: React.FC = () => {
   const [theme, setState] = useState<Theme>("light");
 
   useEffect(() => {
-    const t = initTheme();
-    setState(t);
+    const attr = typeof document !== 'undefined' 
+      ? document.documentElement.getAttribute('data-theme') 
+      : null;
+    if (attr === 'light' || attr === 'dark') {
+      setState(attr as Theme);
+    } else {
+      const stored = getStoredTheme();
+      setState(stored ?? 'light');
+    }
   }, []);
 
   const onToggle = () => {
