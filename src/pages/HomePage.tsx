@@ -48,33 +48,65 @@ const HomePage: React.FC = () => {
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
 
-          // Try several random past years (not the current year) until we find same day matches
-          let picks: ArchiveArticle[] = [];
-          for (let attempt = 0; attempt < 6; attempt += 1) {
-            const randomYear = Math.floor(
-              Math.random() * (currentYear - 1 - MIN_YEAR + 1)
-            ) + MIN_YEAR;
-            const docs = await getArchive(randomYear, month, controller.signal);
-            const sameDay = docs.filter((d) => {
-              const dt = new Date(d.pub_date);
-              return dt.getMonth() + 1 === month && dt.getDate() === day;
-            });
-            if (sameDay.length > 0) {
-              picks = sameDay.slice(0, 6);
-              break;
+          // Build a diverse set of historical picks from random months/years (exclude current year)
+          // Ensure each selection is from a different calendar date (YYYY-MM-DD)
+          const desiredCount = 6;
+          const usedDates = new Set<string>();
+          const cache = new Map<string, ArchiveArticle[]>();
+          const selected: ArchiveArticle[] = [];
+
+          let attempts = 0;
+          while (selected.length < desiredCount && attempts < 24) {
+            attempts += 1;
+            const randomYear = Math.floor(Math.random() * (currentYear - 1 - MIN_YEAR + 1)) + MIN_YEAR;
+            // Pick any month 1-12, but if year is 1851 restrict to Oct-Dec
+            let randomMonth = Math.floor(Math.random() * 12) + 1; // 1..12
+            if (randomYear === 1851 && randomMonth < 10) randomMonth = 10;
+
+            const key = `${randomYear}-${randomMonth}`;
+            let docs = cache.get(key);
+            if (!docs) {
+              try {
+                docs = await getArchive(randomYear, randomMonth, controller.signal);
+                cache.set(key, docs);
+              } catch {
+                continue;
+              }
+            }
+            if (!docs || docs.length === 0) continue;
+
+            // Try a few random samples within this month to find a unique date
+            let sampled: ArchiveArticle | null = null;
+            for (let j = 0; j < 4; j += 1) {
+              const pick = docs[Math.floor(Math.random() * docs.length)];
+              const dt = new Date(pick.pub_date);
+              const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+              if (!usedDates.has(iso)) {
+                sampled = pick;
+                usedDates.add(iso);
+                break;
+              }
+            }
+            if (sampled) selected.push(sampled);
+          }
+
+          // If still short, fill with any remaining docs from cache
+          if (selected.length < desiredCount) {
+            for (const docs of cache.values()) {
+              for (const pick of docs) {
+                if (selected.length >= desiredCount) break;
+                const dt = new Date(pick.pub_date);
+                const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+                if (!usedDates.has(iso)) {
+                  usedDates.add(iso);
+                  selected.push(pick);
+                }
+              }
+              if (selected.length >= desiredCount) break;
             }
           }
 
-          // Fallback: if no same-day matches were found, show a few from a random past year/month
-          if (picks.length === 0) {
-            const fallbackYear = Math.floor(
-              Math.random() * (currentYear - 1 - MIN_YEAR + 1)
-            ) + MIN_YEAR;
-            const fallbackDocs = await getArchive(fallbackYear, month, controller.signal);
-            picks = fallbackDocs.slice(0, 6);
-          }
-
-          setTodayInHistory(picks);
+          setTodayInHistory(selected.slice(0, desiredCount));
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
