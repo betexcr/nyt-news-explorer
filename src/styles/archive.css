@@ -117,8 +117,8 @@
 .calendar-aside { display: none; }
 @media (min-width: 900px) {
   .calendar.compact { max-width: 780px; }
-  .calendar-layout { grid-template-columns: 1fr 260px; align-items: start; }
-  .calendar-aside { display: block; }
+  .calendar-layout { grid-template-columns: 1fr; align-items: start; }
+  .calendar-aside { display: none; }
   .desktop-only { display: block; }
   .mobile-only { display: none !important; }
 }
@@ -147,12 +147,38 @@
 
 .archive-help { color: var(--muted); text-align: center; margin: 0.25rem 0 0.5rem; font-size: 0.9rem; }
 
-/* Pin archive size control to bottom-right of its card */
-.archive-page .controls-card.compact { position: relative; min-height: 56px; }
-.archive-page .controls-card.compact .size-control {
-  position: absolute;
-  right: 12px;
-  bottom: 10px;
+/* Floating size control outside content: bottom-right aligned on large screens */
+.archive-size-floating {
+  position: fixed;
+  right: max(16px, calc((100vw - 1200px) / 2 - 12px));
+  bottom: 16px;
+  z-index: 1100;
+  pointer-events: none; /* allow clicks only on inner control */
+}
+
+.archive-size-floating .size-control-floating {
+  pointer-events: auto;
+  background: rgba(0,0,0,0.04);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme="dark"] .archive-size-floating .size-control-floating {
+  background: rgba(255,255,255,0.06);
+}
+
+.archive-size-floating input[type="range"] {
+  width: 180px;
+}
+
+@media (max-width: 768px) {
+  .archive-size-floating { position: static; right: auto; bottom: auto; padding: 0 0.5rem; }
+  .archive-size-floating .size-control-floating { width: 100%; justify-content: space-between; }
 }
 
 

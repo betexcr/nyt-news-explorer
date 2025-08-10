@@ -254,20 +254,7 @@ const ArchivePage: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <aside className="calendar-aside desktop-only">
-                  <label className="size-control">
-                    Card size
-                    <input
-                      type="range"
-                      min={220}
-                      max={520}
-                      step={10}
-                      value={cardMin}
-                      onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                      aria-label="Card size"
-                    />
-                  </label>
-                </aside>
+                {/* Removed inline aside; replaced with floating control outside container */}
               </div>
 
               <div className="calendar-footer">
@@ -292,6 +279,22 @@ const ArchivePage: React.FC = () => {
                 </button>
               </div>
             </section>
+
+            {/* Floating size control (desktop) outside the calendar container */}
+            <div className="archive-size-floating desktop-only" aria-hidden={false}>
+              <label className="size-control size-control-floating" title="Adjust card size">
+                Card size
+                <input
+                  type="range"
+                  min={220}
+                  max={520}
+                  step={10}
+                  value={cardMin}
+                  onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                  aria-label="Card size"
+                />
+              </label>
+            </div>
 
       {/* Removed floating search button; button moved inside calendar */}
 
