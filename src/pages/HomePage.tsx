@@ -47,64 +47,40 @@ const HomePage: React.FC = () => {
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
 
-          // Build a diverse set of historical picks from random months/years (exclude current year)
-          // Ensure each selection is from a different calendar date (YYYY-MM-DD)
-          const desiredCount = 6;
+          // Reduce API usage: at most 3 archive requests → 3 picks (same month across different years)
+          const desiredCount = 3;
           const usedDates = new Set<string>();
-          const cache = new Map<string, ArchiveArticle[]>();
-          const selected: ArchiveArticle[] = [];
-
-          let attempts = 0;
-          while (selected.length < desiredCount && attempts < 24) {
-            attempts += 1;
-            const randomYear = Math.floor(Math.random() * (currentYear - 1 - MIN_YEAR + 1)) + MIN_YEAR;
-            // Pick any month 1-12, but if year is 1851 restrict to Oct-Dec
-            let randomMonth = Math.floor(Math.random() * 12) + 1; // 1..12
-            if (randomYear === 1851 && randomMonth < 10) randomMonth = 10;
-
-            const key = `${randomYear}-${randomMonth}`;
-            let docs = cache.get(key);
-            if (!docs) {
-              try {
-                docs = await getArchive(randomYear, randomMonth, controller.signal);
-                cache.set(key, docs);
-              } catch {
-                continue;
-              }
-            }
-            if (!docs || docs.length === 0) continue;
-
-            // Try a few random samples within this month to find a unique date
-            let sampled: ArchiveArticle | null = null;
-            for (let j = 0; j < 4; j += 1) {
-              const pick = docs[Math.floor(Math.random() * docs.length)];
-              const dt = new Date(pick.pub_date);
-              const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-              if (!usedDates.has(iso)) {
-                sampled = pick;
-                usedDates.add(iso);
-                break;
-              }
-            }
-            if (sampled) selected.push(sampled);
+          const picks: ArchiveArticle[] = [];
+          const years: number[] = [];
+          while (years.length < 5) { // 3 primaries + 2 backups
+            const y = Math.floor(Math.random() * (currentYear - 1 - MIN_YEAR + 1)) + MIN_YEAR;
+            if (!years.includes(y)) years.push(y);
           }
-
-          // If still short, fill with any remaining docs from cache
-          if (selected.length < desiredCount) {
-            cache.forEach((docs) => {
-              for (const pick of docs) {
-                if (selected.length >= desiredCount) break;
-                const dt = new Date(pick.pub_date);
+          for (const y of years) {
+            if (picks.length >= desiredCount) break;
+            const m = y === 1851 && month < 10 ? 10 : month;
+            try {
+              const docs = await getArchive(y, m, controller.signal);
+              if (!docs || docs.length === 0) continue;
+              // Pick first unique-date doc with a quick random probe
+              let chosen: ArchiveArticle | null = null;
+              for (let j = 0; j < Math.min(4, docs.length); j += 1) {
+                const cand = docs[Math.floor(Math.random() * docs.length)];
+                const dt = new Date(cand.pub_date);
                 const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
                 if (!usedDates.has(iso)) {
                   usedDates.add(iso);
-                  selected.push(pick);
+                  chosen = cand;
+                  break;
                 }
               }
-            });
+              if (chosen) picks.push(chosen);
+            } catch {
+              // ignore
+            }
           }
 
-          setTodayInHistory(selected.slice(0, desiredCount));
+          setTodayInHistory(picks);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');

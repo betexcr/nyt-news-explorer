@@ -219,45 +219,65 @@ const ArchivePage: React.FC = () => {
                 <div className="cal-title" aria-live="polite">{monthNamesLong[clamp(month,1,12)-1]} {year}</div>
                 <button type="button" className="cal-nav" onClick={nextMonth} disabled={!canNext} aria-label="Next month">›</button>
               </div>
-              <div className="calendar-year">
-                <label className="year-label" htmlFor="archive-year">Year</label>
-                <input
-                  id="archive-year"
-                  type="range"
-                  min={START_YEAR}
-                  max={END_YEAR}
-                  step={1}
-                  value={year}
-                  onChange={(e) => {
-                    const y = parseInt(e.target.value, 10);
-                    setYear(y);
-                    if (y === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
-                    if (y === END_YEAR && month > CURRENT_MONTH) setMonth(CURRENT_MONTH);
-                  }}
-                  aria-label="Year"
-                />
-                <div className="year-readout" aria-hidden>{year}</div>
+
+              <div className="calendar-layout">
+                <div className="calendar-main">
+                  <div className="calendar-year">
+                    <label className="year-label" htmlFor="archive-year">Year</label>
+                    <input
+                      id="archive-year"
+                      type="range"
+                      min={START_YEAR}
+                      max={END_YEAR}
+                      step={1}
+                      value={year}
+                      onChange={(e) => {
+                        const y = parseInt(e.target.value, 10);
+                        setYear(y);
+                        if (y === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
+                        if (y === END_YEAR && month > CURRENT_MONTH) setMonth(CURRENT_MONTH);
+                      }}
+                      aria-label="Year"
+                    />
+                    <div className="year-readout" aria-hidden>{year}</div>
+                  </div>
+
+                  <div className="calendar-grid" role="grid">
+                    {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
+                      const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));
+                      const inRange = dayStart != null && dayEnd != null && d > dayStart && d < dayEnd;
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          className={`calendar-day${isSelected ? ' selected' : ''}${inRange ? ' in-range' : ''}`}
+                          aria-pressed={isSelected || inRange}
+                          onClick={() => onCalendarDayClick(d)}
+                        >
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <aside className="calendar-aside desktop-only">
+                  <label className="size-control">
+                    Card size
+                    <input
+                      type="range"
+                      min={220}
+                      max={520}
+                      step={10}
+                      value={cardMin}
+                      onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                      aria-label="Card size"
+                    />
+                  </label>
+                </aside>
               </div>
 
-              <div className="calendar-grid" role="grid">
-                {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
-                  const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));
-                  const inRange = dayStart != null && dayEnd != null && d > dayStart && d < dayEnd;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      className={`calendar-day${isSelected ? ' selected' : ''}${inRange ? ' in-range' : ''}`}
-                      aria-pressed={isSelected || inRange}
-                      onClick={() => onCalendarDayClick(d)}
-                    >
-                      {d}
-                    </button>
-                  );
-                })}
-              </div>
               <div className="calendar-footer">
-                <label className="size-control">
+                <label className="size-control mobile-only">
                   Card size
                   <input
                     type="range"

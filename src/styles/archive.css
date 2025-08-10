@@ -108,10 +108,20 @@
 /* Simple calendar */
 .calendar { margin-top: 0.5rem; }
 .calendar.compact { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem; max-width: 420px; margin: 0 auto; }
+.calendar.compact.wide { max-width: 760px; }
 .calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.5rem 0.5rem; }
 .cal-title { font-weight: 700; }
 .cal-nav { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.25rem 0.5rem; cursor: pointer; }
 .cal-nav:disabled { opacity: 0.5; cursor: not-allowed; }
+.calendar-layout { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.calendar-aside { display: none; }
+@media (min-width: 900px) {
+  .calendar.compact { max-width: 780px; }
+  .calendar-layout { grid-template-columns: 1fr 260px; align-items: start; }
+  .calendar-aside { display: block; }
+  .desktop-only { display: block; }
+  .mobile-only { display: none !important; }
+}
 .calendar-year { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; padding: 0.25rem 0.5rem 0.5rem; }
 .calendar-year .year-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); grid-column: 1 / -1; }
 .calendar-year input[type="range"] { width: 100%; accent-color: var(--primary); }
