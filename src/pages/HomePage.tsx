@@ -197,54 +197,6 @@ const HomePage: React.FC = () => {
       {/* Featured Content Section */}
       <section className="featured-content">
         <div className="content-grid">
-          {/* A day like today */}
-          <div className="content-section today-like-section" style={{ gridColumn: '1 / -1' }}>
-            <div className="section-header">
-              <h2>📅 A day like today…</h2>
-              <Link to="/archive" className="view-all-link">Go to Archive →</Link>
-            </div>
-            {todayInHistory.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No highlights available for today.</p>
-            ) : (
-              <div className="articles-grid">
-                {todayInHistory.map((a) => {
-                  const href = getSafeUrl(a.web_url) || undefined;
-                  const handleOpen = () => {
-                    if (href) window.open(href, '_blank', 'noopener,noreferrer');
-                  };
-                  const handleKey = (e: React.KeyboardEvent) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && href) {
-                      e.preventDefault();
-                      handleOpen();
-                    }
-                  };
-                  return (
-                    <article
-                      key={a.uri}
-                      className="article-card story-card"
-                      role={href ? 'link' : undefined}
-                      tabIndex={href ? 0 : -1}
-                      aria-label={href ? `Open: ${a.headline?.main || a.abstract}` : undefined}
-                      onClick={handleOpen}
-                      onKeyDown={handleKey}
-                    >
-                      <div className="article-content">
-                        <div className="article-meta">
-                          <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
-                          <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
-                        </div>
-                        <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
-                        <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
-                        <div className="article-footer">
-                          <span className="byline">{a.byline?.original || ''}</span>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
           {/* Trending Articles */}
           <div className="content-section trending-section">
             <div className="section-header">
@@ -367,6 +319,55 @@ const HomePage: React.FC = () => {
                 </article>
               );})}
             </div>
+          </div>
+
+          {/* A day like today */}
+          <div className="content-section today-like-section" style={{ gridColumn: '1 / -1' }}>
+            <div className="section-header">
+              <h2>📅 A day like today…</h2>
+              <Link to="/archive" className="view-all-link">Go to Archive →</Link>
+            </div>
+            {todayInHistory.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No highlights available for today.</p>
+            ) : (
+              <div className="articles-grid">
+                {todayInHistory.map((a) => {
+                  const href = getSafeUrl(a.web_url) || undefined;
+                  const handleOpen = () => {
+                    if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                  };
+                  const handleKey = (e: React.KeyboardEvent) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && href) {
+                      e.preventDefault();
+                      handleOpen();
+                    }
+                  };
+                  return (
+                    <article
+                      key={a.uri}
+                      className="article-card story-card"
+                      role={href ? 'link' : undefined}
+                      tabIndex={href ? 0 : -1}
+                      aria-label={href ? `Open: ${a.headline?.main || a.abstract}` : undefined}
+                      onClick={handleOpen}
+                      onKeyDown={handleKey}
+                    >
+                      <div className="article-content">
+                        <div className="article-meta">
+                          <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
+                          <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
+                        </div>
+                        <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
+                        <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
+                        <div className="article-footer">
+                          <span className="byline">{a.byline?.original || ''}</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </section>
