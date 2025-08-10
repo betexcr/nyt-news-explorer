@@ -47,12 +47,13 @@ const HomePage: React.FC = () => {
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
 
-          // Reduce API usage: at most 3 archive requests → 3 picks (same month across different years)
+          // A day like today: choose articles from the SAME calendar day across different years
           const desiredCount = 3;
-          const usedDates = new Set<string>();
+          const targetDay = now.getDate();
           const picks: ArchiveArticle[] = [];
           const years: number[] = [];
-          while (years.length < 5) { // 3 primaries + 2 backups
+          // Try up to 10 unique random years to increase the chance of finding same-day articles
+          while (years.length < 10) {
             const y = Math.floor(Math.random() * (currentYear - 1 - MIN_YEAR + 1)) + MIN_YEAR;
             if (!years.includes(y)) years.push(y);
           }
@@ -62,19 +63,10 @@ const HomePage: React.FC = () => {
             try {
               const docs = await getArchive(y, m, controller.signal);
               if (!docs || docs.length === 0) continue;
-              // Pick first unique-date doc with a quick random probe
-              let chosen: ArchiveArticle | null = null;
-              for (let j = 0; j < Math.min(4, docs.length); j += 1) {
-                const cand = docs[Math.floor(Math.random() * docs.length)];
-                const dt = new Date(cand.pub_date);
-                const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-                if (!usedDates.has(iso)) {
-                  usedDates.add(iso);
-                  chosen = cand;
-                  break;
-                }
+              const sameDayDocs = docs.filter((d) => new Date(d.pub_date).getDate() === targetDay);
+              if (sameDayDocs.length > 0) {
+                picks.push(sameDayDocs[0]);
               }
-              if (chosen) picks.push(chosen);
             } catch {
               // ignore
             }
