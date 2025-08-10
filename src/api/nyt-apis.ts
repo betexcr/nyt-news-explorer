@@ -228,3 +228,20 @@ export const BOOKS_LISTS = [
 
 // Export the error class for use in components
 export { NytApiError };
+
+// Resolve OG image for a given article URL via Netlify function
+export async function resolveOgImage(
+  articleUrl: string,
+  signal?: AbortSignal
+): Promise<string | null> {
+  try {
+    if (!articleUrl || !/^https?:\/\//i.test(articleUrl)) return null;
+    const endpoint = `/.netlify/functions/resolve-og-image?url=${encodeURIComponent(articleUrl)}`;
+    const res = await fetch(endpoint, { signal, headers: { 'accept': 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.image === 'string' ? data.image : null;
+  } catch {
+    return null;
+  }
+}

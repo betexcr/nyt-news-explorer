@@ -42,7 +42,6 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .hero-button {
@@ -368,6 +367,9 @@
     grid-template-columns: 1fr;
     gap: 2rem;
     text-align: center;
+  }
+  .hero-actions {
+    justify-content: center;
   }
   
   .hero-title {
