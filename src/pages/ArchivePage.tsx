@@ -257,6 +257,18 @@ const ArchivePage: React.FC = () => {
                 })}
               </div>
               <div className="calendar-footer">
+                <label className="size-control">
+                  Card size
+                  <input
+                    type="range"
+                    min={220}
+                    max={520}
+                    step={10}
+                    value={cardMin}
+                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                    aria-label="Card size"
+                  />
+                </label>
                 <button
                   className="retry-button"
                   onClick={() => setQuery({ year, month, dayStart, dayEnd })}
@@ -275,21 +287,7 @@ const ArchivePage: React.FC = () => {
         <div style={{ padding: '2rem' }}><Spinner /></div>
       ) : (
         <>
-        {/* Toolbar with size control at top of results */}
-        <div className="archive-list-toolbar">
-          <label className="size-control">
-            Card size
-            <input
-              type="range"
-              min={220}
-              max={520}
-              step={10}
-              value={cardMin}
-              onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-              aria-label="Card size"
-            />
-          </label>
-        </div>
+        {/* Size control moved into calendar footer */}
           <section
             className={`archive-grid${cardMin >= 520 ? ' single-column' : ''}`}
             style={{ ['--card-min' as any]: `${cardMin}px` }}

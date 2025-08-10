@@ -121,7 +121,13 @@
 .calendar-day.selected { background: var(--primary); color: var(--button-text); border-color: var(--primary); }
 .calendar-day.in-range { background: rgba(0,0,0,0.06); }
 
-.calendar-footer { display: flex; justify-content: flex-end; padding: 0.5rem; }
+.calendar-footer { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.5rem; }
+.calendar-footer .size-control { margin-left: auto; }
+@media (max-width: 640px) {
+  .calendar-footer { flex-wrap: wrap; }
+  .calendar-footer .size-control { order: 1; width: 100%; margin-left: 0; }
+  .calendar-footer .retry-button { order: 2; width: 100%; }
+}
 
 /* Floating search button */
 /* floating-search removed; button is now inside calendar */
