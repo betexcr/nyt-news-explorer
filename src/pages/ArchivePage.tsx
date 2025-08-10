@@ -187,6 +187,30 @@ const ArchivePage: React.FC = () => {
     setDayEnd(end);
   };
 
+  // Generate a random (year, month) pair within archive bounds
+  const getRandomYearMonth = (): { year: number; month: number } => {
+    const minYear = START_YEAR;
+    const maxYear = END_YEAR;
+    // Pick a random year in range
+    const ry = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;
+    // Determine valid month bounds for that year
+    const minMonth = ry === START_YEAR ? START_MONTH : 1;
+    const maxMonth = ry === END_YEAR ? CURRENT_MONTH : 12;
+    const rm = Math.floor(Math.random() * (maxMonth - minMonth + 1)) + minMonth;
+    return { year: ry, month: rm };
+  };
+
+  const handleRandomSearch = () => {
+    const { year: ry, month: rm } = getRandomYearMonth();
+    setYear(ry);
+    setMonth(rm);
+    // Optionally clamp day range to target month length
+    const daysInTargetMonth = new Date(ry, rm, 0).getDate();
+    const s = dayStart != null ? Math.min(dayStart, daysInTargetMonth) : dayStart;
+    const e = dayEnd != null ? Math.min(dayEnd, daysInTargetMonth) : dayEnd;
+    setQuery({ year: ry, month: rm, dayStart: s, dayEnd: e });
+  };
+
   return (
     <div className="archive-page">
       <header className="page-header">
@@ -272,7 +296,7 @@ const ArchivePage: React.FC = () => {
                 </label>
                 <button
                   className="retry-button"
-                  onClick={() => setQuery({ year, month, dayStart, dayEnd })}
+                  onClick={handleRandomSearch}
                   aria-label="Search archive"
                 >
                   Search
