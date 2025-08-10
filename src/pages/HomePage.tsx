@@ -33,20 +33,48 @@ const HomePage: React.FC = () => {
           setTodayInHistory([]);
         } else {
           const now = new Date();
+          const currentYear = now.getFullYear();
           const month = now.getMonth() + 1; // 1-12
           const day = now.getDate();
-          const [popular, stories, archiveDocs] = await Promise.all([
+
+          // Ensure we don't request months before Oct 1851
+          const START_YEAR = 1851;
+          const MIN_YEAR = month < 10 ? START_YEAR + 1 : START_YEAR;
+
+          const [popular, stories] = await Promise.all([
             getMostPopular('7', controller.signal),
             getTopStories('home', controller.signal),
-            getArchive(Math.max(now.getFullYear() - 1, 1851), month, controller.signal),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          const filtered = archiveDocs.filter(d => {
-            const dt = new Date(d.pub_date);
-            return dt.getMonth() + 1 === month && dt.getDate() === day;
-          }).slice(0, 6);
-          setTodayInHistory(filtered);
+
+          // Try several random past years (not the current year) until we find same day matches
+          let picks: ArchiveArticle[] = [];
+          for (let attempt = 0; attempt < 6; attempt += 1) {
+            const randomYear = Math.floor(
+              Math.random() * (currentYear - 1 - MIN_YEAR + 1)
+            ) + MIN_YEAR;
+            const docs = await getArchive(randomYear, month, controller.signal);
+            const sameDay = docs.filter((d) => {
+              const dt = new Date(d.pub_date);
+              return dt.getMonth() + 1 === month && dt.getDate() === day;
+            });
+            if (sameDay.length > 0) {
+              picks = sameDay.slice(0, 6);
+              break;
+            }
+          }
+
+          // Fallback: if no same-day matches were found, show a few from a random past year/month
+          if (picks.length === 0) {
+            const fallbackYear = Math.floor(
+              Math.random() * (currentYear - 1 - MIN_YEAR + 1)
+            ) + MIN_YEAR;
+            const fallbackDocs = await getArchive(fallbackYear, month, controller.signal);
+            picks = fallbackDocs.slice(0, 6);
+          }
+
+          setTodayInHistory(picks);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
@@ -179,21 +207,41 @@ const HomePage: React.FC = () => {
               <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No highlights available for today.</p>
             ) : (
               <div className="articles-grid">
-                {todayInHistory.map((a) => (
-                  <article key={a.uri} className="article-card story-card">
-                    <div className="article-content">
-                      <div className="article-meta">
-                        <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
-                        <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
+                {todayInHistory.map((a) => {
+                  const href = getSafeUrl(a.web_url) || undefined;
+                  const handleOpen = () => {
+                    if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                  };
+                  const handleKey = (e: React.KeyboardEvent) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && href) {
+                      e.preventDefault();
+                      handleOpen();
+                    }
+                  };
+                  return (
+                    <article
+                      key={a.uri}
+                      className="article-card story-card"
+                      role={href ? 'link' : undefined}
+                      tabIndex={href ? 0 : -1}
+                      aria-label={href ? `Open: ${a.headline?.main || a.abstract}` : undefined}
+                      onClick={handleOpen}
+                      onKeyDown={handleKey}
+                    >
+                      <div className="article-content">
+                        <div className="article-meta">
+                          <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
+                          <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
+                        </div>
+                        <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
+                        <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
+                        <div className="article-footer">
+                          <span className="byline">{a.byline?.original || ''}</span>
+                        </div>
                       </div>
-                      <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
-                      <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
-                      <div className="article-footer">
-                        <span className="byline">{a.byline?.original || ''}</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
