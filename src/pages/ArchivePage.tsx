@@ -267,12 +267,37 @@ const ArchivePage: React.FC = () => {
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
-            articles.map((a) => {
+              articles.map((a) => {
               const href = getSafeUrl(a.web_url) || undefined;
               const date = new Date(a.pub_date);
               const keywords = (a.keywords || []).slice(0, 3).map(k => k.value).filter(Boolean);
               return (
-                <article key={a.uri} className="archive-card" tabIndex={0}>
+                  <article key={a.uri} className="archive-card" tabIndex={0} style={{ position: 'relative' }}>
+                    {/* Favorite heart overlay – match Search style */}
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFav(a); }}
+                      style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        background: isFav(a) ? 'rgba(255, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.6)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '32px',
+                        height: '32px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '16px',
+                        transition: 'all 0.2s ease',
+                      }}
+                      title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                      aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      {isFav(a) ? '♥' : '♡'}
+                    </button>
                   <div className="card-body">
                     <div className="card-meta">
                       <span className="badge section">{a.section_name || a.news_desk || 'Archive'}</span>
@@ -290,19 +315,11 @@ const ArchivePage: React.FC = () => {
                         ))}
                       </div>
                     )}
-                    <div className="card-actions">
-                      <button
-                        onClick={() => toggleFav(a)}
-                        className="favorite-inline"
-                        aria-label={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                        title={isFav(a) ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        {isFav(a) ? '♥ Favorite' : '♡ Favorite'}
-                      </button>
-                      {href && (
-                        <a className="read-link" href={href} target="_blank" rel="noopener noreferrer">Read on NYTimes →</a>
-                      )}
-                    </div>
+                      <div className="card-actions">
+                        {href && (
+                          <a className="read-link" href={href} target="_blank" rel="noopener noreferrer">Read on NYTimes →</a>
+                        )}
+                      </div>
                   </div>
                 </article>
               );
