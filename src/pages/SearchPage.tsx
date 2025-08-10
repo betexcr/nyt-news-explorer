@@ -466,12 +466,12 @@ const SearchPage: React.FC = () => {
   return (
     <div ref={containerRef}>
       {/* Page Header */}
-      <div className="page-header">
+      <header className="page-header">
         <div>
           <h1 className="page-title">Search</h1>
           <p className="page-subtitle">Find articles by keywords, section, and dates</p>
         </div>
-      </div>
+      </header>
 
       {/* Controls Card Row */}
       <div className="controls-card" role="region" aria-label="Search controls">

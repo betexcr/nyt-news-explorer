@@ -1,7 +1,7 @@
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end; /* align titles along their baselines for uniformity */
   margin-bottom: 2rem;
   gap: 2rem;
 }
