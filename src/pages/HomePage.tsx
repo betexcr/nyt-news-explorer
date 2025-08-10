@@ -35,7 +35,6 @@ const HomePage: React.FC = () => {
           const now = new Date();
           const currentYear = now.getFullYear();
           const month = now.getMonth() + 1; // 1-12
-          const day = now.getDate();
 
           // Ensure we don't request months before Oct 1851
           const START_YEAR = 1851;
@@ -92,7 +91,7 @@ const HomePage: React.FC = () => {
 
           // If still short, fill with any remaining docs from cache
           if (selected.length < desiredCount) {
-            for (const docs of cache.values()) {
+            cache.forEach((docs) => {
               for (const pick of docs) {
                 if (selected.length >= desiredCount) break;
                 const dt = new Date(pick.pub_date);
@@ -102,8 +101,7 @@ const HomePage: React.FC = () => {
                   selected.push(pick);
                 }
               }
-              if (selected.length >= desiredCount) break;
-            }
+            });
           }
 
           setTodayInHistory(selected.slice(0, desiredCount));
