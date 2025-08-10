@@ -112,16 +112,24 @@
 .cal-title { font-weight: 700; }
 .cal-nav { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.25rem 0.5rem; cursor: pointer; }
 .cal-nav:disabled { opacity: 0.5; cursor: not-allowed; }
+.calendar-year { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; padding: 0.25rem 0.5rem 0.5rem; }
+.calendar-year .year-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); grid-column: 1 / -1; }
+.calendar-year input[type="range"] { width: 100%; accent-color: var(--primary); }
+.calendar-year .year-readout { font-weight: 800; color: var(--text); }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
 .calendar-day { padding: 0.3rem 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .calendar-day.selected { background: var(--primary); color: var(--button-text); border-color: var(--primary); }
 .calendar-day.in-range { background: rgba(0,0,0,0.06); }
 
+.calendar-footer { display: flex; justify-content: flex-end; padding: 0.5rem; }
+
 /* Floating search button */
-.floating-search { position: fixed; right: 1rem; bottom: 1rem; background: var(--primary); color: var(--button-text); border: none; border-radius: 999px; padding: 0.6rem 1rem; box-shadow: 0 6px 16px rgba(0,0,0,0.2); cursor: pointer; z-index: 100; }
+/* floating-search removed; button is now inside calendar */
 
 /* Results toolbar */
 .archive-list-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin: 0.5rem 0 0.75rem; }
+
+.archive-help { color: var(--muted); text-align: center; margin: 0.25rem 0 0.5rem; font-size: 0.9rem; }
 
 /* Pin archive size control to bottom-right of its card */
 .archive-page .controls-card.compact { position: relative; min-height: 56px; }

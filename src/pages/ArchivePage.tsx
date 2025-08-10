@@ -206,6 +206,11 @@ const ArchivePage: React.FC = () => {
         <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
       </section>
 
+      <p className="archive-help">
+        Use the arrows to change months, adjust the year with the slider, and click one or two days to pick
+        a single day or a day range. Press Search to load articles from the selected period.
+      </p>
+
       {/* Calendar replaces sliders */}
       <section aria-label="Calendar" className="calendar compact">
               <div className="calendar-header">
@@ -213,6 +218,26 @@ const ArchivePage: React.FC = () => {
                 <div className="cal-title" aria-live="polite">{monthNamesLong[clamp(month,1,12)-1]} {year}</div>
                 <button type="button" className="cal-nav" onClick={nextMonth} disabled={!canNext} aria-label="Next month">›</button>
               </div>
+              <div className="calendar-year">
+                <label className="year-label" htmlFor="archive-year">Year</label>
+                <input
+                  id="archive-year"
+                  type="range"
+                  min={START_YEAR}
+                  max={END_YEAR}
+                  step={1}
+                  value={year}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value, 10);
+                    setYear(y);
+                    if (y === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
+                    if (y === END_YEAR && month > CURRENT_MONTH) setMonth(CURRENT_MONTH);
+                  }}
+                  aria-label="Year"
+                />
+                <div className="year-readout" aria-hidden>{year}</div>
+              </div>
+
               <div className="calendar-grid" role="grid">
                 {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
                   const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));
@@ -230,17 +255,18 @@ const ArchivePage: React.FC = () => {
                   );
                 })}
               </div>
+              <div className="calendar-footer">
+                <button
+                  className="retry-button"
+                  onClick={() => setQuery({ year, month, dayStart, dayEnd })}
+                  aria-label="Search archive"
+                >
+                  Search
+                </button>
+              </div>
             </section>
 
-      {/* Floating search button */}
-      <button
-        className="floating-search"
-        onClick={() => setQuery({ year, month, dayStart, dayEnd })}
-        aria-label="Search archive"
-        title="Search archive"
-      >
-        Search
-      </button>
+      {/* Removed floating search button; button moved inside calendar */}
 
       {/* Error messages hidden per request */}
 
