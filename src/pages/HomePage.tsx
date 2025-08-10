@@ -162,6 +162,9 @@ const HomePage: React.FC = () => {
               <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
                 🔍 Search Articles
               </Link>
+              <Link to="/archive" className="hero-button secondary">
+                🗄️ Explore Archive
+              </Link>
             </div>
           </div>
           <div className="loading-container">
