@@ -46,11 +46,11 @@ describe('HomePage', () => {
     
     // Wait for the component to load
     await waitFor(() => {
-      expect(screen.getByText('🔥 Trending This Week')).toBeInTheDocument();
+      expect(screen.getByText('Trending This Week')).toBeInTheDocument();
     });
     
-    // Check for sections
-    expect(screen.getByText('📰 Top Stories')).toBeInTheDocument();
+    // Check for sections (target the H2 heading specifically)
+    expect(screen.getByRole('heading', { name: 'Top Stories', level: 2 })).toBeInTheDocument();
     expect(screen.getByText('Explore More')).toBeInTheDocument();
   });
 });

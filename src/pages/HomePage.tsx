@@ -134,10 +134,10 @@ const HomePage: React.FC = () => {
             <p className="hero-subtitle">Discover the latest news from The New York Times</p>
             <div className="hero-actions">
               <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
-                🔍 Search Articles
+                Search Articles
               </Link>
               <Link to="/archive" className="hero-button secondary">
-                🗄️ Explore Archive
+                Explore Archive
               </Link>
             </div>
           </div>
@@ -159,10 +159,10 @@ const HomePage: React.FC = () => {
           
           <div className="hero-actions">
             <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
-              🔍 Search Articles
+              Search Articles
             </Link>
             <Link to="/archive" className="hero-button secondary">
-              🗄️ Explore Archive
+              Explore Archive
             </Link>
           </div>
         </div>
@@ -209,7 +209,7 @@ const HomePage: React.FC = () => {
           {/* Trending Articles */}
           <div className="content-section trending-section">
             <div className="section-header">
-              <h2>🔥 Trending This Week</h2>
+              <h2>Trending This Week</h2>
               <Link to="/trending" className="view-all-link">View All →</Link>
             </div>
             
@@ -271,7 +271,7 @@ const HomePage: React.FC = () => {
           {/* Top Stories */}
           <div className="content-section top-stories-section">
             <div className="section-header">
-              <h2>📰 Top Stories</h2>
+              <h2>Top Stories</h2>
               <Link to="/top-stories" className="view-all-link">View All →</Link>
             </div>
             
@@ -333,7 +333,7 @@ const HomePage: React.FC = () => {
           {/* A day like today */}
           <div className="content-section today-like-section" style={{ gridColumn: '1 / -1' }}>
             <div className="section-header">
-              <h2>📅 A day like today…</h2>
+              <h2>A day like today…</h2>
               <Link to="/archive" className="view-all-link">Go to Archive →</Link>
             </div>
             {todayInHistory.length === 0 ? (
@@ -387,37 +387,37 @@ const HomePage: React.FC = () => {
         <h2>Explore More</h2>
         <div className="actions-grid">
           <Link to="/search" className="action-card" onClick={handleHomeClick}>
-            <div className="action-icon">🔍</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>Search Articles</h3>
             <p>Find specific articles with advanced filters</p>
           </Link>
           
           <Link to="/trending" className="action-card">
-            <div className="action-icon">📈</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>Trending</h3>
             <p>Most popular articles this week</p>
           </Link>
           
           <Link to="/top-stories" className="action-card">
-            <div className="action-icon">📰</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>Top Stories</h3>
             <p>Latest top stories by section</p>
           </Link>
           
           <Link to="/archive" className="action-card">
-            <div className="action-icon">🗄️</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>Archive</h3>
             <p>Browse history back to Oct 1, 1851</p>
           </Link>
           
           <Link to="/favorites" className="action-card">
-            <div className="action-icon">⭐</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>Favorites</h3>
             <p>Your saved articles</p>
           </Link>
           
           <Link to="/api-docs" className="action-card">
-            <div className="action-icon">📖</div>
+            <div className="action-icon" aria-hidden="true" />
             <h3>API Docs</h3>
             <p>Interactive API documentation</p>
           </Link>

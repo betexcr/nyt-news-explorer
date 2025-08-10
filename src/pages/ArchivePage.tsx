@@ -19,11 +19,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const END_YEAR = CURRENT_YEAR;
 const CURRENT_MONTH = new Date().getMonth() + 1;
 
-function valueToPosition(value: number, min: number, max: number, trackWidth: number): number {
-  const span = max - min;
-  const pct = (value - min) / (span || 1);
-  return pct * trackWidth;
-}
+//
 
 const ArchivePage: React.FC = () => {
   // Picker state
@@ -129,9 +125,7 @@ const ArchivePage: React.FC = () => {
     setYear(y); setMonth(m);
   };
 
-  const monthNamesShort = useMemo(() => (
-    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  ), []);
+//
 
   const monthNamesLong = useMemo(() => (
     ['January','February','March','April','May','June','July','August','September','October','November','December']
