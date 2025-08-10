@@ -385,6 +385,7 @@ const HomePage: React.FC = () => {
                       onClick={handleOpen}
                       onKeyDown={handleKey}
                     >
+                      {/* Archive: no preview images by design */}
                       <div className="article-content">
                         <div className="article-meta">
                           <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>

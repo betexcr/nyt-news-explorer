@@ -50,9 +50,12 @@ describe('ArchivePage', () => {
     );
 
     expect(screen.getByText(/Archive/i)).toBeInTheDocument();
-    // After UI change, Year is controlled by a slider with accessible name "Year"
-    expect(screen.getByRole('slider', { name: /Year/i })).toBeInTheDocument();
-    expect(screen.getByRole('slider', { name: /Month/i })).toBeInTheDocument();
+    // Sliders removed; calendar with month navigation is present
+    expect(screen.getByRole('region', { name: /Calendar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Previous month/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Next month/i })).toBeInTheDocument();
+    // Floating search button exists
+    expect(screen.getByRole('button', { name: /Search archive/i })).toBeInTheDocument();
 
     // Wait for either data or an empty-state/rendered grid without throwing
     await waitFor(() => {

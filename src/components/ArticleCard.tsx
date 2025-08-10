@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link, createSearchParams } from "react-router-dom";
 import type { Article } from "../types/nyt";
 import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
 
-function getPrimaryImageFromMultimedia(article: Article): string | null {
+function getImageUrl(article: Article): string {
   const mm = article.multimedia;
   
   if (mm) {
@@ -19,7 +19,7 @@ function getPrimaryImageFromMultimedia(article: Article): string | null {
       return url;
     }
   }
-  return null;
+  return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
 
 interface Props {
@@ -27,26 +27,7 @@ interface Props {
 }
 
 const ArticleCard: React.FC<Props> = ({ article }) => {
-  const [image, setImage] = useState<string | null>(getPrimaryImageFromMultimedia(article));
-  const fallback = "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
-
-  useEffect(() => {
-    let aborted = false;
-    async function resolve() {
-      if (image) return;
-      try {
-        // dynamic import to avoid circular deps in tests
-        const mod = await import("../api/nyt-apis");
-        const controller = new AbortController();
-        const url = await mod.resolveOgImage(article.web_url || "", controller.signal);
-        if (!aborted && url) setImage(url);
-      } catch {
-        // ignore
-      }
-    }
-    resolve();
-    return () => { aborted = true; };
-  }, [article.web_url, image]);
+  const image = getImageUrl(article);
   const { favorites, addFavorite, removeFavorite } = useSearchStore();
   const isFavorite = favorites?.some(fav => fav.web_url === article.web_url) || false;
   
@@ -84,7 +65,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
       aria-label={article.headline?.main || "Article"}
     >
       <article className="panel" style={{ padding: ".9rem" }}>
-        <img src={image || fallback} alt="" className="thumb" />
+        <img src={image} alt="" className="thumb" />
         <h3 className="title">{article.headline?.main || ""}</h3>
         <div className="meta">
           <span>{formatDate(article.pub_date)}</span>

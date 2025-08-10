@@ -107,10 +107,20 @@
 /* Simple calendar */
 .calendar { margin-top: 0.5rem; }
 .calendar.compact { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem; max-width: 420px; margin: 0 auto; }
+.calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.25rem 0.5rem 0.5rem; }
+.cal-title { font-weight: 700; }
+.cal-nav { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0.25rem 0.5rem; cursor: pointer; }
+.cal-nav:disabled { opacity: 0.5; cursor: not-allowed; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; }
 .calendar-day { padding: 0.3rem 0; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .calendar-day.selected { background: var(--primary); color: var(--button-text); border-color: var(--primary); }
 .calendar-day.in-range { background: rgba(0,0,0,0.06); }
+
+/* Floating search button */
+.floating-search { position: fixed; right: 1rem; bottom: 1rem; background: var(--primary); color: var(--button-text); border: none; border-radius: 999px; padding: 0.6rem 1rem; box-shadow: 0 6px 16px rgba(0,0,0,0.2); cursor: pointer; z-index: 100; }
+
+/* Results toolbar */
+.archive-list-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin: 0.5rem 0 0.75rem; }
 
 /* Pin archive size control to bottom-right of its card */
 .archive-page .controls-card.compact { position: relative; min-height: 56px; }

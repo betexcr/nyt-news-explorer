@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getArchive, NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
@@ -17,6 +17,7 @@ const START_YEAR = 1851; // NYT archive starts in 1851
 const START_MONTH = 10; // October
 const CURRENT_YEAR = new Date().getFullYear();
 const END_YEAR = CURRENT_YEAR;
+const CURRENT_MONTH = new Date().getMonth() + 1;
 
 function valueToPosition(value: number, min: number, max: number, trackWidth: number): number {
   const span = max - min;
@@ -46,46 +47,7 @@ const ArchivePage: React.FC = () => {
     dayEnd: 15,
   });
 
-  // Month slider track
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const [trackWidth, setTrackWidth] = useState<number>(0);
-  // Year slider track
-  const yearTrackRef = useRef<HTMLDivElement | null>(null);
-  const [yearTrackWidth, setYearTrackWidth] = useState<number>(0);
-
-  // Resize observer to keep track widths accurate
-  useEffect(() => {
-    const monthEl = trackRef.current;
-    const yearEl = yearTrackRef.current;
-    const update = () => {
-      if (monthEl) setTrackWidth(monthEl.getBoundingClientRect().width);
-      if (yearEl) setYearTrackWidth(yearEl.getBoundingClientRect().width);
-    };
-    update();
-    const RO: any = (typeof window !== 'undefined' && (window as any).ResizeObserver) || null;
-    let roMonth: any = null;
-    let roYear: any = null;
-    if (RO) {
-      try {
-        roMonth = monthEl ? new RO(() => setTrackWidth(monthEl.getBoundingClientRect().width)) : null;
-        roYear = yearEl ? new RO(() => setYearTrackWidth(yearEl.getBoundingClientRect().width)) : null;
-        if (roMonth && typeof roMonth.observe === 'function' && monthEl) roMonth.observe(monthEl);
-        if (roYear && typeof roYear.observe === 'function' && yearEl) roYear.observe(yearEl);
-        return () => {
-          if (roMonth && typeof roMonth.disconnect === 'function') roMonth.disconnect();
-          if (roYear && typeof roYear.disconnect === 'function') roYear.disconnect();
-        };
-      } catch {
-        // fall through to window resize listener
-      }
-    }
-    // Fallback for test environments without ResizeObserver
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-
-  // Drag logic
-  const dragging = useRef<'year' | 'month' | null>(null);
+  // Sliders removed. Calendar header controls drive navigation.
 
   // Invariant: if we're at the first archive year, month cannot be before October
   useEffect(() => {
@@ -95,36 +57,8 @@ const ArchivePage: React.FC = () => {
   }, [year, month]);
 
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging.current) return;
-      if (dragging.current === 'month') {
-        if (!trackRef.current) return;
-        const bounds = trackRef.current.getBoundingClientRect();
-        const x = e.clientX - bounds.left;
-        const posPct = clamp(x / bounds.width, 0, 1);
-        let nextMonth = Math.round(1 + posPct * 11);
-        nextMonth = clamp(nextMonth, 1, 12);
-        // Enforce earliest available archive date: Oct 1851
-        if (year === START_YEAR && nextMonth < START_MONTH) nextMonth = START_MONTH;
-        setMonth(nextMonth);
-      } else if (dragging.current === 'year') {
-        if (!yearTrackRef.current) return;
-        const bounds = yearTrackRef.current.getBoundingClientRect();
-        const x = e.clientX - bounds.left;
-        const posPct = clamp(x / bounds.width, 0, 1);
-        const nextYear = clamp(Math.round(START_YEAR + posPct * (END_YEAR - START_YEAR)), START_YEAR, END_YEAR);
-        setYear(nextYear);
-        // If we're at the start year, ensure month is not before October
-        if (nextYear === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
-      }
-    };
-    const onUp = () => (dragging.current = null);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+    if (year === START_YEAR && month < START_MONTH) setMonth(START_MONTH);
+    if (year === END_YEAR && month > CURRENT_MONTH) setMonth(CURRENT_MONTH);
   }, [year, month]);
 
   // Note: year options replaced by a continuous year slider
@@ -175,12 +109,24 @@ const ArchivePage: React.FC = () => {
     return () => controller.abort();
   }, [query]);
 
-  const handleTrackMouseDown = (_e: React.MouseEvent) => {
-    // Single handle for month selection
-    dragging.current = 'month';
+  // Month/year navigation via calendar header
+  const canPrev = useMemo(() => !(year === START_YEAR && month === START_MONTH), [year, month]);
+  const canNext = useMemo(() => !(year === END_YEAR && month === CURRENT_MONTH), [year, month]);
+  const prevMonth = () => {
+    if (!canPrev) return;
+    let y = year;
+    let m = month - 1;
+    if (m < 1) { y -= 1; m = 12; }
+    if (y === START_YEAR && m < START_MONTH) { y = START_YEAR; m = START_MONTH; }
+    setYear(y); setMonth(m);
   };
-  const handleYearTrackMouseDown = (_e: React.MouseEvent) => {
-    dragging.current = 'year';
+  const nextMonth = () => {
+    if (!canNext) return;
+    let y = year;
+    let m = month + 1;
+    if (m > 12) { y += 1; m = 1; }
+    if (y === END_YEAR && m > CURRENT_MONTH) { y = END_YEAR; m = CURRENT_MONTH; }
+    setYear(y); setMonth(m);
   };
 
   const monthNamesShort = useMemo(() => (
@@ -260,101 +206,13 @@ const ArchivePage: React.FC = () => {
         <h2 className={`era-title ${getEraClass(year)}`}>{eraTitle}</h2>
       </section>
 
-      {/* Align controls layout to match Search page (header outside functionality) */}
-      <div className="search-row">
-        <div className="search-section">
-          <section className="epoch-slider">
-            <div className="controls">
-          <div className="control grow year">
-            <label className="control-label">Year</label>
-            <div className="slider-track pretty" ref={yearTrackRef} onMouseDown={handleYearTrackMouseDown}>
-              <div
-                className="slider-handle from shadow"
-                style={{ left: `${(valueToPosition(year, START_YEAR, END_YEAR, yearTrackWidth) / Math.max(yearTrackWidth, 1)) * 100}%` }}
-                role="slider"
-                aria-valuemin={START_YEAR}
-                aria-valuemax={END_YEAR}
-                aria-valuenow={year}
-                aria-label="Year"
-                tabIndex={0}
-              />
-              <div className="year-ticks" aria-hidden>
-                {useMemo(() => {
-                  const ticks: number[] = [];
-                   const startDecade = Math.floor(START_YEAR / 10) * 10;
-                  const endDecade = Math.floor(END_YEAR / 10) * 10;
-                  for (let y = startDecade; y <= endDecade; y += 10) ticks.push(y);
-                  return ticks;
-                }, []).map((y) => (
-                  <span
-                    key={`year-${y}`}
-                    className={y === Math.floor(year / 10) * 10 ? 'current' : ''}
-                    style={{ left: `${(valueToPosition(y, START_YEAR, END_YEAR, yearTrackWidth) / Math.max(yearTrackWidth, 1)) * 100}%` }}
-                  >
-                    {y}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="control grow month">
-            <label className="control-label">Month</label>
-            <div className="slider-track pretty" ref={trackRef} onMouseDown={handleTrackMouseDown}>
-              <div
-                className="slider-handle from shadow"
-                style={{ left: `${(valueToPosition(month, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}
-                role="slider"
-                aria-valuemin={1}
-                aria-valuemax={12}
-                aria-valuenow={month}
-                aria-label="Month"
-                tabIndex={0}
-              />
-              <div className="month-ticks" aria-hidden>
-                {monthNamesShort.map((lbl, i) => (
-                  <span
-                    key={`month-${i+1}`}
-                    className={i + 1 === month ? 'current' : ''}
-                    style={{ left: `${(valueToPosition(i+1, 1, 12, trackWidth) / Math.max(trackWidth, 1)) * 100}%` }}
-                  >
-                    {lbl}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="control">
-            <button
-              className="retry-button"
-              onClick={() => setQuery({ year, month, dayStart, dayEnd })}
-              aria-label="Search archive"
-            >
-              Search
-            </button>
-          </div>
-            </div>
-          </section>
-          {/* Size control pinned in its own card below */}
-          <div className="controls-card compact" role="region" aria-label="Archive size control">
-            <div className="controls-row" style={{ justifyContent: 'flex-end' }}>
-              <label className="size-control">
-                Card size
-                <input
-                  type="range"
-                  min={220}
-                  max={520}
-                  step={10}
-                  value={cardMin}
-                  onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                  aria-label="Card size"
-                />
-              </label>
-            </div>
-          </div>
-          {
+      {/* Calendar replaces sliders */}
       <section aria-label="Calendar" className="calendar compact">
+              <div className="calendar-header">
+                <button type="button" className="cal-nav" onClick={prevMonth} disabled={!canPrev} aria-label="Previous month">‹</button>
+                <div className="cal-title" aria-live="polite">{monthNamesLong[clamp(month,1,12)-1]} {year}</div>
+                <button type="button" className="cal-nav" onClick={nextMonth} disabled={!canNext} aria-label="Next month">›</button>
+              </div>
               <div className="calendar-grid" role="grid">
                 {Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1).map((d) => {
                   const isSelected = (dayStart != null && dayEnd == null && d === dayStart) || (dayStart != null && dayEnd != null && (d === dayStart || d === dayEnd));
@@ -373,15 +231,38 @@ const ArchivePage: React.FC = () => {
                 })}
               </div>
             </section>
-          }
-        </div>
-      </div>
+
+      {/* Floating search button */}
+      <button
+        className="floating-search"
+        onClick={() => setQuery({ year, month, dayStart, dayEnd })}
+        aria-label="Search archive"
+        title="Search archive"
+      >
+        Search
+      </button>
 
       {/* Error messages hidden per request */}
 
       {loading ? (
         <div style={{ padding: '2rem' }}><Spinner /></div>
       ) : (
+        <>
+        {/* Toolbar with size control at top of results */}
+        <div className="archive-list-toolbar">
+          <label className="size-control">
+            Card size
+            <input
+              type="range"
+              min={220}
+              max={520}
+              step={10}
+              value={cardMin}
+              onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+              aria-label="Card size"
+            />
+          </label>
+        </div>
         <section className={'archive-grid'} style={{ ['--card-min' as any]: `${cardMin}px` }}>
           {articles.length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
@@ -428,6 +309,7 @@ const ArchivePage: React.FC = () => {
             })
           )}
         </section>
+        </>
       )}
     </div>
   );
