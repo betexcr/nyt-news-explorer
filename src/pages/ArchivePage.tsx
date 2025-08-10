@@ -304,9 +304,9 @@ const ArchivePage: React.FC = () => {
               </div>
             </section>
 
-            {/* Floating size control (desktop) outside the calendar container */}
-            <div className="archive-size-floating desktop-only" aria-hidden={false}>
-              <label className="size-control size-control-floating" title="Adjust card size">
+            {/* Desktop toolbar row for size control (separate row, not overlay) */}
+            <div className="archive-toolbar desktop-only" role="toolbar" aria-label="Archive controls">
+              <label className="size-control" title="Adjust card size">
                 Card size
                 <input
                   type="range"

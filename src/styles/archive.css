@@ -148,14 +148,8 @@
 .archive-help { color: var(--muted); text-align: center; margin: 0.25rem 0 0.5rem; font-size: 0.9rem; }
 
 /* Floating size control outside content: bottom-right aligned on large screens */
-.archive-size-floating {
-  position: sticky;
-  top: 64px; /* sits near the top; below header */
-  z-index: 10;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -0.5rem;
-}
+/* Deprecated floating control; replaced by toolbar row */
+.archive-size-floating { display: none; }
 
 .archive-size-floating .size-control-floating {
   pointer-events: auto;
@@ -177,8 +171,16 @@
 }
 
 @media (max-width: 768px) {
-  .archive-size-floating { position: static; padding: 0 0.5rem; margin-top: 0.5rem; }
-  .archive-size-floating .size-control-floating { width: 100%; justify-content: space-between; }
+  .archive-size-floating { display: none; }
+}
+
+/* New toolbar row below calendar */
+.archive-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0.5rem;
 }
 
 
