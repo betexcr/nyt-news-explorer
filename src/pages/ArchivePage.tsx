@@ -216,19 +216,6 @@ const ArchivePage: React.FC = () => {
     setDayEnd(end);
   };
 
-  // Generate a random (year, month) pair within archive bounds
-  const getRandomYearMonth = (): { year: number; month: number } => {
-    const minYear = START_YEAR;
-    const maxYear = END_YEAR;
-    // Pick a random year in range
-    const ry = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;
-    // Determine valid month bounds for that year
-    const minMonth = ry === START_YEAR ? START_MONTH : 1;
-    const maxMonth = ry === END_YEAR ? CURRENT_MONTH : 12;
-    const rm = Math.floor(Math.random() * (maxMonth - minMonth + 1)) + minMonth;
-    return { year: ry, month: rm };
-  };
-
   const handleSearch = () => {
     // Use current selection (year, month, day range)
     const daysInTargetMonth = new Date(year, month, 0).getDate();

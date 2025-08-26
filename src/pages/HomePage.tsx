@@ -6,14 +6,14 @@ import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
 import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
-import Spinner from "../components/Spinner";
+// Loading indicator shown only during initial hero render was removed; keep import unused out
 import "../styles/home.css";
 
 const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(true);
   const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
