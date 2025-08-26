@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
+import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 import Spinner from "../components/Spinner";
@@ -17,8 +17,12 @@ const HomePage: React.FC = () => {
   const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
+  // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     const controller = new AbortController();
     const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
@@ -31,6 +35,7 @@ const HomePage: React.FC = () => {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
           setTodayInHistory([]);
+          setLoading(false);
         } else {
           const now = new Date();
           const currentYear = now.getFullYear();
@@ -46,38 +51,33 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
+          // Unblock page render immediately; fetch archive items in the background via serverless (max 3 calls)
+          setLoading(false);
 
-          // A day like today: choose articles from the SAME calendar day across different years
           const desiredCount = 3;
           const targetDay = now.getDate();
-          const picks: ArchiveArticle[] = [];
-          const years: number[] = [];
-          // Try up to 10 unique random years to increase the chance of finding same-day articles
-          while (years.length < 10) {
-            const y = Math.floor(Math.random() * (currentYear - 1 - MIN_YEAR + 1)) + MIN_YEAR;
-            if (!years.includes(y)) years.push(y);
+          const cacheKey = `archiveToday:${now.getFullYear()}-${now.getMonth() + 1}-${targetDay}`;
+          const cached = safeReadCache(cacheKey, 3600); // 1 hour
+          if (cached && Array.isArray(cached.results)) {
+            setTodayInHistory(cached.results.slice(0, desiredCount));
+          } else {
+            fetch(`/\.netlify/functions/archive-today?years=3`, { signal: controller.signal })
+              .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+              .then((data: any) => {
+                if (controller.signal.aborted) return;
+                const picks: ArchiveArticle[] = Array.isArray(data?.results) ? data.results.slice(0, desiredCount) : [];
+                setTodayInHistory(picks);
+                safeWriteCache(cacheKey, { results: picks });
+              })
+              .catch(() => {
+                // ignore; keep page responsive
+              });
           }
-          for (const y of years) {
-            if (picks.length >= desiredCount) break;
-            const m = y === 1851 && month < 10 ? 10 : month;
-            try {
-              const docs = await getArchive(y, m, controller.signal);
-              if (!docs || docs.length === 0) continue;
-              const sameDayDocs = docs.filter((d) => new Date(d.pub_date).getDate() === targetDay);
-              if (sameDayDocs.length > 0) {
-                picks.push(sameDayDocs[0]);
-              }
-            } catch {
-              // ignore
-            }
-          }
-
-          setTodayInHistory(picks);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
       } finally {
-        setLoading(false);
+        // loading handled above to avoid blocking on archive calls
       }
     };
 
@@ -420,3 +420,27 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
+
+// Simple cache helpers
+function safeReadCache(key: string, maxAgeSeconds: number): any | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const ts = typeof parsed._ts === 'number' ? parsed._ts : 0;
+    if (Date.now() - ts > maxAgeSeconds * 1000) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function safeWriteCache(key: string, data: any): void {
+  try {
+    const payload = { _ts: Date.now(), data };
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    // ignore
+  }
+}

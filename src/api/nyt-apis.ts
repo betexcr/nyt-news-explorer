@@ -62,12 +62,14 @@ class NytApiError extends Error {
 async function makeApiRequest<T>(
   url: string,
   params: Record<string, any> = {},
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: { timeoutMs?: number }
 ): Promise<T> {
   try {
     const response: AxiosResponse<T> = await axios.get(url, {
       params: { ...baseParams(), ...params },
       signal,
+      timeout: options?.timeoutMs,
     });
     return response.data;
   } catch (error: any) {
@@ -152,7 +154,7 @@ export async function getArchive(
 ): Promise<ArchiveArticle[]> {
   // NYT Archive API expects month as 1-12 without zero padding
   const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal);
+  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 4000 });
   return response.response.docs;
 }
 
