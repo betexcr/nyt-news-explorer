@@ -19,7 +19,6 @@ const HomePage: React.FC = () => {
   const [, setError] = useState<string | null>(null);
   // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
   const hasFetchedRef = useRef(false);
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
@@ -43,8 +42,7 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          // Fetch "A day like today" items in the background (exact day, 3 random past years)
-
+          // Fetch "A day like today" items with exactly three single-day requests in parallel
           const desiredCount = 3;
           const targetDay = now.getUTCDate();
           const cacheKey = `archiveToday:${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${targetDay}`;
@@ -58,25 +56,31 @@ const HomePage: React.FC = () => {
                 const currentYear = now.getUTCFullYear();
                 const START_YEAR = 1851;
                 const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Oct 1851 earliest for months >=10
-                // Exactly three single-day Article Search requests
-                const picks: ArchiveArticle[] = [];
-                for (let i = 0; i < desiredCount; i += 1) {
-                  const span = (currentYear - 1) - minYear + 1;
-                  const y = minYear + Math.floor(Math.random() * span);
+
+                // Pick three distinct random years biased towards recent years without loops/backoff
+                const pool: number[] = [];
+                for (let y = currentYear - 1; y >= Math.max(currentYear - 40, minYear); y -= 1) pool.push(y);
+                for (let y = Math.max(currentYear - 41, minYear); y >= minYear; y -= 1) pool.push(y);
+                // Shuffle once
+                for (let i = pool.length - 1; i > 0; i -= 1) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                const years = pool.slice(0, desiredCount);
+
+                const results = await Promise.all(years.map(async (y) => {
                   try {
                     const docs = await searchArticlesByDay(y, month, targetDay);
                     if (Array.isArray(docs) && docs.length > 0) {
-                      const chosen = docs[Math.floor(Math.random() * docs.length)];
-                      picks.push(chosen);
+                      return docs[Math.floor(Math.random() * docs.length)];
                     }
-                  } catch (e: any) {
-                    const status = e?.status || e?.response?.status;
-                    if (status === 429) {
-                      await sleep(800);
-                    }
+                    return null;
+                  } catch {
+                    return null;
                   }
-                  await sleep(150);
-                }
+                }));
+
+                const picks = results.filter(Boolean) as ArchiveArticle[];
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
               } catch {
