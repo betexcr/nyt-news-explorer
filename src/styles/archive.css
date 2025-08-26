@@ -115,6 +115,9 @@
 .cal-nav:disabled { opacity: 0.5; cursor: not-allowed; }
 .calendar-layout { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
 .calendar-aside { display: none; }
+/* Visibility helpers */
+.desktop-only { display: none; }
+.mobile-only { display: inline-block; }
 @media (min-width: 900px) {
   .calendar.compact { max-width: 780px; }
   .calendar-layout { grid-template-columns: 1fr; align-items: start; }

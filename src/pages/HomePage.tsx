@@ -49,14 +49,15 @@ const HomePage: React.FC = () => {
           setLoading(false);
 
           const desiredCount = 3;
-          const targetDay = now.getDate();
-          const cacheKey = `archiveToday:${now.getFullYear()}-${now.getMonth() + 1}-${targetDay}`;
+          const targetDay = now.getUTCDate();
+          const cacheKey = `archiveToday:${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${targetDay}`;
           const cached = safeReadCache(cacheKey, 3600); // 1 hour
           if (cached && Array.isArray(cached.results)) {
             setTodayInHistory(cached.results.slice(0, desiredCount));
           } else {
             const key = process.env.REACT_APP_NYT_API_KEY ? `&apiKey=${encodeURIComponent(process.env.REACT_APP_NYT_API_KEY)}` : '';
-            fetch(`/.netlify/functions/archive-today?years=6${key}`, { signal: controller.signal })
+            // Ask function to scan more years and return up to desiredCount
+            fetch(`/.netlify/functions/archive-today?years=24&take=${desiredCount}${key}`, { signal: controller.signal })
               .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
               .then((data: any) => {
                 if (controller.signal.aborted) return;

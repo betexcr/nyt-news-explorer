@@ -8,8 +8,10 @@ export const handler = async (event) => {
     const apiKey = process.env.NYT_API_KEY || process.env.REACT_APP_NYT_API_KEY || apiKeyParam;
     if (!apiKey) return json(500, { error: 'Missing NYT_API_KEY' });
 
-    const yearsParam = parseInt(event?.queryStringParameters?.years || '3', 10);
-    const maxYears = Number.isFinite(yearsParam) ? Math.max(1, Math.min(12, yearsParam)) : 3;
+    const yearsParam = parseInt(event?.queryStringParameters?.years || '12', 10);
+    const takeParam = parseInt(event?.queryStringParameters?.take || '3', 10);
+    const maxYears = Number.isFinite(yearsParam) ? Math.max(1, Math.min(60, yearsParam)) : 12;
+    const take = Number.isFinite(takeParam) ? Math.max(1, Math.min(6, takeParam)) : 3;
 
     const now = new Date();
     // Use UTC to avoid timezone boundary issues
@@ -27,32 +29,29 @@ export const handler = async (event) => {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const promises = candidateYears.slice(0, maxYears).map(async (y) => {
+    const picks = [];
+    const scannedYears = [];
+    for (const y of candidateYears.slice(0, maxYears)) {
+      if (picks.length >= take) break;
+      scannedYears.push(y);
       const m = y === 1851 && month < 10 ? 10 : month;
       const url = `https://api.nytimes.com/svc/archive/v1/${y}/${m}.json?api-key=${encodeURIComponent(apiKey)}`;
       try {
         const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) return null;
+        if (!res.ok) continue;
         const data = await res.json();
-        const docs = data?.response?.docs || [];
-        const match = docs.find((d) => new Date(d.pub_date).getUTCDate() === day) || null;
-        return match;
+        const docs = Array.isArray(data?.response?.docs) ? data.response.docs : [];
+        const match = docs.find((d) => new Date(d.pub_date).getUTCDate() === day);
+        if (match) picks.push(match);
       } catch {
-        return null;
+        // ignore and continue scanning more years
       }
-    });
-
-    const results = await Promise.allSettled(promises);
+    }
     clearTimeout(timeout);
 
-    const picks = results
-      .map((r) => (r.status === 'fulfilled' ? r.value : null))
-      .filter(Boolean)
-      .slice(0, maxYears);
-
-    return json(200, { results: picks, count: picks.length, years: candidateYears.slice(0, maxYears) });
+    return json(200, { results: picks.slice(0, take), count: picks.length, scannedYears });
   } catch (err) {
     const status = err?.name === 'AbortError' ? 504 : 500;
     return json(status, { error: err?.message || 'archive-today failed' });
