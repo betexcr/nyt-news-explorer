@@ -154,7 +154,8 @@ export async function getArchive(
 ): Promise<ArchiveArticle[]> {
   // NYT Archive API expects month as 1-12 without zero padding
   const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 4000 });
+  // Archive responses can be large; allow more time
+  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 15000 });
   return response.response.docs;
 }
 

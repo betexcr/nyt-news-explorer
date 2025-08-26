@@ -31,6 +31,7 @@ const ArchivePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
+  const [timeoutHit, setTimeoutHit] = useState<boolean>(false);
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
   const [cardMin, setCardMin] = useState<number>(300);
   // Applied query (set when user presses Search)
@@ -63,15 +64,22 @@ const ArchivePage: React.FC = () => {
   useEffect(() => {
     if (!query) return;
     const controller = new AbortController();
+    let timeoutId: any;
     const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
     const run = async () => {
       setLoading(true);
       setError(null);
+      setTimeoutHit(false);
       try {
         if (!USE_KEY) {
           setArticles(mockArchiveArticles);
           return;
         }
+        // Provide a UI fallback if the request takes too long
+        timeoutId = setTimeout(() => {
+          setTimeoutHit(true);
+        }, 12000);
+
         const docs = await getArchive(query.year, query.month, controller.signal);
         // Optional client-side day filtering or range filtering
         const filtered = (() => {
@@ -99,10 +107,11 @@ const ArchivePage: React.FC = () => {
         }
       } finally {
         setLoading(false);
+        if (timeoutId) clearTimeout(timeoutId);
       }
     };
     run();
-    return () => controller.abort();
+    return () => { if (timeoutId) clearTimeout(timeoutId); controller.abort(); };
   }, [query]);
 
   // Month/year navigation via calendar header
@@ -325,7 +334,14 @@ const ArchivePage: React.FC = () => {
       {/* Error messages hidden per request */}
 
       {loading ? (
-        <div style={{ padding: '2rem' }}><Spinner /></div>
+        <div style={{ padding: '2rem' }}>
+          <Spinner />
+          {timeoutHit && (
+            <div className="empty-state" style={{ marginTop: '1rem' }}>
+              Taking longer than usual… showing fewer results if available.
+            </div>
+          )}
+        </div>
       ) : (
         <>
         {/* Size control moved into calendar footer */}
