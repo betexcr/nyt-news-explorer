@@ -41,17 +41,26 @@ jobs:
           echo "Build size:"
           du -sh build/
 
-      - name: Deploy to Hostinger via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./build/
-          server-dir: /domains/brainvaultdev.com/public_html/nyt/
-          protocol: ftp
-          log-level: verbose
-          dangerous-clean-slate: true
+      - name: Deploy to Hostinger via lftp (no temp file renames)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          REMOTE_DIR: /domains/brainvaultdev.com/public_html/nyt/
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y lftp
+          echo "Deploying build/ to $REMOTE_DIR using lftp (no temp files)..."
+          lftp -e "
+            set ftp:use-temp-file no;        # prevent .in.* temp files and renames
+            set ftp:passive-mode yes;
+            set net:max-retries 2;
+            set net:timeout 60;
+            open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
+            mkdir -p $REMOTE_DIR;
+            mirror -R --only-newer --parallel=2 --verbose ./build $REMOTE_DIR;
+            quit
+          "
 
       - name: Wait for deployment
         run: |
