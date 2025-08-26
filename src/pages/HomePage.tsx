@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
           const targetDay = now.getUTCDate();
           const cacheKey = `archiveToday:${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${targetDay}`;
           const cached = safeReadCache(cacheKey, 3600); // 1 hour
-          if (cached && Array.isArray(cached.results)) {
+          if (cached && Array.isArray(cached.results) && cached.results.length >= desiredCount) {
             setTodayInHistory(cached.results.slice(0, desiredCount));
           } else {
             (async () => {
@@ -59,28 +59,31 @@ const HomePage: React.FC = () => {
                 const START_YEAR = 1851;
                 const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
                 // Build and shuffle pool of candidate years (exclude current)
-                const yearsPool: number[] = [];
-                for (let y = currentYear - 1; y >= minYear; y -= 1) yearsPool.push(y);
-                for (let i = yearsPool.length - 1; i > 0; i -= 1) {
+                const pool: number[] = [];
+                for (let y = currentYear - 1; y >= minYear; y -= 1) pool.push(y);
+                for (let i = pool.length - 1; i > 0; i -= 1) {
                   const j = Math.floor(Math.random() * (i + 1));
-                  [yearsPool[i], yearsPool[j]] = [yearsPool[j], yearsPool[i]];
+                  [pool[i], pool[j]] = [pool[j], pool[i]];
                 }
                 const picks: ArchiveArticle[] = [];
-                // Scan up to 40 random years or until we have 3 picks
-                const scanLimit = Math.min(40, yearsPool.length);
-                for (let idx = 0; idx < scanLimit && picks.length < desiredCount; idx += 1) {
-                  const y = yearsPool[idx];
-                  const m = y === 1851 && month < 10 ? 10 : month;
-                  try {
-                    const docs = await getArchive(y, m, controller.signal);
-                    const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
-                    if (sameDay.length > 0) {
-                      // pick a random one for that year to add variety
-                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
-                      picks.push(chosen);
-                    }
-                  } catch {
-                    // ignore and continue
+                let idx = 0;
+                // Fetch one year at a time until we have 3 stories or we exhaust a reasonable number of attempts
+                const maxAttempts = Math.min(pool.length, 24);
+                while (picks.length < desiredCount && idx < maxAttempts && !controller.signal.aborted) {
+                  const batchYears = pool.slice(idx, idx + Math.min(3, maxAttempts - idx));
+                  idx += batchYears.length;
+                  const results = await Promise.allSettled(
+                    batchYears.map(async (y) => {
+                      const m = y === 1851 && month < 10 ? 10 : month;
+                      // Avoid aborting archive fetches; let them complete
+                      const docs = await getArchive(y, m);
+                      const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
+                      if (sameDay.length === 0) return null;
+                      return sameDay[Math.floor(Math.random() * sameDay.length)];
+                    })
+                  );
+                  for (const r of results) {
+                    if (r.status === 'fulfilled' && r.value && picks.length < desiredCount) picks.push(r.value as ArchiveArticle);
                   }
                 }
                 if (!controller.signal.aborted) {
