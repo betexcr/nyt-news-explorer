@@ -113,29 +113,7 @@ const HomePage: React.FC = () => {
     return /^(https?:)?\/\//i.test(url) ? url : null;
   };
 
-  if (loading) {
-    return (
-      <div className="home-page">
-        <div className="home-hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">NYT News Explorer</h1>
-            <p className="hero-subtitle">Discover the latest news from The New York Times</p>
-            <div className="hero-actions">
-              <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
-                Search Articles
-              </Link>
-              <Link to="/archive" className="hero-button secondary">
-                Explore Archive
-              </Link>
-            </div>
-          </div>
-          <div className="loading-container">
-            <Spinner />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Always render hero immediately; below content shows as it loads
 
   return (
     <div className="home-page">

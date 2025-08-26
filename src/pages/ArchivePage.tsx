@@ -34,6 +34,7 @@ const ArchivePage: React.FC = () => {
   const [timeoutHit, setTimeoutHit] = useState<boolean>(false);
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
   const [cardMin, setCardMin] = useState<number>(300);
+  const [isDesktop, setIsDesktop] = useState<boolean>(false);
   // Applied query (set when user presses Search)
   const [query, setQuery] = useState<
     { year: number; month: number; dayStart: number | null; dayEnd: number | null } | null
@@ -59,6 +60,25 @@ const ArchivePage: React.FC = () => {
   }, [year, month]);
 
   // Note: year options replaced by a continuous year slider
+
+  // Track viewport for conditional rendering of size controls (avoid duplicates)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(min-width: 900px)') as any;
+    if (!mql) { setIsDesktop(false); return; }
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(!!e.matches);
+    // Some test environments may provide matchMedia without immediate matches property
+    try { setIsDesktop(!!mql.matches); } catch { setIsDesktop(false); }
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', handler);
+      return () => mql.removeEventListener('change', handler);
+    }
+    if (typeof (mql as any).addListener === 'function') {
+      (mql as any).addListener(handler);
+      return () => (mql as any).removeListener(handler);
+    }
+    return () => {};
+  }, []);
 
   // Fetch archive data only when user presses Search (query is set)
   useEffect(() => {
@@ -209,15 +229,12 @@ const ArchivePage: React.FC = () => {
     return { year: ry, month: rm };
   };
 
-  const handleRandomSearch = () => {
-    const { year: ry, month: rm } = getRandomYearMonth();
-    setYear(ry);
-    setMonth(rm);
-    // Optionally clamp day range to target month length
-    const daysInTargetMonth = new Date(ry, rm, 0).getDate();
+  const handleSearch = () => {
+    // Use current selection (year, month, day range)
+    const daysInTargetMonth = new Date(year, month, 0).getDate();
     const s = dayStart != null ? Math.min(dayStart, daysInTargetMonth) : dayStart;
     const e = dayEnd != null ? Math.min(dayEnd, daysInTargetMonth) : dayEnd;
-    setQuery({ year: ry, month: rm, dayStart: s, dayEnd: e });
+    setQuery({ year, month, dayStart: s, dayEnd: e });
   };
 
   return (
@@ -291,6 +308,7 @@ const ArchivePage: React.FC = () => {
               </div>
 
               <div className="calendar-footer">
+                {!isDesktop && (
                 <label className="size-control mobile-only">
                   Card size
                   <input
@@ -303,9 +321,10 @@ const ArchivePage: React.FC = () => {
                     aria-label="Card size"
                   />
                 </label>
+                )}
                 <button
                   className="retry-button"
-                  onClick={handleRandomSearch}
+                  onClick={handleSearch}
                   aria-label="Search archive"
                 >
                   Search
@@ -314,20 +333,22 @@ const ArchivePage: React.FC = () => {
             </section>
 
             {/* Desktop toolbar row for size control (separate row, not overlay) */}
-            <div className="archive-toolbar desktop-only" role="toolbar" aria-label="Archive controls">
-              <label className="size-control" title="Adjust card size">
-                Card size
-                <input
-                  type="range"
-                  min={220}
-                  max={520}
-                  step={10}
-                  value={cardMin}
-                  onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
-                  aria-label="Card size"
-                />
-              </label>
-            </div>
+            {isDesktop && (
+              <div className="archive-toolbar desktop-only" role="toolbar" aria-label="Archive controls">
+                <label className="size-control" title="Adjust card size">
+                  Card size
+                  <input
+                    type="range"
+                    min={220}
+                    max={520}
+                    step={10}
+                    value={cardMin}
+                    onChange={(e) => setCardMin(parseInt(e.target.value, 10))}
+                    aria-label="Card size"
+                  />
+                </label>
+              </div>
+            )}
 
       {/* Removed floating search button; button moved inside calendar */}
 

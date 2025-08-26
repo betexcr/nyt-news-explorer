@@ -22,11 +22,15 @@ export const handler = async (event) => {
     const START_YEAR = 1851;
     const MIN_YEAR = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
 
-    // Build candidate years from most recent backwards
-    const candidateYears = [];
-    for (let i = 1; candidateYears.length < maxYears && currentYear - i >= MIN_YEAR; i += 1) {
-      candidateYears.push(currentYear - i);
+    // Build candidate years randomly from range, excluding currentYear
+    const yearsPool = [];
+    for (let y = currentYear - 1; y >= MIN_YEAR; y -= 1) yearsPool.push(y);
+    // Shuffle pool
+    for (let i = yearsPool.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [yearsPool[i], yearsPool[j]] = [yearsPool[j], yearsPool[i]];
     }
+    const candidateYears = yearsPool.slice(0, maxYears);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
