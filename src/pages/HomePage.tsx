@@ -3,17 +3,17 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
-import Spinner from "../components/Spinner";
+// Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
 
 const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
-  const [loading, setLoading] = useState(true);
+  // No blocking loading state for Home hero
   const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
@@ -27,7 +27,6 @@ const HomePage: React.FC = () => {
     const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
     const fetchHomeData = async () => {
-      setLoading(true);
       // Clear any previous error
       setError(null);
       try {
@@ -35,7 +34,6 @@ const HomePage: React.FC = () => {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
           setTodayInHistory([]);
-          setLoading(false);
         } else {
           const now = new Date();
 
@@ -45,8 +43,7 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          // Unblock page render immediately; fetch archive items in the background via serverless (max 3 calls)
-          setLoading(false);
+          // Fetch "A day like today" items in the background (exact day, 3 random past years)
 
           const desiredCount = 3;
           const targetDay = now.getUTCDate();
@@ -55,25 +52,51 @@ const HomePage: React.FC = () => {
           if (cached && Array.isArray(cached.results)) {
             setTodayInHistory(cached.results.slice(0, desiredCount));
           } else {
-            const key = process.env.REACT_APP_NYT_API_KEY ? `&apiKey=${encodeURIComponent(process.env.REACT_APP_NYT_API_KEY)}` : '';
-            // Ask function to scan more years and return up to desiredCount
-            fetch(`/.netlify/functions/archive-today?years=24&take=${desiredCount}${key}`, { signal: controller.signal })
-              .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
-              .then((data: any) => {
-                if (controller.signal.aborted) return;
-                const picks: ArchiveArticle[] = Array.isArray(data?.results) ? data.results.slice(0, desiredCount) : [];
-                setTodayInHistory(picks);
-                safeWriteCache(cacheKey, { results: picks });
-              })
-              .catch(() => {
-                // ignore; keep page responsive
-              });
+            (async () => {
+              try {
+                const month = now.getUTCMonth() + 1; // 1-12
+                const currentYear = now.getUTCFullYear();
+                const START_YEAR = 1851;
+                const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
+                // Build and shuffle pool of candidate years (exclude current)
+                const yearsPool: number[] = [];
+                for (let y = currentYear - 1; y >= minYear; y -= 1) yearsPool.push(y);
+                for (let i = yearsPool.length - 1; i > 0; i -= 1) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [yearsPool[i], yearsPool[j]] = [yearsPool[j], yearsPool[i]];
+                }
+                const picks: ArchiveArticle[] = [];
+                // Scan up to 40 random years or until we have 3 picks
+                const scanLimit = Math.min(40, yearsPool.length);
+                for (let idx = 0; idx < scanLimit && picks.length < desiredCount; idx += 1) {
+                  const y = yearsPool[idx];
+                  const m = y === 1851 && month < 10 ? 10 : month;
+                  try {
+                    const docs = await getArchive(y, m, controller.signal);
+                    const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
+                    if (sameDay.length > 0) {
+                      // pick a random one for that year to add variety
+                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
+                      picks.push(chosen);
+                    }
+                  } catch {
+                    // ignore and continue
+                  }
+                }
+                if (!controller.signal.aborted) {
+                  setTodayInHistory(picks.slice(0, desiredCount));
+                  safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
+                }
+              } catch {
+                // ignore
+              }
+            })();
           }
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
       } finally {
-        // loading handled above to avoid blocking on archive calls
+        // no-op
       }
     };
 
