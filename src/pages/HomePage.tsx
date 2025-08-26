@@ -23,7 +23,6 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    const controller = new AbortController();
     const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
     const fetchHomeData = async () => {
@@ -69,7 +68,7 @@ const HomePage: React.FC = () => {
                 let idx = 0;
                 // Fetch one year at a time until we have 3 stories or we exhaust a reasonable number of attempts
                 const maxAttempts = Math.min(pool.length, 24);
-                while (picks.length < desiredCount && idx < maxAttempts && !controller.signal.aborted) {
+                while (picks.length < desiredCount && idx < maxAttempts) {
                   const batchYears = pool.slice(idx, idx + Math.min(3, maxAttempts - idx));
                   idx += batchYears.length;
                   const results = await Promise.allSettled(
@@ -86,10 +85,8 @@ const HomePage: React.FC = () => {
                     if (r.status === 'fulfilled' && r.value && picks.length < desiredCount) picks.push(r.value as ArchiveArticle);
                   }
                 }
-                if (!controller.signal.aborted) {
-                  setTodayInHistory(picks.slice(0, desiredCount));
-                  safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
-                }
+                setTodayInHistory(picks.slice(0, desiredCount));
+                safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
               } catch {
                 // ignore
               }
@@ -104,7 +101,7 @@ const HomePage: React.FC = () => {
     };
 
     fetchHomeData();
-    return () => controller.abort();
+    return () => {};
   }, []);
 
   const handleHomeClick = () => {
