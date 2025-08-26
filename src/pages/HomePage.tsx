@@ -69,14 +69,16 @@ const HomePage: React.FC = () => {
                   const j = Math.floor(Math.random() * (i + 1));
                   [pool[i], pool[j]] = [pool[j], pool[i]];
                 }
+                // Exactly three month-level archive fetches (at most)
                 const picks: ArchiveArticle[] = [];
-                let idx = 0;
-                // Limit number of month fetches to keep payload reasonable
-                const maxAttempts = Math.min(pool.length, 6);
-                while (picks.length < desiredCount && idx < maxAttempts) {
-                  const y = pool[idx++];
+                const chosenYears: number[] = [];
+                while (chosenYears.length < desiredCount && pool.length > 0) {
+                  const y = pool.shift()!;
+                  if (!chosenYears.includes(y)) chosenYears.push(y);
+                }
+
+                for (const y of chosenYears) {
                   try {
-                    // Fetch the month from the Archive API and filter by exact UTC day
                     const validMonth = y === 1851 && month < 10 ? 10 : month;
                     const monthDocs = await getArchive(y, validMonth);
                     const sameDay = monthDocs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
@@ -84,13 +86,11 @@ const HomePage: React.FC = () => {
                       const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
                       picks.push(chosen);
                     }
-                  } catch (e: any) {
-                    const status = e?.status || e?.response?.status;
-                    if (status === 429) {
-                      await sleep(1200);
-                    }
+                  } catch {
+                    // ignore errors for individual years
                   }
-                  if (picks.length < desiredCount) await sleep(200);
+                  // Small spacing between the three requests
+                  await sleep(150);
                 }
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
