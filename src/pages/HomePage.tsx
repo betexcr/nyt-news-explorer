@@ -19,6 +19,7 @@ const HomePage: React.FC = () => {
   const [, setError] = useState<string | null>(null);
   // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
   const hasFetchedRef = useRef(false);
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
@@ -66,23 +67,22 @@ const HomePage: React.FC = () => {
                 }
                 const picks: ArchiveArticle[] = [];
                 let idx = 0;
-                // Fetch one year at a time until we have 3 stories or we exhaust a reasonable number of attempts
-                const maxAttempts = Math.min(pool.length, 24);
+                // Sequential requests with small delay to avoid 429 rate limits
+                const maxAttempts = Math.min(pool.length, 12);
                 while (picks.length < desiredCount && idx < maxAttempts) {
-                  const batchYears = pool.slice(idx, idx + Math.min(3, maxAttempts - idx));
-                  idx += batchYears.length;
-                  const results = await Promise.allSettled(
-                    batchYears.map(async (y) => {
-                      const m = month;
-                      // Use Article Search for a single exact day to minimize payload
-                      const docs = await searchArticlesByDay(y, m, targetDay);
-                      if (!Array.isArray(docs) || docs.length === 0) return null;
-                      return docs[Math.floor(Math.random() * docs.length)];
-                    })
-                  );
-                  for (const r of results) {
-                    if (r.status === 'fulfilled' && r.value && picks.length < desiredCount) picks.push(r.value as ArchiveArticle);
+                  const y = pool[idx++];
+                  try {
+                    const docs = await searchArticlesByDay(y, month, targetDay);
+                    if (Array.isArray(docs) && docs.length > 0) {
+                      const chosen = docs[Math.floor(Math.random() * docs.length)];
+                      picks.push(chosen);
+                    }
+                  } catch (e: any) {
+                    // If rate limited, back off briefly and retry next year
+                    const status = e?.status || e?.response?.status;
+                    if (status === 429) await sleep(600);
                   }
+                  if (picks.length < desiredCount) await sleep(150);
                 }
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
