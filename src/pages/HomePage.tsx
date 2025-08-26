@@ -38,8 +38,8 @@ const HomePage: React.FC = () => {
           const now = new Date();
 
           const [popular, stories] = await Promise.all([
-            getMostPopular('7', controller.signal),
-            getTopStories('home', controller.signal),
+            getMostPopular('7'),
+            getTopStories('home'),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
