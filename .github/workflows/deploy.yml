@@ -52,10 +52,11 @@ jobs:
           sudo apt-get install -y lftp
           echo "Deploying build/ to $REMOTE_DIR using lftp (no temp files)..."
           lftp -e "
-            set ftp:use-temp-file no;        # prevent .in.* temp files and renames
+            set xfer:temp-file-name \"\";    # disable temp files/renames
             set ftp:passive-mode yes;
             set net:max-retries 2;
             set net:timeout 60;
+            set ssl:verify-certificate no;     # avoid CN mismatch errors
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
             mkdir -p $REMOTE_DIR;
             mirror -R --only-newer --parallel=2 --verbose ./build $REMOTE_DIR;
