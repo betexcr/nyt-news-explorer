@@ -56,11 +56,15 @@ const HomePage: React.FC = () => {
               try {
                 const month = now.getUTCMonth() + 1; // 1-12
                 const currentYear = now.getUTCFullYear();
-                const START_YEAR = 1851;
-                const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
-                // Build and shuffle pool of candidate years (exclude current)
+                // Prefer recent decades to maximize likelihood of same-day coverage
+                const recentStart = Math.max(currentYear - 80, 1900);
+                const legacyStart = 1851;
+                const minLegacy = month < 10 ? legacyStart + 1 : legacyStart; // Oct 1851 earliest
                 const pool: number[] = [];
-                for (let y = currentYear - 1; y >= minYear; y -= 1) pool.push(y);
+                // Add recent years first
+                for (let y = currentYear - 1; y >= recentStart; y -= 1) pool.push(y);
+                // Add some legacy years as a secondary pool
+                for (let y = recentStart - 1; y >= minLegacy; y -= 1) pool.push(y);
                 for (let i = pool.length - 1; i > 0; i -= 1) {
                   const j = Math.floor(Math.random() * (i + 1));
                   [pool[i], pool[j]] = [pool[j], pool[i]];
