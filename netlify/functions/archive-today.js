@@ -12,9 +12,10 @@ export const handler = async (event) => {
     const maxYears = Number.isFinite(yearsParam) ? Math.max(1, Math.min(12, yearsParam)) : 3;
 
     const now = new Date();
-    const month = now.getMonth() + 1; // 1-12
-    const day = now.getDate();
-    const currentYear = now.getFullYear();
+    // Use UTC to avoid timezone boundary issues
+    const month = now.getUTCMonth() + 1; // 1-12
+    const day = now.getUTCDate();
+    const currentYear = now.getUTCFullYear();
 
     const START_YEAR = 1851;
     const MIN_YEAR = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
@@ -36,7 +37,7 @@ export const handler = async (event) => {
         if (!res.ok) return null;
         const data = await res.json();
         const docs = data?.response?.docs || [];
-        const match = docs.find((d) => new Date(d.pub_date).getDate() === day) || null;
+        const match = docs.find((d) => new Date(d.pub_date).getUTCDate() === day) || null;
         return match;
       } catch {
         return null;

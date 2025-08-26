@@ -87,12 +87,12 @@ const ArchivePage: React.FC = () => {
           const e = query.dayEnd;
           if (s != null && e != null) {
             return docs.filter(d => {
-              const dn = new Date(d.pub_date).getDate();
+              const dn = new Date(d.pub_date).getUTCDate();
               return dn >= s && dn <= e;
             });
           }
           if (s != null) {
-            return docs.filter(d => new Date(d.pub_date).getDate() === s);
+            return docs.filter(d => new Date(d.pub_date).getUTCDate() === s);
           }
           return docs;
         })();
