@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, searchArticlesByDay } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
@@ -58,22 +58,23 @@ const HomePage: React.FC = () => {
                 const currentYear = now.getUTCFullYear();
                 const START_YEAR = 1851;
                 const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Oct 1851 earliest for months >=10
-                // Exactly three random-year fetches of today's month and day
+                // Exactly three single-day Article Search requests
                 const picks: ArchiveArticle[] = [];
                 for (let i = 0; i < desiredCount; i += 1) {
                   const span = (currentYear - 1) - minYear + 1;
                   const y = minYear + Math.floor(Math.random() * span);
                   try {
-                    const monthDocs = await getArchive(y, month);
-                    const sameDay = monthDocs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
-                    if (sameDay.length > 0) {
-                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
+                    const docs = await searchArticlesByDay(y, month, targetDay);
+                    if (Array.isArray(docs) && docs.length > 0) {
+                      const chosen = docs[Math.floor(Math.random() * docs.length)];
                       picks.push(chosen);
                     }
-                  } catch {
-                    // ignore errors for individual years
+                  } catch (e: any) {
+                    const status = e?.status || e?.response?.status;
+                    if (status === 429) {
+                      await sleep(800);
+                    }
                   }
-                  // Small spacing between the three requests
                   await sleep(150);
                 }
                 setTodayInHistory(picks.slice(0, desiredCount));
