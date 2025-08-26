@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
@@ -13,21 +13,17 @@ const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
-  const [loading] = useState(true);
   const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
-  // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
-  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    const controller = new AbortController();
+    // Use a controller only for background archive fetches to avoid
+    // canceling Top Stories / Most Popular during HMR or StrictMode
+    const archiveController = new AbortController();
     const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
     const fetchHomeData = async () => {
-      setLoading(true);
       // Clear any previous error
       setError(null);
       try {
@@ -35,18 +31,16 @@ const HomePage: React.FC = () => {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
           setTodayInHistory([]);
-          setLoading(false);
         } else {
           const now = new Date();
 
           const [popular, stories] = await Promise.all([
-            getMostPopular('7', controller.signal),
-            getTopStories('home', controller.signal),
+            getMostPopular('7'),
+            getTopStories('home'),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          // Unblock page render immediately; fetch archive items in the background via serverless (max 3 calls)
-          setLoading(false);
+          // Fetch archive items in the background via serverless (max 3 calls)
 
           const desiredCount = 3;
           const targetDay = now.getUTCDate();
@@ -57,10 +51,10 @@ const HomePage: React.FC = () => {
           } else {
             const key = process.env.REACT_APP_NYT_API_KEY ? `&apiKey=${encodeURIComponent(process.env.REACT_APP_NYT_API_KEY)}` : '';
             // Ask function to scan more years and return up to desiredCount
-            fetch(`/.netlify/functions/archive-today?years=24&take=${desiredCount}${key}`, { signal: controller.signal })
+            fetch(`/.netlify/functions/archive-today?years=60&take=${desiredCount}${key}`, { signal: archiveController.signal })
               .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
               .then((data: any) => {
-                if (controller.signal.aborted) return;
+                if (archiveController.signal.aborted) return;
                 const picks: ArchiveArticle[] = Array.isArray(data?.results) ? data.results.slice(0, desiredCount) : [];
                 setTodayInHistory(picks);
                 safeWriteCache(cacheKey, { results: picks });
@@ -78,14 +72,28 @@ const HomePage: React.FC = () => {
     };
 
     fetchHomeData();
-    return () => controller.abort();
+    return () => archiveController.abort();
   }, []);
 
   const handleHomeClick = () => {
     reset();
   };
 
-  const getImageUrl = (article: MostPopularArticle | TopStory): string => {
+  const toAbsolute = (u: string | null): string | null => {
+    if (!u) return null;
+    return /^(https?:)?\/\//i.test(u) ? u : `https://static01.nyt.com/${u.replace(/^\/+/, '')}`;
+  };
+
+  const thumb = (u: string | null): string | null => {
+    if (!u) return null;
+    try {
+      const abs = toAbsolute(u);
+      if (!abs) return null;
+      return `/.netlify/functions/img?url=${encodeURIComponent(abs)}&w=240&q=72&fmt=webp`;
+    } catch { return null; }
+  };
+
+  const getImagePair = (article: MostPopularArticle | TopStory): { thumb?: string; original?: string } => {
     // Most Popular
     if ('media' in article && article.media && article.media.length > 0) {
       const media = article.media[0];
@@ -95,17 +103,25 @@ const HomePage: React.FC = () => {
         mm.find((m: any) => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
         mm.find((m: any) => /^(Standard Thumbnail)$/i.test(m.format)) ||
         mm[0];
-      if (preferred?.url) return preferred.url;
+      if (preferred?.url) {
+        const orig = toAbsolute(preferred.url);
+        return { thumb: thumb(preferred.url) || orig || undefined, original: orig || undefined };
+      }
     }
 
     // Top Stories
     if ('multimedia' in article && article.multimedia && article.multimedia.length > 0) {
       const media = article.multimedia[0] as any;
-      if (media?.legacy?.xlarge) return media.legacy.xlarge;
-      if (media?.url) return media.url;
+      if (media?.legacy?.xlarge) {
+        const orig = toAbsolute(media.legacy.xlarge);
+        return { thumb: thumb(media.legacy.xlarge) || orig || undefined, original: orig || undefined };
+      }
+      if (media?.url) {
+        const orig = toAbsolute(media.url);
+        return { thumb: thumb(media.url) || orig || undefined, original: orig || undefined };
+      }
     }
-
-    return '/logo.png';
+    return { original: '/logo.png' };
   };
 
   const getSafeUrl = (url: string | undefined): string | null => {
@@ -202,14 +218,20 @@ const HomePage: React.FC = () => {
                   onKeyDown={handleKey}
                 >
                   <div className="article-image">
-                    <img
-                      src={getImageUrl(article)}
-                      alt={article.title}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                    {(() => {
+                      const { thumb: t, original: o } = getImagePair(article);
+                      const src = t || o || '/logo.png';
+                      return (
+                        <img
+                          src={src}
+                          alt={article.title}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      );
+                    })()}
                     <div className="trending-badge">
                       <span>#{index + 1}</span>
                     </div>
@@ -264,14 +286,20 @@ const HomePage: React.FC = () => {
                   onKeyDown={handleKey}
                 >
                   <div className="article-image">
-                    <img
-                      src={getImageUrl(story)}
-                      alt={story.title}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                    {(() => {
+                      const { thumb: t, original: o } = getImagePair(story);
+                      const src = t || o || '/logo.png';
+                      return (
+                        <img
+                          src={src}
+                          alt={story.title}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      );
+                    })()}
                     <div className="story-badge">
                       <span>Top Story</span>
                     </div>
