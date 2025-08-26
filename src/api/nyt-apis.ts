@@ -152,9 +152,21 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  // NYT Archive API expects month as 1-12 without zero padding
+  // Prefer serverless proxy to avoid CORS in production
+  try {
+    const endpoint = `/.netlify/functions/archive-proxy?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
+    const res = await fetch(endpoint, { signal, headers: { accept: 'application/json' } });
+    if (res.ok) {
+      const data: any = await res.json();
+      const docs = Array.isArray(data?.docs) ? data.docs : [];
+      if (docs.length > 0 || res.ok) return docs as ArchiveArticle[];
+    }
+  } catch {
+    // fall back to direct API below
+  }
+
+  // Fallback: call NYT API directly (dev/local or if proxy unavailable)
   const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  // Archive responses can be large; allow more time
   const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 15000 });
   return response.response.docs;
 }
