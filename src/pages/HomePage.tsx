@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, searchArticlesByDay } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
@@ -71,27 +71,26 @@ const HomePage: React.FC = () => {
                 }
                 const picks: ArchiveArticle[] = [];
                 let idx = 0;
-                // Keep total calls low to avoid 429s
-                const maxAttempts = Math.min(pool.length, 4);
+                // Limit number of month fetches to keep payload reasonable
+                const maxAttempts = Math.min(pool.length, 6);
                 while (picks.length < desiredCount && idx < maxAttempts) {
                   const y = pool[idx++];
                   try {
-                    // Fetch only a single exact day (no monthly archive fallback to keep payload tiny)
-                    const docs = await searchArticlesByDay(y, month, targetDay);
-                    if (Array.isArray(docs) && docs.length > 0) {
-                      const chosen = docs[Math.floor(Math.random() * docs.length)];
+                    // Fetch the month from the Archive API and filter by exact UTC day
+                    const validMonth = y === 1851 && month < 10 ? 10 : month;
+                    const monthDocs = await getArchive(y, validMonth);
+                    const sameDay = monthDocs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
+                    if (sameDay.length > 0) {
+                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
                       picks.push(chosen);
                     }
                   } catch (e: any) {
-                    // If rate limited, back off briefly and retry next year
                     const status = e?.status || e?.response?.status;
                     if (status === 429) {
-                      // Stop trying further within this window; show what we have
                       await sleep(1200);
-                      break;
                     }
                   }
-                  if (picks.length < desiredCount) await sleep(300);
+                  if (picks.length < desiredCount) await sleep(200);
                 }
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
