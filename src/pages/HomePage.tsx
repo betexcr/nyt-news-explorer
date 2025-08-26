@@ -67,8 +67,8 @@ const HomePage: React.FC = () => {
                 }
                 const picks: ArchiveArticle[] = [];
                 let idx = 0;
-                // Sequential requests with small delay to avoid 429 rate limits
-                const maxAttempts = Math.min(pool.length, 6);
+                // Keep total calls low to avoid 429s
+                const maxAttempts = Math.min(pool.length, 4);
                 while (picks.length < desiredCount && idx < maxAttempts) {
                   const y = pool[idx++];
                   try {
@@ -81,9 +81,13 @@ const HomePage: React.FC = () => {
                   } catch (e: any) {
                     // If rate limited, back off briefly and retry next year
                     const status = e?.status || e?.response?.status;
-                    if (status === 429) await sleep(750);
+                    if (status === 429) {
+                      // Stop trying further within this window; show what we have
+                      await sleep(1200);
+                      break;
+                    }
                   }
-                  if (picks.length < desiredCount) await sleep(200);
+                  if (picks.length < desiredCount) await sleep(300);
                 }
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
