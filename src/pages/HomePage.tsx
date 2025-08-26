@@ -56,31 +56,15 @@ const HomePage: React.FC = () => {
               try {
                 const month = now.getUTCMonth() + 1; // 1-12
                 const currentYear = now.getUTCFullYear();
-                // Prefer recent decades to maximize likelihood of same-day coverage
-                const recentStart = Math.max(currentYear - 80, 1900);
-                const legacyStart = 1851;
-                const minLegacy = month < 10 ? legacyStart + 1 : legacyStart; // Oct 1851 earliest
-                const pool: number[] = [];
-                // Add recent years first
-                for (let y = currentYear - 1; y >= recentStart; y -= 1) pool.push(y);
-                // Add some legacy years as a secondary pool
-                for (let y = recentStart - 1; y >= minLegacy; y -= 1) pool.push(y);
-                for (let i = pool.length - 1; i > 0; i -= 1) {
-                  const j = Math.floor(Math.random() * (i + 1));
-                  [pool[i], pool[j]] = [pool[j], pool[i]];
-                }
-                // Exactly three month-level archive fetches (at most)
+                const START_YEAR = 1851;
+                const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Oct 1851 earliest for months >=10
+                // Exactly three random-year fetches of today's month and day
                 const picks: ArchiveArticle[] = [];
-                const chosenYears: number[] = [];
-                while (chosenYears.length < desiredCount && pool.length > 0) {
-                  const y = pool.shift()!;
-                  if (!chosenYears.includes(y)) chosenYears.push(y);
-                }
-
-                for (const y of chosenYears) {
+                for (let i = 0; i < desiredCount; i += 1) {
+                  const span = (currentYear - 1) - minYear + 1;
+                  const y = minYear + Math.floor(Math.random() * span);
                   try {
-                    const validMonth = y === 1851 && month < 10 ? 10 : month;
-                    const monthDocs = await getArchive(y, validMonth);
+                    const monthDocs = await getArchive(y, month);
                     const sameDay = monthDocs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
                     if (sameDay.length > 0) {
                       const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
