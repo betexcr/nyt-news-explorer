@@ -126,6 +126,41 @@ export async function getTopStories(
   return response.results;
 }
 
+// Article Search API - fetch a single day range to avoid large Archive payloads
+export async function searchArticlesByDay(
+  year: number,
+  month: number,
+  day: number,
+  signal?: AbortSignal
+): Promise<ArchiveArticle[]> {
+  const url = ENDPOINTS.ARTICLE_SEARCH;
+  // NYT expects YYYYMMDD
+  const y = String(year);
+  const m = String(month).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  const ymd = `${y}${m}${d}`;
+  const params = {
+    begin_date: ymd,
+    end_date: ymd,
+    sort: 'oldest',
+    // Limit fields to reduce payload
+    fl: [
+      'web_url',
+      'uri',
+      'pub_date',
+      'headline',
+      'abstract',
+      'snippet',
+      'byline',
+      'section_name',
+      'news_desk',
+    ].join(','),
+  } as Record<string, string>;
+  const data = await makeApiRequest<any>(url, params, signal, { timeoutMs: 15000 });
+  const docs = Array.isArray(data?.response?.docs) ? data.response.docs : [];
+  return docs as unknown as ArchiveArticle[];
+}
+
 // Movie Reviews API
 export async function getMovieReviews(
   type: 'all' | 'picks' = 'all',

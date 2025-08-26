@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, searchArticlesByDay } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
@@ -73,12 +73,11 @@ const HomePage: React.FC = () => {
                   idx += batchYears.length;
                   const results = await Promise.allSettled(
                     batchYears.map(async (y) => {
-                      const m = y === 1851 && month < 10 ? 10 : month;
-                      // Avoid aborting archive fetches; let them complete
-                      const docs = await getArchive(y, m);
-                      const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
-                      if (sameDay.length === 0) return null;
-                      return sameDay[Math.floor(Math.random() * sameDay.length)];
+                      const m = month;
+                      // Use Article Search for a single exact day to minimize payload
+                      const docs = await searchArticlesByDay(y, m, targetDay);
+                      if (!Array.isArray(docs) || docs.length === 0) return null;
+                      return docs[Math.floor(Math.random() * docs.length)];
                     })
                   );
                   for (const r of results) {
