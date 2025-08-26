@@ -55,7 +55,8 @@ const HomePage: React.FC = () => {
           if (cached && Array.isArray(cached.results)) {
             setTodayInHistory(cached.results.slice(0, desiredCount));
           } else {
-            fetch(`/.netlify/functions/archive-today?years=3`, { signal: controller.signal })
+            const key = process.env.REACT_APP_NYT_API_KEY ? `&apiKey=${encodeURIComponent(process.env.REACT_APP_NYT_API_KEY)}` : '';
+            fetch(`/.netlify/functions/archive-today?years=6${key}`, { signal: controller.signal })
               .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
               .then((data: any) => {
                 if (controller.signal.aborted) return;

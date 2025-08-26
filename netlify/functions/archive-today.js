@@ -4,11 +4,12 @@
 
 export const handler = async (event) => {
   try {
-    const apiKey = process.env.NYT_API_KEY || process.env.REACT_APP_NYT_API_KEY;
+    const apiKeyParam = event?.queryStringParameters?.apiKey;
+    const apiKey = process.env.NYT_API_KEY || process.env.REACT_APP_NYT_API_KEY || apiKeyParam;
     if (!apiKey) return json(500, { error: 'Missing NYT_API_KEY' });
 
     const yearsParam = parseInt(event?.queryStringParameters?.years || '3', 10);
-    const maxYears = Number.isFinite(yearsParam) ? Math.max(1, Math.min(5, yearsParam)) : 3;
+    const maxYears = Number.isFinite(yearsParam) ? Math.max(1, Math.min(12, yearsParam)) : 3;
 
     const now = new Date();
     const month = now.getMonth() + 1; // 1-12
@@ -18,16 +19,10 @@ export const handler = async (event) => {
     const START_YEAR = 1851;
     const MIN_YEAR = month < 10 ? START_YEAR + 1 : START_YEAR; // Archive starts Oct 1851
 
+    // Build candidate years from most recent backwards
     const candidateYears = [];
-    // Prefer near history
-    const preferred = [currentYear - 1, currentYear - 5, currentYear - 10];
-    for (const y of preferred) {
-      if (y >= MIN_YEAR && y < currentYear) candidateYears.push(y);
-      if (candidateYears.length >= maxYears) break;
-    }
-    for (let back = 2; candidateYears.length < maxYears && currentYear - back >= MIN_YEAR; back += 1) {
-      const y = currentYear - back;
-      if (!candidateYears.includes(y)) candidateYears.push(y);
+    for (let i = 1; candidateYears.length < maxYears && currentYear - i >= MIN_YEAR; i += 1) {
+      candidateYears.push(currentYear - i);
     }
 
     const controller = new AbortController();
