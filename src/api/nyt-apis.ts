@@ -152,22 +152,9 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  // Prefer serverless proxy to avoid CORS in production
-  try {
-    const endpoint = `/.netlify/functions/archive-proxy?year=${encodeURIComponent(year)}&month=${encodeURIComponent(month)}`;
-    const res = await fetch(endpoint, { signal, headers: { accept: 'application/json' } });
-    if (res.ok) {
-      const data: any = await res.json();
-      const docs = Array.isArray(data?.docs) ? data.docs : [];
-      if (docs.length > 0 || res.ok) return docs as ArchiveArticle[];
-    }
-  } catch {
-    // fall back to direct API below
-  }
-
-  // Fallback: call NYT API directly (dev/local or if proxy unavailable)
+  // Call NYT API directly; this endpoint supports CORS and can be large, so allow more time
   const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 15000 });
+  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 });
   return response.response.docs;
 }
 
