@@ -38,12 +38,6 @@ const HomePage: React.FC = () => {
           setLoading(false);
         } else {
           const now = new Date();
-          const currentYear = now.getFullYear();
-          const month = now.getMonth() + 1; // 1-12
-
-          // Ensure we don't request months before Oct 1851
-          const START_YEAR = 1851;
-          const MIN_YEAR = month < 10 ? START_YEAR + 1 : START_YEAR;
 
           const [popular, stories] = await Promise.all([
             getMostPopular('7', controller.signal),
@@ -61,7 +55,7 @@ const HomePage: React.FC = () => {
           if (cached && Array.isArray(cached.results)) {
             setTodayInHistory(cached.results.slice(0, desiredCount));
           } else {
-            fetch(`/\.netlify/functions/archive-today?years=3`, { signal: controller.signal })
+            fetch(`/.netlify/functions/archive-today?years=3`, { signal: controller.signal })
               .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
               .then((data: any) => {
                 if (controller.signal.aborted) return;
