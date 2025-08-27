@@ -31,7 +31,8 @@
     "eject": "react-scripts eject",
     "test": "bun run test:cov",
     "test:cov": "react-scripts test --coverage --watchAll=false",
-    "test:cov:strict": "react-scripts test --coverage --watchAll=false --runInBand --coverageReporters=text --coverageReporters=json-summary "
+    "test:cov:strict": "react-scripts test --coverage --watchAll=false --runInBand --coverageReporters=text --coverageReporters=json-summary ",
+    "deploy": "bash scripts/deploy.sh"
   },
   "eslintConfig": {
     "extends": [
