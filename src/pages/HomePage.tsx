@@ -30,7 +30,6 @@ const HomePage: React.FC = () => {
         if (USE_MOCK) {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
-          setTodayInHistory([]);
         } else {
 
           const [popular, stories] = await Promise.all([
