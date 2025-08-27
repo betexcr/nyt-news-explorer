@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
-import type { ArchiveArticle } from "../types/nyt.other";
+import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
@@ -14,7 +13,6 @@ const HomePage: React.FC = () => {
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
   // No blocking loading state for Home hero
-  const [todayInHistory, setTodayInHistory] = useState<ArchiveArticle[]>([]);
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
   // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
@@ -34,7 +32,6 @@ const HomePage: React.FC = () => {
           setTopStories(mockTopStories.slice(0, 3));
           setTodayInHistory([]);
         } else {
-          const now = new Date();
 
           const [popular, stories] = await Promise.all([
             getMostPopular('7'),
@@ -42,50 +39,6 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          // Fetch "A day like today" via Archive API: three month calls (one per random past year) and filter by same day
-          const desiredCount = 3;
-          const targetDay = now.getUTCDate();
-          const cacheKey = `archiveToday:${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${targetDay}`;
-          const cached = safeReadCache(cacheKey, 3600); // 1 hour
-          if (cached && Array.isArray(cached.results) && cached.results.length >= desiredCount) {
-            setTodayInHistory(cached.results.slice(0, desiredCount));
-          } else {
-            (async () => {
-              try {
-                const month = now.getUTCMonth() + 1; // 1-12
-                const currentYear = now.getUTCFullYear();
-                const START_YEAR = 1851;
-                const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Oct 1851 earliest for months >=10
-                // Candidate years pool, biased to recent decades
-                const pool: number[] = [];
-                for (let y = currentYear - 1; y >= Math.max(currentYear - 40, minYear); y -= 1) pool.push(y);
-                for (let y = Math.max(currentYear - 41, minYear); y >= minYear; y -= 1) pool.push(y);
-                for (let i = pool.length - 1; i > 0; i -= 1) {
-                  const j = Math.floor(Math.random() * (i + 1));
-                  [pool[i], pool[j]] = [pool[j], pool[i]];
-                }
-                const years = pool.slice(0, desiredCount);
-
-                const picks: ArchiveArticle[] = [];
-                for (const y of years) {
-                  try {
-                    const docs = await getArchive(y, month);
-                    const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
-                    if (sameDay.length > 0) {
-                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
-                      picks.push(chosen);
-                    }
-                  } catch {
-                    // ignore individual year errors
-                  }
-                }
-                setTodayInHistory(picks.slice(0, desiredCount));
-                safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
-              } catch {
-                // ignore
-              }
-            })();
-          }
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
@@ -313,55 +266,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* A day like today */}
-          <div className="content-section today-like-section" style={{ gridColumn: '1 / -1' }}>
-            <div className="section-header">
-              <h2>A day like today…</h2>
-              <Link to="/archive" className="view-all-link">Go to Archive →</Link>
-            </div>
-            {todayInHistory.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>No highlights available for today.</p>
-            ) : (
-              <div className="articles-grid">
-                {todayInHistory.map((a) => {
-                  const href = getSafeUrl(a.web_url) || undefined;
-                  const handleOpen = () => {
-                    if (href) window.open(href, '_blank', 'noopener,noreferrer');
-                  };
-                  const handleKey = (e: React.KeyboardEvent) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && href) {
-                      e.preventDefault();
-                      handleOpen();
-                    }
-                  };
-                  return (
-                    <article
-                      key={a.uri}
-                      className="article-card story-card"
-                      role={href ? 'link' : undefined}
-                      tabIndex={href ? 0 : -1}
-                      aria-label={href ? `Open: ${a.headline?.main || a.abstract}` : undefined}
-                      onClick={handleOpen}
-                      onKeyDown={handleKey}
-                    >
-                      {/* Archive: no preview images by design */}
-                      <div className="article-content">
-                        <div className="article-meta">
-                          <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
-                          <span className="date">{new Date(a.pub_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</span>
-                        </div>
-                        <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
-                        <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
-                        <div className="article-footer">
-                          <span className="byline">{a.byline?.original || ''}</span>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {/* A day like today – temporarily removed for performance */}
         </div>
       </section>
 
@@ -413,25 +318,4 @@ const HomePage: React.FC = () => {
 export default HomePage;
 
 // Simple cache helpers
-function safeReadCache(key: string, maxAgeSeconds: number): any | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const ts = typeof parsed._ts === 'number' ? parsed._ts : 0;
-    if (Date.now() - ts > maxAgeSeconds * 1000) return null;
-    return parsed.data;
-  } catch {
-    return null;
-  }
-}
-
-function safeWriteCache(key: string, data: any): void {
-  try {
-    const payload = { _ts: Date.now(), data };
-    localStorage.setItem(key, JSON.stringify(payload));
-  } catch {
-    // ignore
-  }
-}
+// cache helpers removed (no longer used on Home)

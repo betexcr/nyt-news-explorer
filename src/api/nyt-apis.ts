@@ -5,7 +5,7 @@ import type {
   TopStory,
   TopStoriesResponse,
   Book,
-  BooksResponse,
+  // _BooksResponse,
   ArchiveArticle,
   ArchiveResponse,
 } from "../types/nyt.other";
@@ -177,8 +177,12 @@ export async function getBestSellers(
   signal?: AbortSignal
 ): Promise<Book[]> {
   const url = `${ENDPOINTS.BOOKS}/lists/current/${list}.json`;
-  const response = await makeApiRequest<BooksResponse>(url, {}, signal);
-  return response.results;
+  const data = await makeApiRequest<any>(url, {}, signal);
+  // Handle both our local type and the real NYT response shape
+  const results = data?.results;
+  if (Array.isArray(results)) return results as Book[];
+  if (results && Array.isArray(results.books)) return results.books as Book[];
+  return [] as Book[];
 }
 
 // Archive API

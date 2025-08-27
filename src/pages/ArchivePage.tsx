@@ -38,12 +38,7 @@ const ArchivePage: React.FC = () => {
   // Applied query (set when user presses Search)
   const [query, setQuery] = useState<
     { year: number; month: number; dayStart: number | null; dayEnd: number | null } | null
-  >({
-    year: START_YEAR,
-    month: 10,
-    dayStart: 1,
-    dayEnd: 15,
-  });
+  >(null);
 
   // Sliders removed. Calendar header controls drive navigation.
 
@@ -237,8 +232,7 @@ const ArchivePage: React.FC = () => {
 
       {/* Help description just below main title */}
       <p className="archive-help">
-        Use the arrows to change months, adjust the year with the slider, and click one or two days to pick
-        a single day or a day range. Press Search to load articles from the selected period.
+        Use the arrows to change months, adjust the year with the slider, then click one day for a single-day view or two days to select a range. Finally, press <strong>Search</strong> to load articles.
       </p>
 
       <section className="era-title-wrap">
@@ -344,7 +338,7 @@ const ArchivePage: React.FC = () => {
       {/* Error messages hidden per request */}
 
       {loading ? (
-        <div style={{ padding: '2rem' }}>
+        <div className="loading-container" style={{ minHeight: '40vh' }} aria-busy>
           <Spinner />
           {timeoutHit && (
             <div className="empty-state" style={{ marginTop: '1rem' }}>

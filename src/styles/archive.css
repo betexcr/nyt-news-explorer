@@ -5,6 +5,7 @@
 .range-label { color: var(--muted); font-weight: 600; }
 
 .era-title-wrap { margin: 0.25rem 0 0.75rem; display: flex; justify-content: center; background: transparent; }
+.era-title-wrap::after { content: none; }
 .era-title { margin: 0; font-size: clamp(1.35rem, 1.1rem + 1.2vw, 2rem); line-height: 1.15; color: var(--text); text-align: center; }
 .era-title.victorian { font-family: 'Old Standard TT', 'Times New Roman', serif; letter-spacing: 0.5px; font-weight: 700; }
 .era-title.modern { font-family: inherit; font-weight: 800; }
@@ -149,6 +150,9 @@
 .archive-list-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin: 0.5rem 0 0.75rem; }
 
 .archive-help { color: var(--muted); text-align: center; margin: 0.25rem 0 0.5rem; font-size: 0.9rem; }
+
+/* Loading container ensures centered spinner and avoids stray middle bar */
+.loading-container { display: flex; align-items: center; justify-content: center; }
 
 /* Floating size control outside content: bottom-right aligned on large screens */
 /* Deprecated floating control; replaced by toolbar row */
