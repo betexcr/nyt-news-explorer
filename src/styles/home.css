@@ -182,6 +182,16 @@
   border-color: var(--primary);
 }
 
+/* Make clickable cards show pointer cursor */
+.article-card[role="link"],
+.article-card[tabindex="0"],
+.story-card[role="link"],
+.story-card[tabindex="0"],
+.trending-card[role="link"],
+.trending-card[tabindex="0"] {
+  cursor: pointer;
+}
+
 .article-image {
   position: relative;
   height: 160px;
