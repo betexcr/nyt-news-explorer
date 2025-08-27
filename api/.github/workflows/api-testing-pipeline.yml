@@ -1,0 +1,652 @@
+name: 🚀 API Testing Pipeline - Complete Quality Gates
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*', 'release/*' ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/api-testing-pipeline.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/api-testing-pipeline.yml'
+  schedule:
+    # Full security scan nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_level:
+        description: 'Test level to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - smoke
+          - full
+          - security-only
+          - performance-only
+
+env:
+  NODE_VERSION: '20'
+  API_PORT: 3000
+  BASE_URL: http://localhost:3000
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/nyt-api
+
+jobs:
+  # =====================================================================
+  # GATE 1: SPEC QUALITY & SCHEMA-DRIVEN TESTS
+  # =====================================================================
+  spec-validation:
+    name: 📋 Gate 1 - Spec Quality & Schema Validation
+    runs-on: ubuntu-latest
+    outputs:
+      spec-valid: ${{ steps.spec-check.outputs.valid }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # For diff comparison
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: 🔍 Spectral OpenAPI Linting
+        id: spectral
+        run: |
+          cd api
+          npm run test:spec:lint
+          echo "spectral-passed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: 🔄 API Breaking Changes Check (oasdiff)
+        id: breaking-changes
+        if: github.event_name == 'pull_request'
+        run: |
+          cd api
+          git show HEAD~1:api/openapi.yaml > previous-spec.yaml || echo "openapi: 3.0.0" > previous-spec.yaml
+          npx oasdiff breaking previous-spec.yaml openapi.yaml --format json > breaking-changes.json
+          
+          if [ -s breaking-changes.json ]; then
+            echo "breaking-changes=true" >> $GITHUB_OUTPUT
+            echo "## 🚨 Breaking API Changes Detected" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat breaking-changes.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "breaking-changes=false" >> $GITHUB_OUTPUT
+            echo "✅ No breaking changes detected" >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: 📖 API Documentation vs Implementation (Dredd)
+        id: dredd
+        run: |
+          cd api
+          # Start API in background
+          npm run start:simple &
+          API_PID=$!
+          
+          # Wait for API to be ready
+          timeout 30 bash -c 'until curl -f ${{ env.BASE_URL }}/health; do sleep 1; done'
+          
+          # Run Dredd tests
+          npx dredd openapi.yaml ${{ env.BASE_URL }} --reporter json --output dredd-results.json
+          
+          # Kill API
+          kill $API_PID || true
+          
+          echo "dredd-passed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: 🧪 Property-Based Testing (Schemathesis)
+        id: schemathesis
+        if: github.event.inputs.test_level != 'smoke'
+        run: |
+          cd api
+          # Install schemathesis
+          pip install schemathesis
+          
+          # Start API
+          npm run start:simple &
+          API_PID=$!
+          
+          # Wait for API
+          timeout 30 bash -c 'until curl -f ${{ env.BASE_URL }}/health; do sleep 1; done'
+          
+          # Run property-based tests
+          schemathesis run --checks all openapi.yaml --base-url ${{ env.BASE_URL }} \
+            --hypothesis-max-examples=50 --junit-xml schemathesis-results.xml
+          
+          # Kill API
+          kill $API_PID || true
+          
+          echo "schemathesis-passed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: ✅ Gate 1 Summary
+        id: spec-check
+        run: |
+          SPECTRAL_OK=${{ steps.spectral.outputs.spectral-passed == 'true' }}
+          BREAKING_OK=${{ steps.breaking-changes.outputs.breaking-changes != 'true' }}
+          DREDD_OK=${{ steps.dredd.outputs.dredd-passed == 'true' }}
+          SCHEMATHESIS_OK=${{ steps.schemathesis.outputs.schemathesis-passed == 'true' || github.event.inputs.test_level == 'smoke' }}
+          
+          if [[ "$SPECTRAL_OK" == "true" && "$BREAKING_OK" == "true" && "$DREDD_OK" == "true" && "$SCHEMATHESIS_OK" == "true" ]]; then
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "✅ Gate 1 PASSED: API specification is valid" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "valid=false" >> $GITHUB_OUTPUT
+            echo "❌ Gate 1 FAILED: API specification issues detected" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: 📊 Upload spec test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spec-test-results
+          path: |
+            api/dredd-results.json
+            api/schemathesis-results.xml
+            api/breaking-changes.json
+
+  # =====================================================================
+  # GATE 2: UNIT & INTEGRATION TESTS
+  # =====================================================================
+  unit-integration-tests:
+    name: 🧪 Gate 2 - Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: spec-validation
+    if: needs.spec-validation.outputs.spec-valid == 'true'
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: 🧪 Unit Tests (Fastify inject)
+        run: |
+          cd api
+          npm run test:unit
+        env:
+          NODE_ENV: test
+
+      - name: 🔗 Integration Tests (Supertest + Testcontainers)
+        run: |
+          cd api
+          npm run test:integration
+        env:
+          NODE_ENV: test
+          TEST_TIMEOUT: 60000
+
+      - name: 📊 Test Coverage Report
+        run: |
+          cd api
+          npm run test:coverage
+        env:
+          NODE_ENV: test
+
+      - name: 📈 Coverage Comment (PR only)
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          lcov-file: api/coverage/lcov.info
+          delete-old-comments: true
+
+      - name: 📊 Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-integration-results
+          path: |
+            api/coverage/
+            api/test-results.xml
+
+  # =====================================================================
+  # GATE 3: CONTRACT TESTING
+  # =====================================================================
+  contract-tests:
+    name: 🤝 Gate 3 - Contract Testing (Pact)
+    runs-on: ubuntu-latest
+    needs: [spec-validation, unit-integration-tests]
+    if: needs.spec-validation.outputs.spec-valid == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: 🤝 Consumer Contract Tests
+        run: |
+          cd api
+          npm run test:contract
+        env:
+          NODE_ENV: test
+
+      - name: 🔍 Provider Contract Verification
+        run: |
+          cd api
+          # Start API for contract verification
+          npm run start:simple &
+          API_PID=$!
+          
+          # Wait for API
+          timeout 30 bash -c 'until curl -f ${{ env.BASE_URL }}/health; do sleep 1; done'
+          
+          # Run provider verification
+          npm run test:contract:verify
+          
+          # Kill API
+          kill $API_PID || true
+        env:
+          NODE_ENV: test
+
+      - name: 📊 Upload contract results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: contract-test-results
+          path: |
+            api/tests/contract/pacts/
+            api/pact-verification-results.json
+
+  # =====================================================================
+  # GATE 4: PERFORMANCE & SCALABILITY TESTS
+  # =====================================================================
+  performance-tests:
+    name: ⚡ Gate 4 - Performance & Load Testing
+    runs-on: ubuntu-latest
+    needs: [unit-integration-tests]
+    if: github.event.inputs.test_level != 'security-only'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: 📦 Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: 📦 Install API dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: 🚀 Start API Server
+        run: |
+          cd api
+          npm run start:simple &
+          echo $! > api.pid
+          # Wait for server
+          timeout 30 bash -c 'until curl -f ${{ env.BASE_URL }}/health; do sleep 1; done'
+        env:
+          NODE_ENV: production
+
+      - name: ⚡ k6 Smoke Tests (SLO Gates)
+        run: |
+          cd api
+          k6 run tests/performance/smoke.js
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+
+      - name: 📈 k6 Load Tests
+        if: github.event.inputs.test_level == 'full' || github.event.inputs.test_level == 'performance-only'
+        run: |
+          cd api
+          k6 run tests/performance/load.js
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+
+      - name: 🎯 Artillery Scenario Tests
+        if: github.event.inputs.test_level == 'full' || github.event.inputs.test_level == 'performance-only'
+        run: |
+          cd api
+          npm install -g artillery@latest
+          npm run test:perf:artillery
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+
+      - name: 🛑 Stop API Server
+        if: always()
+        run: |
+          if [ -f api/api.pid ]; then
+            kill $(cat api/api.pid) || true
+            rm api/api.pid
+          fi
+
+      - name: 📊 Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-test-results
+          path: |
+            api/smoke-test-results.json
+            api/load-test-results.json
+            api/artillery-report.json
+
+  # =====================================================================
+  # GATE 5: SECURITY TESTING
+  # =====================================================================
+  security-tests:
+    name: 🔒 Gate 5 - Security Testing (OWASP)
+    runs-on: ubuntu-latest
+    needs: [unit-integration-tests]
+    if: github.event_name == 'schedule' || github.event.inputs.test_level == 'full' || github.event.inputs.test_level == 'security-only'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: api/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd api
+          npm ci
+
+      - name: 🚀 Start API Server
+        run: |
+          cd api
+          npm run start:simple &
+          echo $! > api.pid
+          timeout 30 bash -c 'until curl -f ${{ env.BASE_URL }}/health; do sleep 1; done'
+
+      - name: 🔒 Custom Security Tests (OWASP API Top 10)
+        run: |
+          cd api
+          node tests/security/security-tests.js
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+
+      - name: 🛡️ OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: ${{ env.BASE_URL }}
+          rules_file_name: 'tests/security/zap-baseline.conf'
+          cmd_options: '-a -d -T 5 -j'
+
+      - name: 🛡️ OWASP ZAP Full Scan
+        if: github.event_name == 'schedule'
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: ${{ env.BASE_URL }}
+          rules_file_name: 'tests/security/zap-full.conf'
+          cmd_options: '-a -T 10'
+
+      - name: 🛑 Stop API Server
+        if: always()
+        run: |
+          if [ -f api/api.pid ]; then
+            kill $(cat api/api.pid) || true
+            rm api/api.pid
+          fi
+
+      - name: 📊 Upload security results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results
+          path: |
+            api/security-reports/
+            report_html.html
+            report_json.json
+
+  # =====================================================================
+  # BUILD & PUSH DOCKER IMAGE
+  # =====================================================================
+  build-and-push:
+    name: 🐳 Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [contract-tests, performance-tests]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🔨 Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 📝 Output image
+        id: image
+        run: |
+          echo "image=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}" >> $GITHUB_OUTPUT
+
+  # =====================================================================
+  # DEPLOY TO STAGING
+  # =====================================================================
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-push, security-tests]
+    if: github.ref == 'refs/heads/develop' && success()
+    environment: staging
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: 🎯 Deploy to EKS Staging
+        run: |
+          # Update kubeconfig
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name staging-cluster
+          
+          # Apply Kubernetes manifests
+          cd api/k8s
+          kubectl apply -f namespace.yaml
+          kubectl apply -f configmap.yaml
+          kubectl apply -f secret.yaml
+          
+          # Update deployment with new image
+          kubectl set image deployment/nyt-api nyt-api=${{ needs.build-and-push.outputs.image }} -n nyt-api
+          kubectl rollout status deployment/nyt-api -n nyt-api --timeout=300s
+          
+          # Apply services and ingress
+          kubectl apply -f service.yaml
+          kubectl apply -f ingress.yaml
+          kubectl apply -f hpa.yaml
+
+      - name: 🔍 Post-deployment smoke tests
+        run: |
+          # Wait for deployment
+          sleep 30
+          
+          # Get staging URL
+          STAGING_URL=$(kubectl get ingress nyt-api-ingress -n nyt-api -o jsonpath='{.spec.rules[0].host}')
+          
+          # Run smoke tests against staging
+          curl -f "https://${STAGING_URL}/health" || exit 1
+          echo "✅ Staging deployment successful"
+
+  # =====================================================================
+  # PRODUCTION DEPLOYMENT
+  # =====================================================================
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, security-tests]
+    if: github.ref == 'refs/heads/main' && success()
+    environment: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: 🌟 Deploy to EKS Production
+        run: |
+          # Update kubeconfig
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name production-cluster
+          
+          # Apply Kubernetes manifests
+          cd api/k8s
+          kubectl apply -f namespace.yaml
+          kubectl apply -f configmap.yaml
+          kubectl apply -f secret.yaml
+          
+          # Canary deployment (50% traffic)
+          kubectl patch deployment nyt-api -n nyt-api -p '{"spec":{"replicas":4}}'
+          kubectl set image deployment/nyt-api nyt-api=${{ needs.build-and-push.outputs.image }} -n nyt-api
+          kubectl rollout status deployment/nyt-api -n nyt-api --timeout=600s
+          
+          # Apply services and ingress
+          kubectl apply -f service.yaml
+          kubectl apply -f ingress.yaml
+          kubectl apply -f hpa.yaml
+
+      - name: 📊 Post-deployment validation
+        run: |
+          # Production smoke tests
+          sleep 60
+          
+          PROD_URL=$(kubectl get ingress nyt-api-ingress -n nyt-api -o jsonpath='{.spec.rules[0].host}')
+          
+          # Health check
+          curl -f "https://${PROD_URL}/health" || exit 1
+          
+          # Basic API tests
+          curl -f "https://${PROD_URL}/api/v1/health" || exit 1
+          
+          echo "✅ Production deployment validated"
+
+  # =====================================================================
+  # NOTIFICATION & REPORTING
+  # =====================================================================
+  notify:
+    name: 📢 Notifications & Reporting
+    runs-on: ubuntu-latest
+    needs: [deploy-production, deploy-staging]
+    if: always()
+    steps:
+      - name: 📊 Generate Test Report
+        run: |
+          echo "# 🧪 API Testing Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Spec Validation: ${{ needs.spec-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit/Integration: ${{ needs.unit-integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Contract Tests: ${{ needs.contract-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance: ${{ needs.performance-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security: ${{ needs.security-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployments" >> $GITHUB_STEP_SUMMARY
+          echo "- 🚀 Staging: ${{ needs.deploy-staging.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌟 Production: ${{ needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 💬 Slack Notification
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          text: "🚨 API Testing Pipeline Failed on ${{ github.ref }}"

@@ -1,0 +1,207 @@
+{
+  "timestamp": "2025-08-27T06:22:16.505Z",
+  "baseUrl": "http://localhost:3000",
+  "tests": [
+    {
+      "test": "BOLA - Direct Object Reference",
+      "passed": true,
+      "severity": "critical",
+      "details": "Endpoint properly rejects unauthorized access",
+      "recommendation": "Implement proper authorization checks for all object access",
+      "timestamp": "2025-08-27T06:22:16.524Z"
+    },
+    {
+      "test": "BOLA - Parameter Manipulation",
+      "passed": true,
+      "severity": "high",
+      "details": "Does not expose other user data",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.526Z"
+    },
+    {
+      "test": "Broken Auth - Weak Password",
+      "passed": false,
+      "severity": "high",
+      "details": "Weak passwords accepted",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.529Z"
+    },
+    {
+      "test": "Broken Auth - Invalid JWT",
+      "passed": true,
+      "severity": "critical",
+      "details": "Invalid JWT tokens rejected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.530Z"
+    },
+    {
+      "test": "Broken Auth - Expired Token",
+      "passed": true,
+      "severity": "high",
+      "details": "Expired tokens rejected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.532Z"
+    },
+    {
+      "test": "BOPLA - Sensitive Data Exposure",
+      "passed": true,
+      "severity": "medium",
+      "details": "No sensitive fields exposed",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.534Z"
+    },
+    {
+      "test": "Resource Consumption - Rate Limiting",
+      "passed": false,
+      "severity": "medium",
+      "details": "No rate limiting detected",
+      "recommendation": "Implement rate limiting to prevent abuse",
+      "timestamp": "2025-08-27T06:22:16.546Z"
+    },
+    {
+      "test": "Resource Consumption - Large Payload",
+      "passed": true,
+      "severity": "medium",
+      "details": "Large payloads rejected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.597Z"
+    },
+    {
+      "test": "BFLA - Admin Access (/api/v1/admin/users)",
+      "passed": true,
+      "severity": "critical",
+      "details": "Admin endpoint protected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.599Z"
+    },
+    {
+      "test": "BFLA - Admin Access (/api/v1/admin/config)",
+      "passed": true,
+      "severity": "critical",
+      "details": "Admin endpoint protected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.600Z"
+    },
+    {
+      "test": "BFLA - Admin Access (/api/v1/admin/logs)",
+      "passed": true,
+      "severity": "critical",
+      "details": "Admin endpoint protected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.601Z"
+    },
+    {
+      "test": "BFLA - HTTP Method Tampering",
+      "passed": true,
+      "severity": "medium",
+      "details": "Invalid HTTP methods rejected",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.602Z"
+    },
+    {
+      "test": "SSRF - URL Parameter (http://169.254.169.2...)",
+      "passed": true,
+      "severity": "critical",
+      "details": "SSRF payload blocked",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.604Z"
+    },
+    {
+      "test": "SSRF - URL Parameter (http://localhost:22...)",
+      "passed": true,
+      "severity": "critical",
+      "details": "SSRF payload blocked",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.605Z"
+    },
+    {
+      "test": "SSRF - URL Parameter (file:///etc/passwd...)",
+      "passed": true,
+      "severity": "critical",
+      "details": "SSRF payload blocked",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.607Z"
+    },
+    {
+      "test": "SSRF - URL Parameter (ftp://localhost:21...)",
+      "passed": true,
+      "severity": "critical",
+      "details": "SSRF payload blocked",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.608Z"
+    },
+    {
+      "test": "Security Headers - x-content-type-options",
+      "passed": true,
+      "severity": "medium",
+      "details": "Present: nosniff",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Security Headers - x-frame-options",
+      "passed": true,
+      "severity": "medium",
+      "details": "Present: SAMEORIGIN",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Security Headers - x-dns-prefetch-control",
+      "passed": true,
+      "severity": "medium",
+      "details": "Present: off",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Security Headers - x-download-options",
+      "passed": true,
+      "severity": "medium",
+      "details": "Present: noopen",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Security Headers - strict-transport-security",
+      "passed": true,
+      "severity": "medium",
+      "details": "Present: max-age=15552000; includeSubDomains",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Security Headers - content-security-policy",
+      "passed": true,
+      "severity": "low",
+      "details": "Not present",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.609Z"
+    },
+    {
+      "test": "Input Validation - SQL Injection",
+      "passed": true,
+      "severity": "high",
+      "details": "SQL injection payload handled safely",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.610Z"
+    },
+    {
+      "test": "Input Validation - XSS",
+      "passed": true,
+      "severity": "medium",
+      "details": "XSS payload sanitized",
+      "recommendation": "",
+      "timestamp": "2025-08-27T06:22:16.611Z"
+    }
+  ],
+  "summary": {
+    "total": 24,
+    "passed": 22,
+    "failed": 2,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 0
+  }
+}

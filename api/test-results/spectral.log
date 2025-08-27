@@ -1,0 +1,5 @@
+
+> nyt-news-api@1.0.0 test:spec:lint
+> spectral lint openapi.yaml
+
+No results with a severity of 'error' found!

@@ -1,0 +1,751 @@
+openapi: 3.0.0
+info:
+  title: NYT News Explorer API
+  description: |
+    Modern, high-throughput, secure Node.js API for the NYT News Explorer.
+    
+    ## Features
+    - **Security**: JWT authentication, OAuth 2.0, security headers
+    - **Performance**: Sub-10ms response times, rate limiting, caching
+    - **Compliance**: RFC 9457 Problem Details, OWASP API Security Top-10
+    - **Observability**: OpenTelemetry traces, structured logging, health checks
+    
+    ## Authentication
+    This API uses JWT Bearer tokens. Obtain a token via the `/api/v1/auth/login` endpoint.
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/betexcr/nyt-news-explorer
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://example.com/terms
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api-staging.nyt-news-explorer.com
+    description: Staging server
+  - url: https://api.nyt-news-explorer.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Basic Health Check
+      description: Returns basic server health status without authentication
+      tags:
+        - Health
+      security: []
+      operationId: getBasicHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicHealthResponse'
+              examples:
+                healthy:
+                  value:
+                    status: healthy
+                    timestamp: "2025-08-27T05:53:02.896Z"
+                    uptime: 3.525016153
+                    version: "1.0.0"
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/health:
+    get:
+      summary: Detailed Health Check
+      description: Returns detailed server health status with environment info
+      tags:
+        - Health
+      security: []
+      operationId: getDetailedHealth
+      responses:
+        '200':
+          description: Server is healthy with details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthResponse'
+              examples:
+                healthy:
+                  value:
+                    status: healthy
+                    timestamp: "2025-08-27T05:53:16.373Z"
+                    version: "1.0.0"
+                    environment: development
+                    uptime: 3.525016153
+                    services:
+                      database: up
+                      redis: up
+                      external_apis: up
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /api/v1/auth/login:
+    post:
+      summary: User Login
+      description: |
+        Authenticate user and return JWT access token.
+        
+        **Rate Limits**: 10 requests per minute per IP
+        **Security**: Implements exponential backoff on failed attempts
+      tags:
+        - Authentication
+      security: []
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid_user:
+                value:
+                  email: test@example.com
+                  password: password
+              demo_user:
+                value:
+                  email: demo@nytimes.com
+                  password: demo123456
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                successful_login:
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    user:
+                      id: "123"
+                      email: test@example.com
+                      roles: ["user"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/v1/protected:
+    get:
+      summary: Protected Endpoint Example
+      description: |
+        Example protected endpoint that requires JWT authentication.
+        Used for testing authentication flows and token validation.
+      tags:
+        - Testing
+        - Protected
+      operationId: getProtectedResource
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Access granted to protected resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtectedResponse'
+              examples:
+                success:
+                  value:
+                    message: "This is a protected endpoint"
+                    user:
+                      id: "123"
+                      email: test@example.com
+                      roles: ["user"]
+                    timestamp: "2025-08-27T05:53:31.366Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/articles/search:
+    get:
+      summary: Search Articles
+      description: |
+        Search New York Times articles with advanced filtering options.
+        
+        **Performance**: Results cached for 5 minutes
+        **Rate Limits**: 100 requests per hour per authenticated user
+      tags:
+        - Articles
+      operationId: searchArticles
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Search query string
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 500
+            example: technology
+        - name: page
+          in: query
+          description: Page number for pagination (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 1
+        - name: sort
+          in: query
+          description: Sort order for results
+          schema:
+            type: string
+            enum: [newest, oldest, relevance]
+            default: relevance
+        - name: begin_date
+          in: query
+          description: Begin date for search (YYYYMMDD format)
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+            example: "20240101"
+        - name: end_date
+          in: query
+          description: End date for search (YYYYMMDD format)
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+            example: "20241231"
+      responses:
+        '200':
+          description: Search results
+          headers:
+            X-Cache-Status:
+              description: Cache hit/miss status
+              schema:
+                type: string
+                enum: [hit, miss, refresh]
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleSearchResponse'
+              examples:
+                successful_search:
+                  value:
+                    status: OK
+                    copyright: "Copyright (c) 2024 The New York Times Company"
+                    response:
+                      docs:
+                        - _id: "nyt://article/abc123"
+                          web_url: "https://www.nytimes.com/2024/08/27/technology/ai-breakthrough.html"
+                          headline:
+                            main: "AI Breakthrough Revolutionizes Technology Industry"
+                            print_headline: "Tech Revolution"
+                          abstract: "Scientists announce major breakthrough in artificial intelligence"
+                          pub_date: "2024-08-27T05:53:41.613Z"
+                          document_type: "article"
+                          news_desk: "Technology"
+                          section_name: "Technology"
+                          subsection_name: "Artificial Intelligence"
+                          byline:
+                            original: "By Jane Smith"
+                          word_count: 1200
+                          uri: "nyt://article/abc123"
+                      meta:
+                        hits: 1
+                        offset: 0
+                        time: 43
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer token authentication. 
+        
+        Obtain a token from `/api/v1/auth/login` and include it in the Authorization header:
+        `Authorization: Bearer <token>`
+    
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API Key authentication for service-to-service communication.
+        
+        Include your API key in the X-API-Key header.
+
+  headers:
+    RateLimitLimit:
+      description: The number of allowed requests in the current period
+      schema:
+        type: integer
+        example: 100
+    
+    RateLimitRemaining:
+      description: The number of remaining requests in the current period
+      schema:
+        type: integer
+        example: 95
+    
+    RateLimitReset:
+      description: The time when the current rate limit window resets (Unix timestamp)
+      schema:
+        type: integer
+        example: 1756274400
+
+  schemas:
+    BasicHealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - uptime
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server timestamp (ISO 8601)
+        uptime:
+          type: number
+          description: Server uptime in seconds
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+      example:
+        status: healthy
+        timestamp: "2025-08-27T05:53:02.896Z"
+        uptime: 3.525016153
+        version: "1.0.0"
+
+    DetailedHealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/BasicHealthResponse'
+        - type: object
+          properties:
+            environment:
+              type: string
+              enum: [development, staging, production]
+              description: Current environment
+            services:
+              type: object
+              description: Health status of dependent services
+              properties:
+                database:
+                  type: string
+                  enum: [up, down, degraded]
+                redis:
+                  type: string
+                  enum: [up, down, degraded]
+                external_apis:
+                  type: string
+                  enum: [up, down, degraded]
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 254
+          description: User's email address
+          example: test@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: User's password (minimum 8 characters)
+          example: password
+      example:
+        email: test@example.com
+        password: password
+
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (expires in 15 minutes)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzU2Mjc0MDA0LCJleHAiOjE3NTYyNzQ5MDR9.i1lhV1PWoAPdMQwNK_mhV0_v20ggSbV0h_yZImIZnwg"
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - roles
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+          example: "123"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: test@example.com
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [user, admin, api-user]
+          description: User's roles for authorization
+          example: ["user"]
+
+    ProtectedResponse:
+      type: object
+      required:
+        - message
+        - user
+        - timestamp
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "This is a protected endpoint"
+        user:
+          $ref: '#/components/schemas/User'
+        timestamp:
+          type: string
+          format: date-time
+          description: Request timestamp
+          example: "2025-08-27T05:53:31.366Z"
+
+    ArticleSearchResponse:
+      type: object
+      required:
+        - status
+        - response
+      properties:
+        status:
+          type: string
+          enum: [OK]
+          description: Response status
+        copyright:
+          type: string
+          description: Copyright notice
+          example: "Copyright (c) 2024 The New York Times Company"
+        response:
+          type: object
+          required:
+            - docs
+            - meta
+          properties:
+            docs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Article'
+              description: Array of matching articles
+            meta:
+              $ref: '#/components/schemas/SearchMeta'
+
+    Article:
+      type: object
+      required:
+        - _id
+        - web_url
+        - headline
+        - pub_date
+      properties:
+        _id:
+          type: string
+          description: Unique article identifier
+          example: "nyt://article/abc123"
+        web_url:
+          type: string
+          format: uri
+          description: Article URL on nytimes.com
+          example: "https://www.nytimes.com/2024/08/27/technology/ai-breakthrough.html"
+        headline:
+          type: object
+          properties:
+            main:
+              type: string
+              description: Main headline
+              example: "AI Breakthrough Revolutionizes Technology Industry"
+            print_headline:
+              type: string
+              description: Print version headline
+              example: "Tech Revolution"
+        abstract:
+          type: string
+          description: Article summary
+          example: "Scientists announce major breakthrough in artificial intelligence"
+        pub_date:
+          type: string
+          format: date-time
+          description: Publication date
+          example: "2024-08-27T05:53:41.613Z"
+        document_type:
+          type: string
+          enum: [article, blogpost, multimedia]
+          description: Type of document
+        news_desk:
+          type: string
+          description: News desk that produced the article
+          example: "Technology"
+        section_name:
+          type: string
+          description: Section name
+          example: "Technology"
+        subsection_name:
+          type: string
+          description: Subsection name
+          example: "Artificial Intelligence"
+        byline:
+          type: object
+          properties:
+            original:
+              type: string
+              description: Original byline
+              example: "By Jane Smith"
+        word_count:
+          type: integer
+          description: Word count
+          example: 1200
+        uri:
+          type: string
+          description: NYT URI
+          example: "nyt://article/abc123"
+
+    SearchMeta:
+      type: object
+      required:
+        - hits
+        - offset
+        - time
+      properties:
+        hits:
+          type: integer
+          description: Total number of matching results
+          example: 1
+        offset:
+          type: integer
+          description: Current offset for pagination
+          example: 0
+        time:
+          type: integer
+          description: Query execution time in milliseconds
+          example: 43
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details for HTTP APIs
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI that identifies the problem type
+          example: "https://api.nyt-news-explorer.com/problems/invalid-request"
+        title:
+          type: string
+          description: Human-readable summary of the problem
+          example: "Invalid Request"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        detail:
+          type: string
+          description: Human-readable explanation of this problem occurrence
+          example: "The request body contains invalid JSON"
+        instance:
+          type: string
+          format: uri
+          description: URI that identifies the specific problem occurrence
+          example: "https://api.nyt-news-explorer.com/api/v1/articles/search"
+        correlationId:
+          type: string
+          description: Unique identifier for request tracing
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+          example: "2025-08-27T05:53:31.366Z"
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            invalid_json:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/invalid-request"
+                title: "Invalid Request"
+                status: 400
+                detail: "The request body contains invalid JSON"
+                instance: "https://api.nyt-news-explorer.com/api/v1/auth/login"
+                correlationId: "550e8400-e29b-41d4-a716-446655440000"
+                timestamp: "2025-08-27T05:53:31.366Z"
+            validation_error:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/validation-error"
+                title: "Validation Error"
+                status: 400
+                detail: "Email must be a valid email address"
+                instance: "https://api.nyt-news-explorer.com/api/v1/auth/login"
+                correlationId: "550e8400-e29b-41d4-a716-446655440001"
+                timestamp: "2025-08-27T05:53:31.366Z"
+
+    Unauthorized:
+      description: Unauthorized - Authentication required or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            missing_token:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/invalid-token"
+                title: "Invalid Token"
+                status: 401
+                detail: "Authentication required"
+                instance: "https://api.nyt-news-explorer.com/api/v1/protected"
+                correlationId: "550e8400-e29b-41d4-a716-446655440002"
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            insufficient_permissions:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/forbidden"
+                title: "Forbidden"
+                status: 403
+                detail: "Insufficient permissions to access this resource"
+                instance: "https://api.nyt-news-explorer.com/api/v1/admin/users"
+                correlationId: "550e8400-e29b-41d4-a716-446655440003"
+
+    TooManyRequests:
+      description: Too Many Requests - Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Number of seconds to wait before retrying
+          schema:
+            type: integer
+            example: 60
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            rate_limit_exceeded:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/rate-limit-exceeded"
+                title: "Rate Limit Exceeded"
+                status: 429
+                detail: "Too many requests. You have exceeded the rate limit of 100 requests per hour."
+                instance: "https://api.nyt-news-explorer.com/api/v1/articles/search"
+                correlationId: "550e8400-e29b-41d4-a716-446655440004"
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            server_error:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/server-error"
+                title: "Internal Server Error"
+                status: 500
+                detail: "An unexpected error occurred"
+                instance: "https://api.nyt-news-explorer.com/api/v1/articles/search"
+                correlationId: "550e8400-e29b-41d4-a716-446655440005"
+
+    ServiceUnavailable:
+      description: Service Unavailable
+      headers:
+        Retry-After:
+          description: Number of seconds to wait before retrying
+          schema:
+            type: integer
+            example: 30
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            service_unavailable:
+              value:
+                type: "https://api.nyt-news-explorer.com/problems/service-unavailable"
+                title: "Service Unavailable"
+                status: 503
+                detail: "The service is temporarily unavailable. Please try again later."
+                instance: "https://api.nyt-news-explorer.com/health"
+                correlationId: "550e8400-e29b-41d4-a716-446655440006"
+
+tags:
+  - name: Health
+    description: Health check endpoints for monitoring and load balancers
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Articles
+    description: New York Times article search and retrieval
+  - name: Testing
+    description: Endpoints for testing and development
+  - name: Protected
+    description: Endpoints requiring authentication
+
+externalDocs:
+  description: Find more info about the NYT News Explorer
+  url: https://github.com/betexcr/nyt-news-explorer

@@ -1,0 +1,213 @@
+
+> nyt-news-api@1.0.0 test:unit
+> vitest run --config vitest.unit.config.ts
+
+
+ RUN  v1.6.1 /workspace/api
+
+ ❯ |unit| tests/unit/auth.test.ts  (14 tests | 6 failed) 84ms
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing credentials
+     → expected 200 to be 401 // Object.is equality
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject invalid email format
+     → expected 200 to be 401 // Object.is equality
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing email
+     → expected 200 to be 401 // Object.is equality
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing password
+     → expected 200 to be 401 // Object.is equality
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should handle malformed JSON gracefully
+     → expected 415 to be 400 // Object.is equality
+   ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should include correlation ID in response
+     → expected undefined to be 'test-auth-123' // Object.is equality
+ ❯ |unit| tests/unit/articles.test.ts  (13 tests | 1 failed) 13ms
+   ❯ tests/unit/articles.test.ts > Articles API > GET /api/v1/articles/search > should include correlation ID in response
+     → expected undefined to be 'test-articles-123' // Object.is equality
+ ❯ |unit| tests/unit/health.test.ts  (7 tests | 2 failed) 10ms
+   ❯ tests/unit/health.test.ts > Health Endpoints > GET /health > should include correlation id in headers
+     → expected undefined to be 'test-correlation-123' // Object.is equality
+   ❯ tests/unit/health.test.ts > Health Endpoints > GET /api/v1/health > should return detailed health status
+     → expected { status: 'healthy', …(3) } to match object { status: 'healthy', …(2) }
+(1 matching property omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |unit| tests/unit/articles.test.ts > Articles API > GET /api/v1/articles/search > should include correlation ID in response
+AssertionError: expected undefined to be 'test-articles-123' // Object.is equality
+
+- Expected: 
+"test-articles-123"
+
++ Received: 
+undefined
+
+ ❯ tests/unit/articles.test.ts:124:52
+    122|       })
+    123| 
+    124|       expect(response.headers['x-correlation-id']).toBe(correlationId)
+       |                                                    ^
+    125|     })
+    126| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing credentials
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ tests/unit/auth.test.ts:73:35
+     71|       })
+     72| 
+     73|       expect(response.statusCode).toBe(401)
+       |                                   ^
+     74|       
+     75|       const body = JSON.parse(response.body)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject invalid email format
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ tests/unit/auth.test.ts:89:35
+     87|       })
+     88| 
+     89|       expect(response.statusCode).toBe(401)
+       |                                   ^
+     90|     })
+     91| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing email
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ tests/unit/auth.test.ts:101:35
+     99|       })
+    100| 
+    101|       expect(response.statusCode).toBe(401)
+       |                                   ^
+    102|     })
+    103| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing password
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ tests/unit/auth.test.ts:113:35
+    111|       })
+    112| 
+    113|       expect(response.statusCode).toBe(401)
+       |                                   ^
+    114|     })
+    115| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should handle malformed JSON gracefully
+AssertionError: expected 415 to be 400 // Object.is equality
+
+- Expected
++ Received
+
+- 400
++ 415
+
+ ❯ tests/unit/auth.test.ts:123:35
+    121|       })
+    122| 
+    123|       expect(response.statusCode).toBe(400)
+       |                                   ^
+    124|     })
+    125| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  |unit| tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should include correlation ID in response
+AssertionError: expected undefined to be 'test-auth-123' // Object.is equality
+
+- Expected: 
+"test-auth-123"
+
++ Received: 
+undefined
+
+ ❯ tests/unit/auth.test.ts:140:52
+    138|       })
+    139| 
+    140|       expect(response.headers['x-correlation-id']).toBe(correlationId)
+       |                                                    ^
+    141|     })
+    142|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  |unit| tests/unit/health.test.ts > Health Endpoints > GET /health > should include correlation id in headers
+AssertionError: expected undefined to be 'test-correlation-123' // Object.is equality
+
+- Expected: 
+"test-correlation-123"
+
++ Received: 
+undefined
+
+ ❯ tests/unit/health.test.ts:63:52
+     61|       })
+     62| 
+     63|       expect(response.headers['x-correlation-id']).toBe(correlationId)
+       |                                                    ^
+     64|     })
+     65|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  |unit| tests/unit/health.test.ts > Health Endpoints > GET /api/v1/health > should return detailed health status
+AssertionError: expected { status: 'healthy', …(3) } to match object { status: 'healthy', …(2) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  Object {
+-   "environment": "development",
++   "environment": "test",
+    "status": "healthy",
+    "version": "1.0.0",
+  }
+
+ ❯ tests/unit/health.test.ts:77:20
+     75|       
+     76|       const body = JSON.parse(response.body)
+     77|       expect(body).toMatchObject({
+       |                    ^
+     78|         status: 'healthy',
+     79|         version: '1.0.0',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+ Test Files  3 failed (3)
+      Tests  9 failed | 25 passed (34)
+   Start at  06:22:15
+   Duration  514ms (transform 70ms, setup 0ms, collect 239ms, tests 107ms, environment 0ms, prepare 56ms)
+
