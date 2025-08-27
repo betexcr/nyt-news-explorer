@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
-import type { MostPopularArticle, TopStory, ArchiveArticle } from "../types/nyt.other";
-import { mockTrendingArticles, mockTopStories, mockArchiveArticles } from "../api/mock-data";
-import { getMostPopular, getTopStories, searchArticlesByDay } from "../api/nyt-apis";
+import type { MostPopularArticle, TopStory } from "../types/nyt.other";
+import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
+import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
-  const [todayArticles, setTodayArticles] = useState<ArchiveArticle[]>([]);
+  
   // No blocking loading state for Home hero
   // Keep local error handling but do not surface in UI
   const [, setError] = useState<string | null>(null);
@@ -31,21 +31,13 @@ const HomePage: React.FC = () => {
         if (USE_MOCK) {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
-          setTodayArticles(mockArchiveArticles.slice(0, 2));
         } else {
-          const now = new Date();
-          const prevYear = now.getUTCFullYear() - 1;
-          const month = now.getUTCMonth() + 1;
-          const day = now.getUTCDate();
-
-          const [popular, stories, dayDocs] = await Promise.all([
+          const [popular, stories] = await Promise.all([
             getMostPopular('7'),
             getTopStories('home'),
-            searchArticlesByDay(prevYear, month, day),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          setTodayArticles((dayDocs || []).slice(0, 2));
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
@@ -275,47 +267,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* A Day Like Today */}
-      <section className="featured-content" aria-label="A Day Like Today">
-        <div className="content-grid">
-          <div className="content-section today-section">
-            <div className="section-header">
-              <h2>A Day Like Today</h2>
-              <Link to="/archive" className="view-all-link">View In Archive →</Link>
-            </div>
-            <div className="articles-grid">
-              {todayArticles.map((a) => {
-                const href = getSafeUrl(a.web_url) || undefined;
-                const handleOpen = () => { if (href) window.open(href, '_blank', 'noopener,noreferrer'); };
-                const handleKey = (e: React.KeyboardEvent) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && href) { e.preventDefault(); handleOpen(); }
-                };
-                return (
-                  <article
-                    key={a.uri || a._id}
-                    className="article-card today-card"
-                    role={href ? 'link' : undefined}
-                    tabIndex={href ? 0 : -1}
-                    aria-label={href ? `Open: ${a.headline?.main || a.abstract || 'Article'}` : undefined}
-                    onClick={handleOpen}
-                    onKeyDown={handleKey}
-                  >
-                    <div className="article-content">
-                      <div className="article-meta">
-                        <span className="section">{a.section_name || a.news_desk || 'Archive'}</span>
-                        <span className="date">{formatDate(a.pub_date)}</span>
-                      </div>
-                      <h3 className="article-title">{a.headline?.main || a.abstract}</h3>
-                      <p className="article-abstract">{a.snippet || a.lead_paragraph || ''}</p>
-                      {a.byline?.original ? (<div className="article-footer"><span className="byline">{a.byline.original}</span></div>) : null}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Quick Actions */}
       <section className="quick-actions">
