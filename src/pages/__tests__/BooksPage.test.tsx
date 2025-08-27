@@ -6,6 +6,8 @@ import BooksPage from '../BooksPage';
 
 describe('BooksPage', () => {
   test('renders best sellers grid', async () => {
+    const originalKey = process.env.REACT_APP_NYT_API_KEY;
+    process.env.REACT_APP_NYT_API_KEY = 'test';
     const spy = jest.spyOn(api, 'getBestSellers').mockResolvedValueOnce([
       {
         rank: 1,
@@ -37,18 +39,21 @@ describe('BooksPage', () => {
       }
     ] as any);
 
-    render(
-      <MemoryRouter>
-        <BooksPage />
-      </MemoryRouter>
-    );
+    try {
+      render(
+        <MemoryRouter>
+          <BooksPage />
+        </MemoryRouter>
+      );
 
-    await waitFor(() => {
-      expect(screen.getByText('Books')).toBeInTheDocument();
-      expect(screen.getByText('Test Book')).toBeInTheDocument();
-    });
-
-    spy.mockRestore();
+      await waitFor(() => {
+        expect(screen.getByText('Books')).toBeInTheDocument();
+        expect(screen.getByText('Test Book')).toBeInTheDocument();
+      });
+    } finally {
+      spy.mockRestore();
+      process.env.REACT_APP_NYT_API_KEY = originalKey;
+    }
   });
 });
 
