@@ -264,8 +264,6 @@ const HomePage: React.FC = () => {
               );})}
             </div>
           </div>
-
-          {/* A day like today – temporarily removed for performance */}
         </div>
       </section>
 
