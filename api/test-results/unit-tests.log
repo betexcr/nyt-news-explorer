@@ -5,7 +5,7 @@
 
  RUN  v1.6.1 /workspace/api
 
- ❯ |unit| tests/unit/auth.test.ts  (14 tests | 6 failed) 84ms
+ ❯ |unit| tests/unit/auth.test.ts  (14 tests | 6 failed) 83ms
    ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject missing credentials
      → expected 200 to be 401 // Object.is equality
    ❯ tests/unit/auth.test.ts > Authentication > POST /api/v1/auth/login > should reject invalid email format
@@ -21,7 +21,7 @@
  ❯ |unit| tests/unit/articles.test.ts  (13 tests | 1 failed) 13ms
    ❯ tests/unit/articles.test.ts > Articles API > GET /api/v1/articles/search > should include correlation ID in response
      → expected undefined to be 'test-articles-123' // Object.is equality
- ❯ |unit| tests/unit/health.test.ts  (7 tests | 2 failed) 10ms
+ ❯ |unit| tests/unit/health.test.ts  (7 tests | 2 failed) 11ms
    ❯ tests/unit/health.test.ts > Health Endpoints > GET /health > should include correlation id in headers
      → expected undefined to be 'test-correlation-123' // Object.is equality
    ❯ tests/unit/health.test.ts > Health Endpoints > GET /api/v1/health > should return detailed health status
@@ -208,6 +208,6 @@ AssertionError: expected { status: 'healthy', …(3) } to match object { status:
 
  Test Files  3 failed (3)
       Tests  9 failed | 25 passed (34)
-   Start at  06:22:15
-   Duration  514ms (transform 70ms, setup 0ms, collect 239ms, tests 107ms, environment 0ms, prepare 56ms)
+   Start at  06:26:49
+   Duration  501ms (transform 71ms, setup 0ms, collect 239ms, tests 107ms, environment 0ms, prepare 48ms)
 

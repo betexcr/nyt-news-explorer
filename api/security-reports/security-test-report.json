@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-08-27T06:22:16.505Z",
+  "timestamp": "2025-08-27T06:26:50.447Z",
   "baseUrl": "http://localhost:3000",
   "tests": [
     {
@@ -8,7 +8,7 @@
       "severity": "critical",
       "details": "Endpoint properly rejects unauthorized access",
       "recommendation": "Implement proper authorization checks for all object access",
-      "timestamp": "2025-08-27T06:22:16.524Z"
+      "timestamp": "2025-08-27T06:26:50.465Z"
     },
     {
       "test": "BOLA - Parameter Manipulation",
@@ -16,7 +16,7 @@
       "severity": "high",
       "details": "Does not expose other user data",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.526Z"
+      "timestamp": "2025-08-27T06:26:50.467Z"
     },
     {
       "test": "Broken Auth - Weak Password",
@@ -24,7 +24,7 @@
       "severity": "high",
       "details": "Weak passwords accepted",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.529Z"
+      "timestamp": "2025-08-27T06:26:50.469Z"
     },
     {
       "test": "Broken Auth - Invalid JWT",
@@ -32,7 +32,7 @@
       "severity": "critical",
       "details": "Invalid JWT tokens rejected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.530Z"
+      "timestamp": "2025-08-27T06:26:50.472Z"
     },
     {
       "test": "Broken Auth - Expired Token",
@@ -40,7 +40,7 @@
       "severity": "high",
       "details": "Expired tokens rejected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.532Z"
+      "timestamp": "2025-08-27T06:26:50.473Z"
     },
     {
       "test": "BOPLA - Sensitive Data Exposure",
@@ -48,7 +48,7 @@
       "severity": "medium",
       "details": "No sensitive fields exposed",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.534Z"
+      "timestamp": "2025-08-27T06:26:50.475Z"
     },
     {
       "test": "Resource Consumption - Rate Limiting",
@@ -56,7 +56,7 @@
       "severity": "medium",
       "details": "No rate limiting detected",
       "recommendation": "Implement rate limiting to prevent abuse",
-      "timestamp": "2025-08-27T06:22:16.546Z"
+      "timestamp": "2025-08-27T06:26:50.486Z"
     },
     {
       "test": "Resource Consumption - Large Payload",
@@ -64,7 +64,7 @@
       "severity": "medium",
       "details": "Large payloads rejected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.597Z"
+      "timestamp": "2025-08-27T06:26:50.534Z"
     },
     {
       "test": "BFLA - Admin Access (/api/v1/admin/users)",
@@ -72,7 +72,7 @@
       "severity": "critical",
       "details": "Admin endpoint protected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.599Z"
+      "timestamp": "2025-08-27T06:26:50.535Z"
     },
     {
       "test": "BFLA - Admin Access (/api/v1/admin/config)",
@@ -80,7 +80,7 @@
       "severity": "critical",
       "details": "Admin endpoint protected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.600Z"
+      "timestamp": "2025-08-27T06:26:50.536Z"
     },
     {
       "test": "BFLA - Admin Access (/api/v1/admin/logs)",
@@ -88,7 +88,7 @@
       "severity": "critical",
       "details": "Admin endpoint protected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.601Z"
+      "timestamp": "2025-08-27T06:26:50.537Z"
     },
     {
       "test": "BFLA - HTTP Method Tampering",
@@ -96,7 +96,7 @@
       "severity": "medium",
       "details": "Invalid HTTP methods rejected",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.602Z"
+      "timestamp": "2025-08-27T06:26:50.538Z"
     },
     {
       "test": "SSRF - URL Parameter (http://169.254.169.2...)",
@@ -104,7 +104,7 @@
       "severity": "critical",
       "details": "SSRF payload blocked",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.604Z"
+      "timestamp": "2025-08-27T06:26:50.540Z"
     },
     {
       "test": "SSRF - URL Parameter (http://localhost:22...)",
@@ -112,7 +112,7 @@
       "severity": "critical",
       "details": "SSRF payload blocked",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.605Z"
+      "timestamp": "2025-08-27T06:26:50.541Z"
     },
     {
       "test": "SSRF - URL Parameter (file:///etc/passwd...)",
@@ -120,7 +120,7 @@
       "severity": "critical",
       "details": "SSRF payload blocked",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.607Z"
+      "timestamp": "2025-08-27T06:26:50.542Z"
     },
     {
       "test": "SSRF - URL Parameter (ftp://localhost:21...)",
@@ -128,7 +128,7 @@
       "severity": "critical",
       "details": "SSRF payload blocked",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.608Z"
+      "timestamp": "2025-08-27T06:26:50.542Z"
     },
     {
       "test": "Security Headers - x-content-type-options",
@@ -136,7 +136,7 @@
       "severity": "medium",
       "details": "Present: nosniff",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Security Headers - x-frame-options",
@@ -144,7 +144,7 @@
       "severity": "medium",
       "details": "Present: SAMEORIGIN",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Security Headers - x-dns-prefetch-control",
@@ -152,7 +152,7 @@
       "severity": "medium",
       "details": "Present: off",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Security Headers - x-download-options",
@@ -160,7 +160,7 @@
       "severity": "medium",
       "details": "Present: noopen",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Security Headers - strict-transport-security",
@@ -168,7 +168,7 @@
       "severity": "medium",
       "details": "Present: max-age=15552000; includeSubDomains",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Security Headers - content-security-policy",
@@ -176,7 +176,7 @@
       "severity": "low",
       "details": "Not present",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.609Z"
+      "timestamp": "2025-08-27T06:26:50.544Z"
     },
     {
       "test": "Input Validation - SQL Injection",
@@ -184,7 +184,7 @@
       "severity": "high",
       "details": "SQL injection payload handled safely",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.610Z"
+      "timestamp": "2025-08-27T06:26:50.546Z"
     },
     {
       "test": "Input Validation - XSS",
@@ -192,7 +192,7 @@
       "severity": "medium",
       "details": "XSS payload sanitized",
       "recommendation": "",
-      "timestamp": "2025-08-27T06:22:16.611Z"
+      "timestamp": "2025-08-27T06:26:50.547Z"
     }
   ],
   "summary": {

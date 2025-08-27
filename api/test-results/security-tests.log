@@ -1,43 +1,43 @@
-[2025-08-27T06:22:16.505Z] [INFO] 🚀 Starting comprehensive security tests...
-[2025-08-27T06:22:16.522Z] [INFO] ✅ Authentication successful
-[2025-08-27T06:22:16.522Z] [INFO] 🔍 Testing API1:2023 - Broken Object Level Authorization
-[2025-08-27T06:22:16.524Z] [INFO] ✅ PASS: BOLA - Direct Object Reference (critical)
-[2025-08-27T06:22:16.526Z] [INFO] ✅ PASS: BOLA - Parameter Manipulation (high)
-[2025-08-27T06:22:16.527Z] [INFO] 🔍 Testing API2:2023 - Broken Authentication
-[2025-08-27T06:22:16.529Z] [INFO] ❌ FAIL: Broken Auth - Weak Password (high)
-[2025-08-27T06:22:16.529Z] [INFO]    Details: Weak passwords accepted
-[2025-08-27T06:22:16.530Z] [INFO] ✅ PASS: Broken Auth - Invalid JWT (critical)
-[2025-08-27T06:22:16.532Z] [INFO] ✅ PASS: Broken Auth - Expired Token (high)
-[2025-08-27T06:22:16.532Z] [INFO] 🔍 Testing API3:2023 - Broken Object Property Level Authorization
-[2025-08-27T06:22:16.534Z] [INFO] ✅ PASS: BOPLA - Sensitive Data Exposure (medium)
-[2025-08-27T06:22:16.534Z] [INFO] 🔍 Testing API4:2023 - Unrestricted Resource Consumption
-[2025-08-27T06:22:16.546Z] [INFO] ❌ FAIL: Resource Consumption - Rate Limiting (medium)
-[2025-08-27T06:22:16.546Z] [INFO]    Details: No rate limiting detected
-[2025-08-27T06:22:16.597Z] [INFO] ✅ PASS: Resource Consumption - Large Payload (medium)
-[2025-08-27T06:22:16.597Z] [INFO] 🔍 Testing API5:2023 - Broken Function Level Authorization
-[2025-08-27T06:22:16.599Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/users) (critical)
-[2025-08-27T06:22:16.600Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/config) (critical)
-[2025-08-27T06:22:16.601Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/logs) (critical)
-[2025-08-27T06:22:16.602Z] [INFO] ✅ PASS: BFLA - HTTP Method Tampering (medium)
-[2025-08-27T06:22:16.602Z] [INFO] 🔍 Testing API6:2023 - Server-Side Request Forgery
-[2025-08-27T06:22:16.604Z] [INFO] ✅ PASS: SSRF - URL Parameter (http://169.254.169.2...) (critical)
-[2025-08-27T06:22:16.605Z] [INFO] ✅ PASS: SSRF - URL Parameter (http://localhost:22...) (critical)
-[2025-08-27T06:22:16.607Z] [INFO] ✅ PASS: SSRF - URL Parameter (file:///etc/passwd...) (critical)
-[2025-08-27T06:22:16.608Z] [INFO] ✅ PASS: SSRF - URL Parameter (ftp://localhost:21...) (critical)
-[2025-08-27T06:22:16.608Z] [INFO] 🔍 Testing Security Headers
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - x-content-type-options (medium)
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - x-frame-options (medium)
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - x-dns-prefetch-control (medium)
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - x-download-options (medium)
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - strict-transport-security (medium)
-[2025-08-27T06:22:16.609Z] [INFO] ✅ PASS: Security Headers - content-security-policy (low)
-[2025-08-27T06:22:16.609Z] [INFO] 🔍 Testing Input Validation
-[2025-08-27T06:22:16.610Z] [INFO] ✅ PASS: Input Validation - SQL Injection (high)
-[2025-08-27T06:22:16.611Z] [INFO] ✅ PASS: Input Validation - XSS (medium)
-[2025-08-27T06:22:16.611Z] [INFO] 📊 Generating security test report...
-[2025-08-27T06:22:16.612Z] [INFO] ✅ Reports generated:
-[2025-08-27T06:22:16.612Z] [INFO]    📄 security-reports/security-test-report.json
-[2025-08-27T06:22:16.612Z] [INFO]    📋 security-reports/security-summary.txt
-[2025-08-27T06:22:16.612Z] [INFO] 🏁 Security tests completed!
-[2025-08-27T06:22:16.612Z] [INFO] 📊 Summary: 22/24 passed
-[2025-08-27T06:22:16.612Z] [WARN] ⚠️  HIGH: 1 high-severity issues found
+[2025-08-27T06:26:50.447Z] [INFO] 🚀 Starting comprehensive security tests...
+[2025-08-27T06:26:50.463Z] [INFO] ✅ Authentication successful
+[2025-08-27T06:26:50.463Z] [INFO] 🔍 Testing API1:2023 - Broken Object Level Authorization
+[2025-08-27T06:26:50.465Z] [INFO] ✅ PASS: BOLA - Direct Object Reference (critical)
+[2025-08-27T06:26:50.467Z] [INFO] ✅ PASS: BOLA - Parameter Manipulation (high)
+[2025-08-27T06:26:50.468Z] [INFO] 🔍 Testing API2:2023 - Broken Authentication
+[2025-08-27T06:26:50.469Z] [INFO] ❌ FAIL: Broken Auth - Weak Password (high)
+[2025-08-27T06:26:50.470Z] [INFO]    Details: Weak passwords accepted
+[2025-08-27T06:26:50.472Z] [INFO] ✅ PASS: Broken Auth - Invalid JWT (critical)
+[2025-08-27T06:26:50.473Z] [INFO] ✅ PASS: Broken Auth - Expired Token (high)
+[2025-08-27T06:26:50.474Z] [INFO] 🔍 Testing API3:2023 - Broken Object Property Level Authorization
+[2025-08-27T06:26:50.475Z] [INFO] ✅ PASS: BOPLA - Sensitive Data Exposure (medium)
+[2025-08-27T06:26:50.476Z] [INFO] 🔍 Testing API4:2023 - Unrestricted Resource Consumption
+[2025-08-27T06:26:50.486Z] [INFO] ❌ FAIL: Resource Consumption - Rate Limiting (medium)
+[2025-08-27T06:26:50.486Z] [INFO]    Details: No rate limiting detected
+[2025-08-27T06:26:50.534Z] [INFO] ✅ PASS: Resource Consumption - Large Payload (medium)
+[2025-08-27T06:26:50.534Z] [INFO] 🔍 Testing API5:2023 - Broken Function Level Authorization
+[2025-08-27T06:26:50.535Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/users) (critical)
+[2025-08-27T06:26:50.536Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/config) (critical)
+[2025-08-27T06:26:50.537Z] [INFO] ✅ PASS: BFLA - Admin Access (/api/v1/admin/logs) (critical)
+[2025-08-27T06:26:50.538Z] [INFO] ✅ PASS: BFLA - HTTP Method Tampering (medium)
+[2025-08-27T06:26:50.538Z] [INFO] 🔍 Testing API6:2023 - Server-Side Request Forgery
+[2025-08-27T06:26:50.540Z] [INFO] ✅ PASS: SSRF - URL Parameter (http://169.254.169.2...) (critical)
+[2025-08-27T06:26:50.541Z] [INFO] ✅ PASS: SSRF - URL Parameter (http://localhost:22...) (critical)
+[2025-08-27T06:26:50.542Z] [INFO] ✅ PASS: SSRF - URL Parameter (file:///etc/passwd...) (critical)
+[2025-08-27T06:26:50.542Z] [INFO] ✅ PASS: SSRF - URL Parameter (ftp://localhost:21...) (critical)
+[2025-08-27T06:26:50.543Z] [INFO] 🔍 Testing Security Headers
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - x-content-type-options (medium)
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - x-frame-options (medium)
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - x-dns-prefetch-control (medium)
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - x-download-options (medium)
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - strict-transport-security (medium)
+[2025-08-27T06:26:50.544Z] [INFO] ✅ PASS: Security Headers - content-security-policy (low)
+[2025-08-27T06:26:50.544Z] [INFO] 🔍 Testing Input Validation
+[2025-08-27T06:26:50.546Z] [INFO] ✅ PASS: Input Validation - SQL Injection (high)
+[2025-08-27T06:26:50.547Z] [INFO] ✅ PASS: Input Validation - XSS (medium)
+[2025-08-27T06:26:50.547Z] [INFO] 📊 Generating security test report...
+[2025-08-27T06:26:50.548Z] [INFO] ✅ Reports generated:
+[2025-08-27T06:26:50.548Z] [INFO]    📄 security-reports/security-test-report.json
+[2025-08-27T06:26:50.548Z] [INFO]    📋 security-reports/security-summary.txt
+[2025-08-27T06:26:50.548Z] [INFO] 🏁 Security tests completed!
+[2025-08-27T06:26:50.548Z] [INFO] 📊 Summary: 22/24 passed
+[2025-08-27T06:26:50.548Z] [WARN] ⚠️  HIGH: 1 high-severity issues found
