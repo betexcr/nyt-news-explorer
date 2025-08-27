@@ -185,6 +185,28 @@ export async function getBestSellers(
   return [] as Book[];
 }
 
+// Books API - Lists Overview (shows all lists and their latest dates)
+export async function getBooksListsOverview(
+  signal?: AbortSignal
+): Promise<any> {
+  const url = `${ENDPOINTS.BOOKS}/lists/overview.json`;
+  const data = await makeApiRequest<any>(url, {}, signal);
+  return data?.results ?? data;
+}
+
+// Books API - Dated List for a specific list and date (YYYY-MM-DD)
+export async function getBooksListByDate(
+  list: string,
+  date: string, // 'current' or 'YYYY-MM-DD'
+  signal?: AbortSignal
+): Promise<Book[]> {
+  const url = `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`;
+  const data = await makeApiRequest<any>(url, {}, signal);
+  const results = data?.results;
+  if (results && Array.isArray(results.books)) return results.books as Book[];
+  return [] as Book[];
+}
+
 // Archive API
 export async function getArchive(
   year: number,

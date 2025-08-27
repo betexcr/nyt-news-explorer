@@ -303,10 +303,10 @@ const HomePage: React.FC = () => {
             <p>Your saved articles</p>
           </Link>
           
-          <Link to="/api-docs" className="action-card">
+          <Link to="/books" className="action-card">
             <div className="action-icon" aria-hidden="true" />
-            <h3>API Docs</h3>
-            <p>Interactive API documentation</p>
+            <h3>Books</h3>
+            <p>Best Sellers by list</p>
           </Link>
         </div>
       </section>

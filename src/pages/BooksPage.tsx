@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getBestSellers, BOOKS_LISTS } from '../api/nyt-apis';
+import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-apis';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
 import '../styles/books.css';
@@ -9,6 +9,7 @@ const DEFAULT_LIST = 'hardcover-fiction';
 const BooksPage: React.FC = () => {
   const [listName, setListName] = useState<string>(DEFAULT_LIST);
   const [books, setBooks] = useState<Book[]>([]);
+  const [date, setDate] = useState<string>('current'); // YYYY-MM-DD or 'current'
   const [loading, setLoading] = useState<boolean>(false);
   const [, setError] = useState<string | null>(null);
 
@@ -25,7 +26,9 @@ const BooksPage: React.FC = () => {
           if (!cancelled) setBooks(mockBooks);
           return;
         }
-        const results = await getBestSellers(listName);
+        const results = date === 'current'
+          ? await getBestSellers(listName)
+          : await getBooksListByDate(listName, date);
         if (!cancelled) setBooks(results);
       } catch (err: any) {
         if (!cancelled) setError(err?.message || 'Failed to load books');
@@ -35,7 +38,7 @@ const BooksPage: React.FC = () => {
     };
     load();
     return () => { cancelled = true; };
-  }, [listName]);
+  }, [listName, date]);
 
   return (
     <div className="books-page">
@@ -59,6 +62,24 @@ const BooksPage: React.FC = () => {
             ))}
           </select>
         </label>
+        <label className="list-select">
+          Date
+          <input
+            type="date"
+            aria-label="Pick date for list (optional)"
+            value={date === 'current' ? '' : date}
+            max={new Date().toISOString().slice(0,10)}
+            onChange={(e) => setDate(e.target.value ? e.target.value : 'current')}
+          />
+        </label>
+        <button
+          type="button"
+          className="retry-button"
+          onClick={() => { /* triggers useEffect via state already */ }}
+          aria-label="Reload list"
+        >
+          Reload
+        </button>
       </div>
 
       {loading ? (
