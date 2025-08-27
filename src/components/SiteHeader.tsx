@@ -106,8 +106,7 @@ export const SiteHeader: React.FC = () => {
         <nav 
           style={{ 
             alignItems: "center", 
-            gap: "0.5rem",
-            display: "none" // Hidden on mobile
+            gap: "0.5rem"
           }}
           className="desktop-nav"
         >
