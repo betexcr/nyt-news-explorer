@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories, searchArticlesByDay } from "../api/nyt-apis";
+import { getMostPopular, getTopStories, getArchive } from "../api/nyt-apis";
 import type { ArchiveArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
-          // Fetch "A day like today" items with exactly three single-day requests in parallel
+          // Fetch "A day like today" via Archive API: three month calls (one per random past year) and filter by same day
           const desiredCount = 3;
           const targetDay = now.getUTCDate();
           const cacheKey = `archiveToday:${now.getUTCFullYear()}-${now.getUTCMonth() + 1}-${targetDay}`;
@@ -56,31 +56,29 @@ const HomePage: React.FC = () => {
                 const currentYear = now.getUTCFullYear();
                 const START_YEAR = 1851;
                 const minYear = month < 10 ? START_YEAR + 1 : START_YEAR; // Oct 1851 earliest for months >=10
-
-                // Pick three distinct random years biased towards recent years without loops/backoff
+                // Candidate years pool, biased to recent decades
                 const pool: number[] = [];
                 for (let y = currentYear - 1; y >= Math.max(currentYear - 40, minYear); y -= 1) pool.push(y);
                 for (let y = Math.max(currentYear - 41, minYear); y >= minYear; y -= 1) pool.push(y);
-                // Shuffle once
                 for (let i = pool.length - 1; i > 0; i -= 1) {
                   const j = Math.floor(Math.random() * (i + 1));
                   [pool[i], pool[j]] = [pool[j], pool[i]];
                 }
                 const years = pool.slice(0, desiredCount);
 
-                const results = await Promise.all(years.map(async (y) => {
+                const picks: ArchiveArticle[] = [];
+                for (const y of years) {
                   try {
-                    const docs = await searchArticlesByDay(y, month, targetDay);
-                    if (Array.isArray(docs) && docs.length > 0) {
-                      return docs[Math.floor(Math.random() * docs.length)];
+                    const docs = await getArchive(y, month);
+                    const sameDay = docs.filter((d) => new Date(d.pub_date).getUTCDate() === targetDay);
+                    if (sameDay.length > 0) {
+                      const chosen = sameDay[Math.floor(Math.random() * sameDay.length)];
+                      picks.push(chosen);
                     }
-                    return null;
                   } catch {
-                    return null;
+                    // ignore individual year errors
                   }
-                }));
-
-                const picks = results.filter(Boolean) as ArchiveArticle[];
+                }
                 setTodayInHistory(picks.slice(0, desiredCount));
                 safeWriteCache(cacheKey, { results: picks.slice(0, desiredCount) });
               } catch {

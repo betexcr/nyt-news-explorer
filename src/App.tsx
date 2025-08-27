@@ -9,6 +9,7 @@ import ArchivePage from "./pages/ArchivePage";
 import DetailPage from "./pages/DetailPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
+import BooksPage from "./pages/BooksPage";
 import "./index.css";
 import "./styles/header.css";
 import "./styles/api-docs.css";
@@ -27,6 +28,7 @@ function App() {
             <Route path="/trending" element={<TrendingPage />} />
             <Route path="/top-stories" element={<TopStoriesPage />} />
             <Route path="/archive" element={<ArchivePage />} />
+            <Route path="/books" element={<BooksPage />} />
             <Route path="/detail" element={<DetailPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/api-docs" element={<ApiDocsPage />} />
