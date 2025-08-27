@@ -96,7 +96,7 @@ export async function authRoutes(fastify) {
                 type: 'https://api.nyt-news-explorer.com/problems/invalid-authorization-request',
                 title: 'Invalid Authorization Request',
                 status: 400,
-                detail: error.message,
+                detail: error instanceof Error ? error.message : 'Unknown error',
                 instance: request.url,
                 correlationId: request.headers['x-correlation-id'],
             });
@@ -186,7 +186,7 @@ export async function authRoutes(fastify) {
                 type: 'https://api.nyt-news-explorer.com/problems/invalid-token-request',
                 title: 'Invalid Token Request',
                 status: 400,
-                detail: error.message,
+                detail: error instanceof Error ? error.message : 'Unknown error',
                 instance: request.url,
                 correlationId: request.headers['x-correlation-id'],
             });

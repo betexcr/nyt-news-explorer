@@ -19,5 +19,5 @@ declare module 'fastify' {
         };
     }
 }
-declare const _default: typeof circuitBreakerPlugin;
-export default _default;
+declare const plugin: typeof circuitBreakerPlugin;
+export default plugin;

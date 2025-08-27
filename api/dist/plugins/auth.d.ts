@@ -17,11 +17,21 @@ interface User {
     iss?: string;
     aud?: string;
 }
+interface TokenPair {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+}
 declare module 'fastify' {
     interface FastifyRequest {
         user?: User;
     }
+    interface FastifyInstance {
+        authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+        authorize: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+        generateTokenPair: (user: Omit<User, 'iat' | 'exp' | 'iss' | 'aud'>) => Promise<TokenPair>;
+    }
 }
 declare function authPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof authPlugin;
-export default _default;
+declare const plugin: typeof authPlugin;
+export default plugin;

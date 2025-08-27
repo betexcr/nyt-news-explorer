@@ -1,12 +1,12 @@
 import { FastifyInstance } from 'fastify'
-import { securityPlugin } from './security.js'
-import { rateLimitingPlugin } from './rate-limiting.js'
-import { compressionPlugin } from './compression.js'
-import { cachingPlugin } from './caching.js'
-import { authPlugin } from './auth.js'
-import { swaggerPlugin } from './swagger.js'
-import { healthCheckPlugin } from './health-check.js'
-import { circuitBreakerPlugin } from './circuit-breaker.js'
+import securityPlugin from './security.js'
+import rateLimitingPlugin from './rate-limiting.js'
+import compressionPlugin from './compression.js'
+import cachingPlugin from './caching.js'
+import authPlugin from './auth.js'
+import swaggerPlugin from './swagger.js'
+import healthCheckPlugin from './health-check.js'
+import circuitBreakerPlugin from './circuit-breaker.js'
 
 /**
  * Register all plugins in the correct order

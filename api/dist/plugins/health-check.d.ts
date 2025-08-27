@@ -8,5 +8,5 @@ import { FastifyInstance } from 'fastify';
  * - Circuit breaker integration
  */
 declare function healthCheckPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof healthCheckPlugin;
-export default _default;
+declare const plugin: typeof healthCheckPlugin;
+export default plugin;

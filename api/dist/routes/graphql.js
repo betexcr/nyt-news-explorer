@@ -238,7 +238,7 @@ const resolvers = {
                 return result;
             }
             catch (error) {
-                throw new Error(`Search failed: ${error.message}`);
+                throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         },
         topStories: async (_parent, args, context) => {
@@ -261,7 +261,7 @@ const resolvers = {
                 return articles;
             }
             catch (error) {
-                throw new Error(`Top stories fetch failed: ${error.message}`);
+                throw new Error(`Top stories fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         },
         archive: async (_parent, args, context) => {
@@ -284,7 +284,7 @@ const resolvers = {
                 return articles;
             }
             catch (error) {
-                throw new Error(`Archive fetch failed: ${error.message}`);
+                throw new Error(`Archive fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         },
         me: async (_parent, _args, context) => {
@@ -415,10 +415,7 @@ export async function graphqlRoutes(fastify) {
             catch (error) {
                 // Continue without authentication for public queries
             }
-            const response = await yoga.handleNodeRequest(request, {
-                req: request.raw,
-                res: reply.raw,
-            });
+            const response = await yoga.handleNodeRequest(request, {});
             response.headers.forEach((value, key) => {
                 reply.header(key, value);
             });

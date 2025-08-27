@@ -148,7 +148,9 @@ async function securityPlugin(fastify: FastifyInstance) {
   })
 }
 
-export default fp(securityPlugin, {
+const plugin = fp(securityPlugin, {
   name: 'security',
   fastify: '4.x',
 })
+
+export default plugin

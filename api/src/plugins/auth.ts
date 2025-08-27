@@ -39,6 +39,12 @@ declare module 'fastify' {
   interface FastifyRequest {
     user?: User
   }
+  
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    authorize: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    generateTokenPair: (user: Omit<User, 'iat' | 'exp' | 'iss' | 'aud'>) => Promise<TokenPair>
+  }
 }
 
 async function authPlugin(fastify: FastifyInstance) {
@@ -129,7 +135,7 @@ async function authPlugin(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/invalid-token',
         title: 'Invalid Token',
         status: 401,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
         correlationId: request.headers['x-correlation-id'],
       })
@@ -203,7 +209,7 @@ async function authPlugin(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/invalid-api-key',
         title: 'Invalid API Key',
         status: 401,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
         correlationId: request.headers['x-correlation-id'],
       })
@@ -329,7 +335,7 @@ async function authPlugin(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/invalid-refresh-token',
         title: 'Invalid Refresh Token',
         status: 401,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
       })
     }
@@ -374,7 +380,7 @@ async function authPlugin(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/revocation-failed',
         title: 'Token Revocation Failed',
         status: 400,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
       })
     }
@@ -391,8 +397,10 @@ async function getUserById(userId: string): Promise<User | null> {
   }
 }
 
-export default fp(authPlugin, {
+const plugin = fp(authPlugin, {
   name: 'auth',
   dependencies: ['jwt', 'redis'],
   fastify: '4.x',
 })
+
+export default plugin

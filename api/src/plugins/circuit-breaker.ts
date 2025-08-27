@@ -119,19 +119,20 @@ async function circuitBreakerPlugin(fastify: FastifyInstance) {
         if (fallback) {
           fastify.log.info({ 
             breakerName, 
-            error: error.message 
+            error: error instanceof Error ? error.message : 'Unknown error'
           }, 'Using fallback due to circuit breaker')
           
           return typeof fallback === 'function' ? await fallback() : fallback
         }
         
         // Return circuit breaker error in Problem Details format
+        const resetTimeout = circuitBreakerConfigs[breakerName as keyof typeof circuitBreakerConfigs]?.resetTimeout || 30000
         throw {
           type: 'https://api.nyt-news-explorer.com/problems/service-unavailable',
           title: 'Service Temporarily Unavailable',
           status: 503,
           detail: `The ${breakerName} service is currently unavailable. Please try again later.`,
-          retryAfter: Math.ceil(circuitBreakerConfigs[breakerName]?.resetTimeout / 1000) || 30,
+          retryAfter: Math.ceil(resetTimeout / 1000),
         }
       }
     },
@@ -153,7 +154,7 @@ async function circuitBreakerPlugin(fastify: FastifyInstance) {
 
     // Get all circuit breakers status
     getAllStatus: () => {
-      const status = {}
+      const status: Record<string, any> = {}
       for (const [name, breaker] of circuitBreakers) {
         status[name] = {
           state: breaker.opened ? 'open' : breaker.halfOpen ? 'half-open' : 'closed',
@@ -274,7 +275,9 @@ declare module 'fastify' {
   }
 }
 
-export default fp(circuitBreakerPlugin, {
+const plugin = fp(circuitBreakerPlugin, {
   name: 'circuit-breaker',
   fastify: '4.x',
 })
+
+export default plugin

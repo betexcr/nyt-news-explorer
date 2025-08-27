@@ -23,5 +23,5 @@ declare module 'fastify' {
         cacheKey?: string;
     }
 }
-declare const _default: typeof cachingPlugin;
-export default _default;
+declare const plugin: typeof cachingPlugin;
+export default plugin;

@@ -88,10 +88,10 @@ async function createServer() {
   })
 
   // Register all plugins (security, rate limiting, compression, etc.)
-  await registerPlugins(server)
+  await registerPlugins(server as any)
 
   // Register all routes
-  await registerRoutes(server)
+  await registerRoutes(server as any)
 
   // Global error handler with Problem Details (RFC 9457)
   server.setErrorHandler(async (error, request, reply) => {
@@ -156,7 +156,7 @@ async function start() {
           server.log.info('Server closed successfully')
           process.exit(0)
         } catch (error) {
-          server.log.error('Error during shutdown', error)
+          server.log.error('Error during shutdown', { error: error instanceof Error ? error.message : 'Unknown error' })
           process.exit(1)
         }
       })
@@ -176,19 +176,19 @@ async function start() {
     }, 'Server started successfully')
 
   } catch (error) {
-    logger.error('Failed to start server', error)
+    logger.error('Failed to start server', { error: error instanceof Error ? error.message : 'Unknown error' })
     process.exit(1)
   }
 }
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught exception', error)
+  logger.error('Uncaught exception', { error: error.message, stack: error.stack })
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled rejection', { reason, promise })
+  logger.error('Unhandled rejection', { reason: reason instanceof Error ? reason.message : String(reason), promise: String(promise) })
   process.exit(1)
 })
 

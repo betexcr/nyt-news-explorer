@@ -7,5 +7,5 @@ import { FastifyInstance } from 'fastify';
  * - Dynamic compression based on content type and size
  */
 declare function compressionPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof compressionPlugin;
-export default _default;
+declare const plugin: typeof compressionPlugin;
+export default plugin;

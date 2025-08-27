@@ -252,7 +252,7 @@ const resolvers = {
         return result
         
       } catch (error) {
-        throw new Error(`Search failed: ${error.message}`)
+        throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     },
 
@@ -284,7 +284,7 @@ const resolvers = {
         return articles
         
       } catch (error) {
-        throw new Error(`Top stories fetch failed: ${error.message}`)
+        throw new Error(`Top stories fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     },
 
@@ -316,7 +316,7 @@ const resolvers = {
         return articles
         
       } catch (error) {
-        throw new Error(`Archive fetch failed: ${error.message}`)
+        throw new Error(`Archive fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     },
 
@@ -454,15 +454,12 @@ export async function graphqlRoutes(fastify: FastifyInstance) {
     handler: async (request, reply) => {
       // Optional authentication for GraphQL
       try {
-        await fastify.authenticate(request, reply)
+        await (fastify as any).authenticate(request, reply)
       } catch (error) {
         // Continue without authentication for public queries
       }
       
-      const response = await yoga.handleNodeRequest(request, {
-        req: request.raw,
-        res: reply.raw,
-      })
+      const response = await yoga.handleNodeRequest(request, {})
       
       response.headers.forEach((value, key) => {
         reply.header(key, value)

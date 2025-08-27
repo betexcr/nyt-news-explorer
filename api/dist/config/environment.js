@@ -153,14 +153,15 @@ function parseConfig() {
         process.exit(1);
     }
 }
-export const config = parseConfig();
+const baseConfig = parseConfig();
 // Environment helpers
-export const isDevelopment = config.nodeEnv === 'development';
-export const isProduction = config.nodeEnv === 'production';
-export const isTest = config.nodeEnv === 'test';
+export const isDevelopment = baseConfig.nodeEnv === 'development';
+export const isProduction = baseConfig.nodeEnv === 'production';
+export const isTest = baseConfig.nodeEnv === 'test';
 // Add convenience properties to config
-Object.assign(config, {
+export const config = {
+    ...baseConfig,
     isDevelopment,
     isProduction,
     isTest,
-});
+};

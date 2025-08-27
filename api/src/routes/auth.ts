@@ -111,7 +111,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/invalid-authorization-request',
         title: 'Invalid Authorization Request',
         status: 400,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
         correlationId: request.headers['x-correlation-id'],
       })
@@ -197,7 +197,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       }
       
       // Generate token pair
-      const tokenPair = await fastify.generateTokenPair(user)
+      const tokenPair = await (fastify as any).generateTokenPair(user)
       
       // Clean up used codes
       await fastify.redis.del(codeKey, challengeKey)
@@ -215,7 +215,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/invalid-token-request',
         title: 'Invalid Token Request',
         status: 400,
-        detail: error.message,
+        detail: error instanceof Error ? error.message : 'Unknown error',
         instance: request.url,
         correlationId: request.headers['x-correlation-id'],
       })
@@ -300,7 +300,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       await fastify.redis.del(loginAttemptKey)
       
       // Generate tokens
-      const tokenPair = await fastify.generateTokenPair({
+      const tokenPair = await (fastify as any).generateTokenPair({
         id: user.id,
         email: user.email,
         roles: user.roles,
@@ -418,7 +418,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       await saveUser(user)
       
       // Generate tokens
-      const tokenPair = await fastify.generateTokenPair({
+      const tokenPair = await (fastify as any).generateTokenPair({
         id: user.id,
         email: user.email,
         roles: user.roles,
@@ -469,7 +469,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   // Logout endpoint
   fastify.post('/logout', {
-    preHandler: [fastify.authenticate],
+    preHandler: [(fastify as any).authenticate],
     schema: {
       tags: ['Authentication'],
       summary: 'User Logout',

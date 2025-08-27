@@ -124,8 +124,9 @@ async function rateLimitingPlugin(fastify) {
         }
     });
 }
-export default fp(rateLimitingPlugin, {
+const plugin = fp(rateLimitingPlugin, {
     name: 'rate-limiting',
     dependencies: ['redis'],
     fastify: '4.x',
 });
+export default plugin;

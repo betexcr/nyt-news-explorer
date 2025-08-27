@@ -378,7 +378,9 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
   })
 }
 
-export default fp(swaggerPlugin, {
+const plugin = fp(swaggerPlugin, {
   name: 'swagger',
   fastify: '4.x',
 })
+
+export default plugin

@@ -7,5 +7,5 @@ import { FastifyInstance } from 'fastify';
  * - Input validation and sanitization
  */
 declare function securityPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof securityPlugin;
-export default _default;
+declare const plugin: typeof securityPlugin;
+export default plugin;

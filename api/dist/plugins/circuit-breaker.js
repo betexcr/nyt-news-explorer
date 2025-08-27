@@ -97,17 +97,18 @@ async function circuitBreakerPlugin(fastify) {
                 if (fallback) {
                     fastify.log.info({
                         breakerName,
-                        error: error.message
+                        error: error instanceof Error ? error.message : 'Unknown error'
                     }, 'Using fallback due to circuit breaker');
                     return typeof fallback === 'function' ? await fallback() : fallback;
                 }
                 // Return circuit breaker error in Problem Details format
+                const resetTimeout = circuitBreakerConfigs[breakerName]?.resetTimeout || 30000;
                 throw {
                     type: 'https://api.nyt-news-explorer.com/problems/service-unavailable',
                     title: 'Service Temporarily Unavailable',
                     status: 503,
                     detail: `The ${breakerName} service is currently unavailable. Please try again later.`,
-                    retryAfter: Math.ceil(circuitBreakerConfigs[breakerName]?.resetTimeout / 1000) || 30,
+                    retryAfter: Math.ceil(resetTimeout / 1000),
                 };
             }
         },
@@ -217,7 +218,8 @@ async function circuitBreakerPlugin(fastify) {
         }
     });
 }
-export default fp(circuitBreakerPlugin, {
+const plugin = fp(circuitBreakerPlugin, {
     name: 'circuit-breaker',
     fastify: '4.x',
 });
+export default plugin;

@@ -79,7 +79,8 @@ async function compressionPlugin(fastify) {
         return payload;
     });
 }
-export default fp(compressionPlugin, {
+const plugin = fp(compressionPlugin, {
     name: 'compression',
     fastify: '4.x',
 });
+export default plugin;

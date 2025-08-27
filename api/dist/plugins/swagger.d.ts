@@ -8,5 +8,5 @@ import { FastifyInstance } from 'fastify';
  * - Request/response examples
  */
 declare function swaggerPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof swaggerPlugin;
-export default _default;
+declare const plugin: typeof swaggerPlugin;
+export default plugin;

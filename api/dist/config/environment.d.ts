@@ -1,4 +1,10 @@
+export declare const isDevelopment: boolean;
+export declare const isProduction: boolean;
+export declare const isTest: boolean;
 export declare const config: {
+    isDevelopment: boolean;
+    isProduction: boolean;
+    isTest: boolean;
     nodeEnv: "development" | "production" | "test";
     server: {
         port: number;
@@ -56,6 +62,3 @@ export declare const config: {
         credentials: boolean;
     };
 };
-export declare const isDevelopment: boolean;
-export declare const isProduction: boolean;
-export declare const isTest: boolean;

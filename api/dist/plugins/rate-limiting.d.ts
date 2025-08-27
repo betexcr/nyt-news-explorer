@@ -7,5 +7,5 @@ import { FastifyInstance } from 'fastify';
  * - Implements exponential backoff recommendations
  */
 declare function rateLimitingPlugin(fastify: FastifyInstance): Promise<void>;
-declare const _default: typeof rateLimitingPlugin;
-export default _default;
+declare const plugin: typeof rateLimitingPlugin;
+export default plugin;

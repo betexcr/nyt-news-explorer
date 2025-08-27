@@ -226,7 +226,8 @@ async function cachingPlugin(fastify) {
         return successful;
     });
 }
-export default fp(cachingPlugin, {
+const plugin = fp(cachingPlugin, {
     name: 'caching',
     fastify: '4.x',
 });
+export default plugin;

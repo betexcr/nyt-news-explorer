@@ -20,14 +20,14 @@ export async function registerRoutes(fastify: FastifyInstance) {
     // Protected user routes (authentication required)
     await fastify.register(async function (fastify) {
       // Apply authentication to all routes in this context
-      await fastify.addHook('preHandler', fastify.authenticate)
+      await fastify.addHook('preHandler', (fastify as any).authenticate)
       
       // User favorites
       await fastify.register(favoritesRoutes, { prefix: '/favorites' })
       
       // Admin routes (requires admin role)
       await fastify.register(async function (fastify) {
-        await fastify.addHook('preHandler', fastify.authorize(['admin']))
+        await fastify.addHook('preHandler', (fastify as any).authorize(['admin']))
         await fastify.register(adminRoutes, { prefix: '/admin' })
       })
     })

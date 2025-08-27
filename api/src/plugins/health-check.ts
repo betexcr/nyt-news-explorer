@@ -166,9 +166,9 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
     const circuitBreakerStatus = fastify.circuitBreaker.getAllStatus()
     
     // Determine overall health
-    const healthyChecks = Object.values(checks).filter(check => check.status === 'up').length
+    const healthyChecks = Object.values(checks).filter((check: any) => check.status === 'up').length
     const totalChecks = Object.keys(checks).length
-    const healthyCircuitBreakers = Object.values(circuitBreakerStatus).filter(cb => cb.state === 'closed').length
+    const healthyCircuitBreakers = Object.values(circuitBreakerStatus).filter((cb: any) => cb.state === 'closed').length
     const totalCircuitBreakers = Object.keys(circuitBreakerStatus).length
     
     let overallStatus = 'healthy'
@@ -322,8 +322,10 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   })
 }
 
-export default fp(healthCheckPlugin, {
+const plugin = fp(healthCheckPlugin, {
   name: 'health-check',
   dependencies: ['redis', 'circuit-breaker'],
   fastify: '4.x',
 })
+
+export default plugin

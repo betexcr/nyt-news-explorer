@@ -6,12 +6,14 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --tsconfig tsconfig.json src/server.ts",
+    "dev:simple": "tsx watch --tsconfig tsconfig.json src/server-simple.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/server.js",
+    "start:simple": "tsx src/server-simple.ts",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:e2e": "vitest --config vitest.e2e.config.ts",
-    "lint": "eslint src --ext .ts --fix",
+    "lint": "eslint src --fix",
     "type-check": "tsc --noEmit",
     "generate:jwks": "node scripts/generate-jwks.js",
     "docker:build": "docker build -t nyt-api .",
@@ -32,7 +34,6 @@
     "@fastify/swagger": "^8.15.0",
     "@fastify/swagger-ui": "^4.1.0",
     "@fastify/under-pressure": "^8.5.0",
-
     "@opentelemetry/api": "^1.8.0",
     "@opentelemetry/auto-instrumentations-node": "^0.46.1",
     "@opentelemetry/exporter-jaeger": "^1.24.1",
@@ -53,7 +54,9 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.12.12",
+    "@types/opossum": "^8.1.9",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
     "@vitest/coverage-v8": "^1.6.0",
