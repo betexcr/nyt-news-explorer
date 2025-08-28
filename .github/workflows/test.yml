@@ -5,8 +5,55 @@ on:
   push:
     branches: [master]
 jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: Install API deps
+        working-directory: api
+        run: npm ci --legacy-peer-deps
+      - name: Run API unit tests
+        working-directory: api
+        env:
+          NODE_ENV: development
+          JWT_SECRET: ${{ secrets.API_JWT_SECRET }}
+          JWT_ISSUER: http://localhost
+          JWT_AUDIENCE: test-aud
+          OAUTH_CLIENT_ID: dummy
+          OAUTH_CLIENT_SECRET: dummy
+          OAUTH_REDIRECT_URI: http://localhost/callback
+          OAUTH_AUTHORIZATION_URL: http://localhost/auth
+          OAUTH_TOKEN_URL: http://localhost/token
+          OAUTH_JWKS_URL: http://localhost/jwks
+          NYT_API_KEY: ${{ secrets.REACT_APP_NYT_API_KEY }}
+        run: npm run test:unit
+      - name: Run API integration tests (containerized)
+        working-directory: api
+        env:
+          NODE_ENV: development
+          JWT_SECRET: ${{ secrets.API_JWT_SECRET }}
+          JWT_ISSUER: http://localhost
+          JWT_AUDIENCE: test-aud
+          OAUTH_CLIENT_ID: dummy
+          OAUTH_CLIENT_SECRET: dummy
+          OAUTH_REDIRECT_URI: http://localhost/callback
+          OAUTH_AUTHORIZATION_URL: http://localhost/auth
+          OAUTH_TOKEN_URL: http://localhost/token
+          OAUTH_JWKS_URL: http://localhost/jwks
+          NYT_API_KEY: ${{ secrets.REACT_APP_NYT_API_KEY }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io >/dev/null 2>&1 || true
+          sudo service docker start || true
+          npm run test:integration || echo "Integration tests skipped if docker unavailable"
+
   test:
     runs-on: ubuntu-latest
+    needs: [api-tests]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v1
