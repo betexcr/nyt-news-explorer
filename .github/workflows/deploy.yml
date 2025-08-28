@@ -39,7 +39,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y lftp
-          echo "Deploying build/ to $REMOTE_DIR using lftp (force overwrite + delete)..."
+          echo "Deploying contents of build/ to $REMOTE_DIR using lftp (force overwrite + delete)..."
           lftp -e "
             set xfer:temp-file-name \"\";
             set ftp:passive-mode yes;
@@ -49,7 +49,8 @@ jobs:
             set xfer:clobber on;
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
             mkdir -p $REMOTE_DIR;
-            mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build $REMOTE_DIR;
+            cd $REMOTE_DIR;
+            mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
             cls -l $REMOTE_DIR;
             quit
           "

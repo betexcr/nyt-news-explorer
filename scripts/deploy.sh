@@ -12,7 +12,7 @@ REMOTE_DIR="${FTP_REMOTE_DIR:-/domains/brainvaultdev.com/public_html/nyt}"
 echo "Building production bundle…"
 bun run build >/dev/null
 
-echo "Deploying ${LOCAL_DIR} to ${REMOTE_DIR} on ${FTP_HOST} (force overwrite + delete)…"
+echo "Deploying contents of ${LOCAL_DIR}/ to ${REMOTE_DIR} on ${FTP_HOST} (force overwrite + delete)…"
 
 lftp -u "${FTP_USER}","${FTP_PASS}" "${FTP_HOST}" -e "\
 set ssl:verify-certificate no; \
@@ -20,7 +20,9 @@ set ftp:passive-mode true; \
 set xfer:clobber on; \
 set net:timeout 20; \
 set net:max-retries 2; \
-mirror -R --delete --ignore-time --overwrite --parallel=8 \"${LOCAL_DIR}\" \"${REMOTE_DIR}\"; \
+cd \"${REMOTE_DIR}\"; \
+mirror -R --delete --ignore-time --overwrite --parallel=8 \"${LOCAL_DIR}/\" .; \
+cls -l; \
 bye" 
 
 echo "Deploy complete."
