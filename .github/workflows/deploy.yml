@@ -14,10 +14,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '18.20.8'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: |
+          npm install --legacy-peer-deps
+          # Align ajv stack for webpack/schema-utils on Node 18
+          npm i -D ajv@8.12.0 ajv-keywords@^5.1.0 schema-utils@^4 --legacy-peer-deps
 
       - name: Build React app
         env:
