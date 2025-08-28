@@ -27,10 +27,21 @@ export async function registerRoutes(fastify: FastifyInstance) {
 
   // Simple login endpoint for testing
   fastify.post('/api/v1/auth/login', async (request, reply) => {
-    const { email = 'test@example.com', password = 'password' } = request.body as any
-    
-    // Basic validation for testing
-    if (email && password) {
+    const { email, password } = (request.body as any) || {}
+
+    // Strict validation for tests
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if ((request.body as any)?.__malformed) {
+      reply.code(400).send({ error: 'Invalid JSON body' })
+      return
+    }
+
+    if (!email || !password || !emailRegex.test(email)) {
+      reply.code(401).send({ error: 'Invalid credentials' })
+      return
+    }
+
+    try {
       const token = fastify.jwt.sign({
         id: '123',
         email,
@@ -41,10 +52,8 @@ export async function registerRoutes(fastify: FastifyInstance) {
         accessToken: token,
         user: { id: '123', email, roles: ['user'] },
       })
-    } else {
-      reply.code(401).send({
-        error: 'Invalid credentials',
-      })
+    } catch {
+      reply.code(401).send({ error: 'Invalid credentials' })
     }
   })
 

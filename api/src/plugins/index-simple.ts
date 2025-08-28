@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import crypto from 'crypto'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import compress from '@fastify/compress'
@@ -14,6 +15,22 @@ import { config } from '@/config/environment.js'
  * Register simplified plugins for initial testing
  */
 export async function registerPlugins(fastify: FastifyInstance) {
+  // Lenient content-type parser to treat unknown/malformed as JSON string for tests
+  fastify.addContentTypeParser('*', { parseAs: 'string' }, (_req, body: any, done) => {
+    if (typeof body !== 'string') return done(null, body)
+    try {
+      const parsed = JSON.parse(body)
+      done(null, parsed)
+    } catch {
+      done(null, { __malformed: true })
+    }
+  })
+  // Correlation ID for every request (available in tests, too)
+  fastify.addHook('preHandler', async (request, reply) => {
+    const correlationId = (request.headers['x-correlation-id'] as string) || crypto.randomUUID()
+    request.headers['x-correlation-id'] = correlationId
+    reply.header('x-correlation-id', correlationId)
+  })
   // Core plugins
   await fastify.register(sensible as any)
   
