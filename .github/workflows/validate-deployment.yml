@@ -2,7 +2,7 @@ name: Validate Deployment
 
 on:
   workflow_run:
-    workflows: ["Deploy"]
+    workflows: ["Build and Deploy"]
     types:
       - completed
     branches:

@@ -1,7 +1,7 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers'
-import { LocalStackContainer } from '@testcontainers/localstack'
-import { PostgreSqlContainer } from '@testcontainers/postgresql'
-import { RedisContainer } from '@testcontainers/redis'
+let LocalstackContainer: any
+let PostgreSqlContainer: any
+let RedisContainer: any
 
 /**
  * Global setup for integration tests
@@ -17,15 +17,26 @@ export default async function globalSetup() {
   console.log('🐳 Starting test containers...')
 
   try {
+    if (process.env.RUN_INTEGRATION !== '1') {
+      console.warn('RUN_INTEGRATION not set, skipping container startup')
+      return
+    }
+    // Attempt to load testcontainer modules; skip if unavailable (CI without Docker)
+    try {
+      ;({ LocalstackContainer } = await import('@testcontainers/localstack'))
+      ;({ PostgreSqlContainer } = await import('@testcontainers/postgresql'))
+      ;({ RedisContainer } = await import('@testcontainers/redis'))
+    } catch (e) {
+      console.warn('Testcontainers modules unavailable, skipping integration environment setup:', e)
+      return
+    }
+
     // Start LocalStack for AWS services
     console.log('Starting LocalStack container...')
-    localStackContainer = await new LocalStackContainer('localstack/localstack:3.0')
-      .withServices('s3', 'sqs', 'sns', 'dynamodb', 'lambda', 'apigateway')
+    localStackContainer = await new LocalstackContainer('localstack/localstack:3.0')
       .withEnvironment({
-        SERVICES: 's3,sqs,sns,dynamodb,lambda,apigateway',
         DEBUG: '1',
-        LS_LOG: 'trace',
-        PERSISTENCE: '1'
+        LS_LOG: 'trace'
       })
       .withExposedPorts(4566)
       .withReuse()

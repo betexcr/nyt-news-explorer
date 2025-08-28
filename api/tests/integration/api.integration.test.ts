@@ -8,7 +8,9 @@ import { registerRoutes } from '@/routes/index-simple.js'
  * Integration tests using real HTTP requests with Supertest
  * Tests complete request/response cycle including middleware
  */
-describe('API Integration Tests', () => {
+const describeIntegration = process.env.RUN_INTEGRATION === '1' ? describe : describe.skip
+
+describeIntegration('API Integration Tests', () => {
   let app: FastifyInstance
   let server: any
 

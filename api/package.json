@@ -95,6 +95,12 @@
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
   },
+  "optionalDependencies": {
+    "@testcontainers/localstack": "^10.10.3",
+    "@testcontainers/postgresql": "^10.10.3",
+    "@testcontainers/redis": "^10.10.3",
+    "testcontainers": "^10.10.3"
+  },
   "engines": {
     "node": ">=20.0.0"
   }

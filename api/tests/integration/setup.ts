@@ -8,6 +8,11 @@ import { beforeAll, afterAll } from 'vitest'
 beforeAll(async () => {
   // Validate that containers are running and accessible
   console.log('🔧 Validating test environment...')
+
+  if (process.env.RUN_INTEGRATION !== '1') {
+    console.warn('RUN_INTEGRATION not set, skipping integration checks')
+    return
+  }
   
   // Validate LocalStack
   if (!process.env.TEST_LOCALSTACK_ENDPOINT) {
