@@ -1,0 +1,278 @@
+# Artillery Load Testing Configuration
+# Scenario-based testing with realistic user journeys
+
+config:
+  target: "{{ $processEnvironment.BASE_URL || 'http://localhost:3000' }}"
+  
+  # Load phases - progressive ramp up
+  phases:
+    # Warm up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    
+    # Normal load
+    - duration: 120  
+      arrivalRate: 10
+      name: "Normal load"
+    
+    # Peak load simulation
+    - duration: 180
+      arrivalRate: 25
+      name: "Peak load"
+    
+    # Spike test
+    - duration: 60
+      arrivalRate: 50
+      name: "Spike test"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool down"
+
+  # Global configuration
+  http:
+    timeout: 10
+    pool: 50
+    
+  # Payload configuration
+  payload:
+    path: "tests/performance/test-data.csv"
+    fields:
+      - "email"
+      - "password"
+      - "query"
+    cast: false
+    skipEmptyLines: true
+    delimiter: ","
+
+  # Variables for dynamic data
+  variables:
+    searchQueries:
+      - "technology"
+      - "artificial intelligence"
+      - "climate change"
+      - "politics"
+      - "business"
+      - "health"
+      - "science"
+      - "sports"
+      - "education"
+      - "entertainment"
+
+  # Performance thresholds and SLOs
+  ensure:
+    p95: 500           # 95th percentile under 500ms
+    p99: 1000          # 99th percentile under 1s
+    maxErrorRate: 2    # Error rate under 2%
+    
+  # Plugins for enhanced reporting
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+    
+  # Custom metrics
+  processor: "./artillery-processor.js"
+
+# Test scenarios representing realistic user behavior
+scenarios:
+  # Scenario 1: Anonymous user browsing (60% of traffic)
+  - name: "Anonymous browsing"
+    weight: 60
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"
+          capture:
+            - json: "$.status"
+              as: "healthStatus"
+      
+      - think: 1
+      
+      - get:
+          url: "/api/v1/articles/search"
+          qs:
+            q: "{{ $randomString() }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "response.docs"
+      
+      - think: 2
+      
+      - loop:
+          - get:
+              url: "/api/v1/articles/search"
+              qs:
+                q: "{{ searchQueries.$randomChoice() }}"
+                page: "{{ $randomInt(1, 5) }}"
+          - think: "{{ $randomInt(1, 3) }}"
+        count: "{{ $randomInt(2, 5) }}"
+
+  # Scenario 2: Authenticated user journey (30% of traffic)  
+  - name: "Authenticated user"
+    weight: 30
+    flow:
+      # Login flow
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "accessToken"
+          capture:
+            - json: "$.accessToken"
+              as: "authToken"
+            - json: "$.user.id"
+              as: "userId"
+      
+      - think: 1
+      
+      # Access protected resource
+      - get:
+          url: "/api/v1/protected" 
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      
+      - think: 1
+      
+      # Perform multiple searches
+      - loop:
+          - get:
+              url: "/api/v1/articles/search"
+              qs:
+                q: "{{ searchQueries.$randomChoice() }}"
+              expect:
+                - statusCode: 200
+          - think: "{{ $randomInt(1, 4) }}"
+        count: "{{ $randomInt(3, 8) }}"
+
+  # Scenario 3: Heavy user - power user behavior (10% of traffic)
+  - name: "Power user"  
+    weight: 10
+    flow:
+      # Authenticate
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "test@example.com"
+            password: "password"
+          capture:
+            - json: "$.accessToken"
+              as: "authToken"
+      
+      # Rapid fire searches
+      - loop:
+          - get:
+              url: "/api/v1/articles/search"
+              qs:
+                q: "{{ query || searchQueries.$randomChoice() }}"
+                sort: "{{ ['newest', 'oldest', 'relevance'].$randomChoice() }}"
+                page: "{{ $randomInt(1, 10) }}"
+          - get:
+              url: "/api/v1/protected"
+              headers:
+                Authorization: "Bearer {{ authToken }}"
+          - think: 0.5
+        count: "{{ $randomInt(10, 20) }}"
+
+# Before/after hooks  
+before:
+  flow:
+    - log: "🚀 Starting Artillery load test"
+    - get:
+        url: "/health"
+        expect:
+          - statusCode: 200
+
+after:
+  flow:
+    - log: "🏁 Artillery load test completed"
+
+# Custom functions for advanced scenarios
+functions:
+  # Custom authentication with retry logic
+  authenticateWithRetry: |
+    function(requestParams, context, ee, next) {
+      const maxRetries = 3;
+      let retries = 0;
+      
+      function attemptAuth() {
+        const authPayload = {
+          email: context.vars.email || 'test@example.com',
+          password: context.vars.password || 'password'
+        };
+        
+        ee.emit('request');
+        
+        // Simulate auth request (in real scenario, use HTTP client)
+        setTimeout(() => {
+          if (Math.random() > 0.05) { // 95% success rate
+            context.vars.authToken = 'mock-jwt-token-' + Date.now();
+            ee.emit('response', 200, {}, {});
+            return next();
+          } else if (retries < maxRetries) {
+            retries++;
+            attemptAuth();
+          } else {
+            ee.emit('response', 401, {}, {});
+            return next(new Error('Authentication failed after retries'));
+          }
+        }, Math.random() * 100 + 50); // 50-150ms auth time
+      }
+      
+      attemptAuth();
+    }
+
+  # Realistic search with spell correction simulation
+  smartSearch: |
+    function(requestParams, context, ee, next) {
+      const queries = context.vars.searchQueries || ['technology'];
+      let query = queries[Math.floor(Math.random() * queries.length)];
+      
+      // Simulate typos 20% of the time
+      if (Math.random() < 0.2) {
+        const typos = {
+          'technology': 'technolagy',
+          'artificial intelligence': 'artifical inteligence',
+          'climate change': 'climat change'
+        };
+        query = typos[query] || query;
+      }
+      
+      requestParams.qs = requestParams.qs || {};
+      requestParams.qs.q = query;
+      
+      return next();
+    }
+
+# Test-specific configuration
+environments:
+  development:
+    target: "http://localhost:3000"
+    phases:
+      - duration: 30
+        arrivalRate: 5
+  
+  staging:
+    target: "{{ $processEnvironment.STAGING_URL }}"
+    phases:
+      - duration: 60  
+        arrivalRate: 10
+      - duration: 120
+        arrivalRate: 20
+        
+  production:
+    target: "{{ $processEnvironment.PROD_URL }}"
+    phases:
+      - duration: 300
+        arrivalRate: 50
+      - duration: 600  
+        arrivalRate: 100

@@ -1,0 +1,113 @@
+# Horizontal Pod Autoscaler for elastic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nyt-api-hpa
+  namespace: nyt-news-api
+  labels:
+    app: nyt-api
+    version: v1.0.0
+  annotations:
+    description: "HPA for NYT API based on CPU, memory, and custom metrics"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nyt-api
+  
+  minReplicas: 3
+  maxReplicas: 20
+  
+  # Multiple metrics for intelligent scaling
+  metrics:
+  # CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  # Scale up at 70% CPU
+  
+  # Memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80  # Scale up at 80% memory
+  
+  # Custom metrics (if available)
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "100"  # Scale up when > 100 RPS per pod
+  
+  # External metrics (if using external monitoring)
+  - type: External
+    external:
+      metric:
+        name: response_time_p95
+      target:
+        type: Value
+        value: "500m"  # Scale up when 95th percentile response time > 500ms
+  
+  # Scaling behavior configuration
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60  # Wait 1 minute before scaling up again
+      policies:
+      - type: Percent
+        value: 50  # Scale up by max 50% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 2  # Or add max 2 pods at a time
+        periodSeconds: 60
+      selectPolicy: Max
+    
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+      - type: Percent
+        value: 10  # Scale down by max 10% of current replicas
+        periodSeconds: 60
+      - type: Pods
+        value: 1  # Or remove max 1 pod at a time
+        periodSeconds: 60
+      selectPolicy: Min
+
+---
+# Vertical Pod Autoscaler (if VPA is installed)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: nyt-api-vpa
+  namespace: nyt-news-api
+  labels:
+    app: nyt-api
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nyt-api
+  
+  updatePolicy:
+    updateMode: "Auto"  # Automatically apply recommendations
+    # updateMode: "Off"  # Only provide recommendations
+  
+  resourcePolicy:
+    containerPolicies:
+    - containerName: api
+      minAllowed:
+        memory: "128Mi"
+        cpu: "100m"
+      maxAllowed:
+        memory: "2Gi"
+        cpu: "2000m"
+      controlledResources: ["cpu", "memory"]
+      controlledValues: RequestsAndLimits
+    
+    - containerName: log-shipper
+      mode: "Off"  # Don't autoscale sidecar containers

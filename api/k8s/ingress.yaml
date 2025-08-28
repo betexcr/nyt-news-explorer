@@ -1,0 +1,226 @@
+# Gateway API (preferred over legacy Ingress)
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: nyt-api-route
+  namespace: nyt-news-api
+  labels:
+    app: nyt-api
+    version: v1.0.0
+  annotations:
+    description: "Gateway API route for NYT News Explorer API"
+spec:
+  parentRefs:
+  - name: api-gateway
+    namespace: gateway-system
+    sectionName: https
+  
+  hostnames:
+  - "api.nyt-news-explorer.com"
+  
+  rules:
+  # Health checks (no rate limiting)
+  - matches:
+    - path:
+        type: Exact
+        value: /health
+    - path:
+        type: Exact
+        value: /ready
+    - path:
+        type: Exact
+        value: /live
+    - path:
+        type: Exact
+        value: /startup
+    backendRefs:
+    - name: nyt-api-service
+      port: 80
+      weight: 100
+    filters:
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        add:
+        - name: Cache-Control
+          value: "no-cache, no-store, must-revalidate"
+  
+  # Authentication endpoints (strict rate limiting)
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/v1/auth
+    backendRefs:
+    - name: nyt-api-service
+      port: 80
+      weight: 100
+    filters:
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+        - name: X-Rate-Limit-Category
+          value: "auth"
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        add:
+        - name: Strict-Transport-Security
+          value: "max-age=31536000; includeSubDomains; preload"
+    timeouts:
+      request: 30s
+      backendRequest: 25s
+  
+  # Admin endpoints (very strict)
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/v1/admin
+    backendRefs:
+    - name: nyt-api-service
+      port: 80
+      weight: 100
+    filters:
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+        - name: X-Rate-Limit-Category
+          value: "admin"
+    timeouts:
+      request: 60s
+      backendRequest: 55s
+  
+  # API endpoints (normal rate limiting)
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/v1
+    backendRefs:
+    - name: nyt-api-service
+      port: 80
+      weight: 100
+    filters:
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+        - name: X-Forwarded-Proto
+          value: "https"
+        - name: X-Rate-Limit-Category
+          value: "api"
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        add:
+        - name: X-Content-Type-Options
+          value: "nosniff"
+        - name: X-Frame-Options
+          value: "DENY"
+        - name: X-XSS-Protection
+          value: "1; mode=block"
+        - name: Referrer-Policy
+          value: "strict-origin-when-cross-origin"
+    timeouts:
+      request: 30s
+      backendRequest: 25s
+  
+  # Documentation and root
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /docs
+    - path:
+        type: Exact
+        value: /
+    - path:
+        type: Exact
+        value: /openapi.json
+    - path:
+        type: Exact
+        value: /openapi.yaml
+    backendRefs:
+    - name: nyt-api-service
+      port: 80
+      weight: 100
+    filters:
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        add:
+        - name: Cache-Control
+          value: "public, max-age=3600"
+    timeouts:
+      request: 15s
+      backendRequest: 10s
+
+---
+# Legacy Ingress (if Gateway API not available)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nyt-api-ingress
+  namespace: nyt-news-api
+  labels:
+    app: nyt-api
+    version: v1.0.0
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: "nginx"
+    
+    # TLS and SSL
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.2 TLSv1.3"
+    nginx.ingress.kubernetes.io/ssl-ciphers: "ECDHE-RSA-AES128-GCM-SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-SHA,ECDHE-RSA-AES256-SHA,ECDHE-RSA-AES128-SHA256,ECDHE-RSA-AES256-SHA384"
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit-rps: "10"
+    nginx.ingress.kubernetes.io/rate-limit-connections: "20"
+    
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://nyt.brainvaultdev.com,https://app.nyt-news-explorer.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization,X-API-Key,X-Correlation-ID,X-Idempotency-Key"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range,X-Correlation-ID,ETag,X-RateLimit-Limit,X-RateLimit-Remaining,X-RateLimit-Reset"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-max-age: "86400"
+    
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "5"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/client-body-timeout: "60"
+    nginx.ingress.kubernetes.io/client-header-timeout: "60"
+    
+    # Body size
+    nginx.ingress.kubernetes.io/proxy-body-size: "1m"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' cdn.jsdelivr.net; object-src 'none'; frame-src 'none';" always;
+    
+    # Specific rate limits for auth endpoints
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~* ^/api/v1/auth {
+        limit_req zone=auth_limit burst=5 nodelay;
+      }
+      location ~* ^/api/v1/admin {
+        limit_req zone=admin_limit burst=2 nodelay;
+      }
+spec:
+  tls:
+  - hosts:
+    - api.nyt-news-explorer.com
+    secretName: nyt-api-tls
+  rules:
+  - host: api.nyt-news-explorer.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nyt-api-service
+            port:
+              number: 80

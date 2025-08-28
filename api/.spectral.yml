@@ -1,0 +1,2 @@
+# Spectral OpenAPI Linting Rules - Base Only
+extends: ["spectral:oas"]

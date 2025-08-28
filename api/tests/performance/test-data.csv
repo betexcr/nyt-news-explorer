@@ -1,0 +1,21 @@
+email,password,query
+test@example.com,password,technology
+demo@example.com,password,artificial intelligence
+user1@example.com,password,climate change
+user2@example.com,password,politics
+testuser@example.com,password,business
+admin@example.com,password,health
+developer@example.com,password,science
+manager@example.com,password,sports
+analyst@example.com,password,education
+researcher@example.com,password,entertainment
+journalist@example.com,password,machine learning
+editor@example.com,password,cryptocurrency
+writer@example.com,password,renewable energy
+reporter@example.com,password,space exploration
+contributor@example.com,password,robotics
+reviewer@example.com,password,biotechnology
+blogger@example.com,password,quantum computing
+author@example.com,password,cybersecurity
+publisher@example.com,password,data science
+moderator@example.com,password,virtual reality
