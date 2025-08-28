@@ -1,11 +1,7 @@
-name: Build and Deploy
+name: Deploy React App to Hostinger
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    types:
-      - completed
   push:
-    branches: [master]
+    branches: [master, main]
 
 jobs:
   build-and-deploy:
@@ -15,33 +11,23 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-      - name: Configure npm registry
-        run: |
-          echo "Configuring npm registry..."
-          npm config set registry https://registry.npmjs.org/
-          npm config list
+      - name: Install dependencies
+        run: npm install
 
-      - name: Install Dependencies
-        run: bun install
-
-      - name: Generate Types
-        run: bun run gen:types
-
-      - name: Build React App
+      - name: Build React app
         env:
           REACT_APP_NYT_API_KEY: ${{ secrets.REACT_APP_NYT_API_KEY }}
         run: |
-          echo "Building React app..."
-          bun run build
-          echo "Build completed. Checking build output..."
+          npm run build
           ls -la build/
-          echo "Build size:"
           du -sh build/
 
-      - name: Deploy to Hostinger via lftp (no temp file renames)
+      - name: Deploy to Hostinger via lftp (force mirror overwrite + delete)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -50,16 +36,18 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y lftp
-          echo "Deploying build/ to $REMOTE_DIR using lftp (no temp files)..."
+          echo "Deploying build/ to $REMOTE_DIR using lftp (force overwrite + delete)..."
           lftp -e "
-            set xfer:temp-file-name \"\";  # disable temp files/renames entirely
+            set xfer:temp-file-name \"\";
             set ftp:passive-mode yes;
-            set ftp:ssl-allow no;            # force plain FTP to avoid CN mismatch on FTPS
+            set ftp:ssl-allow no;
             set net:max-retries 2;
             set net:timeout 60;
+            set xfer:clobber on;
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
             mkdir -p $REMOTE_DIR;
-            mirror -R --only-newer --parallel=2 --verbose ./build $REMOTE_DIR;
+            mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build $REMOTE_DIR;
+            cls -l $REMOTE_DIR;
             quit
           "
 
