@@ -73,10 +73,12 @@ jobs:
           # We'll check if the page loads without JavaScript errors
           content=$(curl -s https://nyt.brainvaultdev.com/ || echo "")
           
-          if echo "$content" | grep -q "react-scripts"; then
+          if echo "$content" | grep -q "id=\"root\""; then
             echo "✅ React app structure detected"
           else
             echo "❌ React app structure not found"
+            echo "Page content preview:"
+            echo "$content" | head -10
             exit 1
           fi
       
