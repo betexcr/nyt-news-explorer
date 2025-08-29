@@ -112,112 +112,42 @@ export const SiteHeader: React.FC = () => {
         >
           <Link
             to="/"
-            style={{
-              color: location.pathname === "/" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
           >
             Home
           </Link>
           <Link
             to="/trending"
-            style={{
-              color: location.pathname === "/trending" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/trending" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/trending" ? "active" : ""}`}
           >
             Trending
           </Link>
           <Link
             to="/top-stories"
-            style={{
-              color: location.pathname === "/top-stories" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/top-stories" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/top-stories" ? "active" : ""}`}
           >
             Top Stories
           </Link>
           <Link
             to="/archive"
-            style={{
-              color: location.pathname === "/archive" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/archive" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/archive" ? "active" : ""}`}
           >
             Archive
           </Link>
           <Link
             to="/books"
-            style={{
-              color: location.pathname === "/books" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/books" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/books" ? "active" : ""}`}
           >
             Books
           </Link>
           <Link
             to="/search"
-            style={{
-              color: location.pathname === "/search" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/search" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/search" ? "active" : ""}`}
           >
             Search
           </Link>
           <Link
             to="/favorites"
-            style={{
-              color: location.pathname === "/favorites" ? "white" : "var(--textMuted)",
-              textDecoration: "none",
-              fontWeight: 600,
-              padding: "0.5rem 0.75rem",
-              borderRadius: "6px",
-              transition: "all 0.2s ease",
-              fontSize: "0.9rem",
-              background: location.pathname === "/favorites" ? "var(--primary)" : "transparent",
-            }}
             className={`nav-link ${location.pathname === "/favorites" ? "active" : ""}`}
           >
             Favorites

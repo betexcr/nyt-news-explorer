@@ -13,6 +13,19 @@
 }
 
 /* Desktop Navigation Styles */
+.nav-link {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+  text-decoration: none !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+
 .nav-link:hover {
   background: var(--bg) !important;
   color: var(--text) !important;
@@ -29,13 +42,6 @@
   display: flex !important;
   align-items: center;
   gap: 0.25rem;
-}
-
-.nav-link {
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
-  text-transform: none !important;
-  letter-spacing: 0.01em !important;
 }
 
 /* Dropdown Options */
