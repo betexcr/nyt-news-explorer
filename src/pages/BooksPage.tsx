@@ -68,6 +68,7 @@ const BooksPage: React.FC = () => {
             type="date"
             aria-label="Pick date for list (optional)"
             value={date === 'current' ? '' : date}
+            min="2008-01-01"
             max={new Date().toISOString().slice(0,10)}
             onChange={(e) => setDate(e.target.value ? e.target.value : 'current')}
           />
