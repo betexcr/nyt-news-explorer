@@ -39,12 +39,20 @@ jobs:
           echo "Build size:"
           du -sh build/
 
-      - name: Fix .htaccess file
+      - name: Fix server configuration files
         run: |
           echo "Replacing build .htaccess with custom configuration..."
           cp public/.htaccess build/.htaccess
           echo "Updated .htaccess file:"
           cat build/.htaccess
+          
+          echo "Adding web.config for LiteSpeed compatibility..."
+          cp public/web.config build/web.config
+          echo "Added web.config file"
+          
+          echo "Adding _headers file for static hosting..."
+          cp public/_headers build/_headers
+          echo "Added _headers file"
 
       - name: Deploy to Hostinger via lftp (mirror contents, overwrite + delete)
         env:

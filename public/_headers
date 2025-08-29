@@ -1,0 +1,42 @@
+# Global headers
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# JavaScript files
+*.js
+  Content-Type: application/javascript
+  Cache-Control: public, max-age=31536000
+
+# CSS files
+*.css
+  Content-Type: text/css
+  Cache-Control: public, max-age=31536000
+
+# JSON files
+*.json
+  Content-Type: application/json
+
+# Font files
+*.woff
+  Content-Type: font/woff
+  Cache-Control: public, max-age=31536000
+
+*.woff2
+  Content-Type: font/woff2
+  Cache-Control: public, max-age=31536000
+
+*.ttf
+  Content-Type: font/ttf
+  Cache-Control: public, max-age=31536000
+
+*.eot
+  Content-Type: font/eot
+  Cache-Control: public, max-age=31536000
+
+# Image files
+*.svg
+  Content-Type: image/svg+xml
+  Cache-Control: public, max-age=31536000 
