@@ -7,7 +7,7 @@ const app = express();
 const PORT = 3000;
 
 // NYT API configuration
-const NYT_API_KEY = process.env.NYT_API_KEY || 'test';
+const NYT_API_KEY = process.env.NYT_API_KEY || 'ykBBKwfsn0sIyA4A2RUaw0wnp4eWDVK7';
 const NYT_BASE_URL = 'https://api.nytimes.com/svc';
 
 app.use(cors({
@@ -160,8 +160,29 @@ app.post('/api/v1/graphql', async (req, res) => {
         }
       });
     } else if (query.includes('bestsellers')) {
-      const list = variables?.list || 'hardcover-fiction';
-      const date = variables?.date || '';
+      // Extract list and date from GraphQL query or variables
+      let list = variables?.list || 'hardcover-fiction';
+      let date = variables?.date || '';
+      
+      // If variables are not provided, try to extract from the query string
+      if (!variables?.list) {
+        const listMatch = query.match(/list:\s*["']([^"']+)["']/);
+        if (listMatch) {
+          list = listMatch[1];
+        }
+      }
+      
+      if (!variables?.date) {
+        const dateMatch = query.match(/date:\s*["']([^"']+)["']/);
+        if (dateMatch) {
+          date = dateMatch[1];
+        }
+      }
+      
+      console.log('Full query:', query);
+      console.log('Variables:', variables);
+      console.log('List parameter:', list);
+      console.log('Date parameter:', date);
       
       try {
         const response = await axios.get(`${NYT_BASE_URL}/books/v3/lists/${date}/${list}.json`, {
@@ -213,8 +234,11 @@ app.post('/api/v1/graphql', async (req, res) => {
       } catch (error) {
         console.log('NYT Books API rate limited, using fallback data');
         
-        // Fallback data when rate limited
-        const fallbackBooks = [
+        // Different fallback data based on list type
+        let fallbackBooks;
+        
+        if (list.includes('hardcover-fiction') || (list.includes('fiction') && !list.includes('nonfiction'))) {
+          fallbackBooks = [
           {
             title: "The Midnight Library",
             author: "Matt Haig",
@@ -356,12 +380,191 @@ app.post('/api/v1/graphql', async (req, res) => {
             isbns: []
           }
         ];
+        } else if (list.includes('nonfiction') || list.includes('paperback-nonfiction')) {
+          fallbackBooks = [
+            {
+              title: "Sapiens: A Brief History of Humankind",
+              author: "Yuval Noah Harari",
+              description: "A groundbreaking narrative of humanity's creation and evolution.",
+              publisher: "Harper",
+              rank: 1,
+              weeks_on_list: 89,
+              amazonProductUrl: "https://www.amazon.com/Sapiens-Humankind-Yuval-Noah-Harari/dp/0062316095",
+              bookImage: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1420595954i/23692271.jpg",
+              primary_isbn13: "9780062316097",
+              primary_isbn10: "0062316095",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 1,
+              asterisk: 0,
+              dagger: 0,
+              price: "$29.99",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            },
+            {
+              title: "The Power of Habit",
+              author: "Charles Duhigg",
+              description: "Why we do what we do in life and business.",
+              publisher: "Random House",
+              rank: 2,
+              weeks_on_list: 67,
+              amazonProductUrl: "https://www.amazon.com/Power-Habit-What-Life-Business/dp/081298160X",
+              bookImage: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1545854312i/12609433.jpg",
+              primary_isbn13: "9780812981605",
+              primary_isbn10: "081298160X",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 2,
+              asterisk: 0,
+              dagger: 0,
+              price: "$26.00",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            },
+            {
+              title: "Thinking, Fast and Slow",
+              author: "Daniel Kahneman",
+              description: "The two systems that drive the way we think.",
+              publisher: "Farrar, Straus and Giroux",
+              rank: 3,
+              weeks_on_list: 45,
+              amazonProductUrl: "https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555",
+              bookImage: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1317793965i/11468377.jpg",
+              primary_isbn13: "9780374533557",
+              primary_isbn10: "0374533555",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 3,
+              asterisk: 0,
+              dagger: 0,
+              price: "$30.00",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            }
+          ];
+        } else if (list.includes('graphic') || list.includes('manga')) {
+          fallbackBooks = [
+            {
+              title: "Watchmen",
+              author: "Alan Moore",
+              description: "A groundbreaking graphic novel about superheroes and society.",
+              publisher: "DC Comics",
+              rank: 1,
+              weeks_on_list: 23,
+              amazonProductUrl: "https://www.amazon.com/Watchmen-Alan-Moore/dp/0930289234",
+              bookImage: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1441249349i/472331.jpg",
+              primary_isbn13: "9780930289232",
+              primary_isbn10: "0930289234",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 1,
+              asterisk: 0,
+              dagger: 0,
+              price: "$19.99",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            },
+            {
+              title: "Maus",
+              author: "Art Spiegelman",
+              description: "A survivor's tale of the Holocaust.",
+              publisher: "Pantheon",
+              rank: 2,
+              weeks_on_list: 34,
+              amazonProductUrl: "https://www.amazon.com/Maus-Survivors-Tale-Art-Spiegelman/dp/0394747232",
+              bookImage: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1327872220i/15195.jpg",
+              primary_isbn13: "9780394747231",
+              primary_isbn10: "0394747232",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 2,
+              asterisk: 0,
+              dagger: 0,
+              price: "$16.95",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            }
+          ];
+        } else {
+          // Default fallback for other categories
+          fallbackBooks = [
+            {
+              title: "Sample Book",
+              author: "Sample Author",
+              description: "A sample book for this category.",
+              publisher: "Sample Publisher",
+              rank: 1,
+              weeks_on_list: 1,
+              amazonProductUrl: "https://www.amazon.com",
+              bookImage: "https://via.placeholder.com/150x225?text=Book+Cover",
+              primary_isbn13: "9780000000000",
+              primary_isbn10: "0000000000",
+              bookImageWidth: 150,
+              bookImageHeight: 225,
+              age_group: "",
+              book_review_link: "",
+              first_chapter_link: "",
+              sunday_review_link: "",
+              article_chapter_link: "",
+              buy_links: [],
+              book_uri: "",
+              rank_last_week: 1,
+              asterisk: 0,
+              dagger: 0,
+              price: "$19.99",
+              contributor: "",
+              contributor_note: "",
+              isbns: []
+            }
+          ];
+        }
         
         res.json({
           data: {
             bestsellers: {
-              listName: "Hardcover Fiction",
-              displayName: "Hardcover Fiction",
+              listName: list.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              displayName: list.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
               updated: new Date().toISOString(),
               books: fallbackBooks
             }
