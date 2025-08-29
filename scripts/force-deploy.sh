@@ -25,8 +25,8 @@ cp public/.htaccess build/.htaccess
 cp public/web.config build/web.config
 cp public/_headers build/_headers
 
-# Deploy using lftp with aggressive settings
-echo "🌐 Deploying to server..."
+# Deploy using lftp with complete folder replacement
+echo "🌐 Performing complete folder replacement..."
 lftp -e "
   set ftp:passive-mode yes;
   set ftp:ssl-allow no;
@@ -34,14 +34,26 @@ lftp -e "
   set net:timeout 120;
   set xfer:clobber on;
   set mirror:parallel 8;
-  set mirror:delete-first on;
   open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
+  
+  # Step 1: Delete the entire remote directory and recreate it
+  echo 'Step 1: Removing old directory completely...';
+  rm -rf /domains/brainvaultdev.com/public_html/nyt/;
   mkdir -p /domains/brainvaultdev.com/public_html/nyt/;
   cd /domains/brainvaultdev.com/public_html/nyt/;
-  mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
-  echo 'Deployment completed. Files on server:';
+  
+  # Step 2: Upload fresh build files
+  echo 'Step 2: Uploading fresh build files...';
+  mirror -R --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
+  
+  # Step 3: Verify deployment
+  echo 'Step 3: Verifying deployment...';
+  echo 'Files in static/js/:';
   cls -la static/js/;
+  echo 'Files in static/css/:';
   cls -la static/css/;
+  echo 'Total files deployed:';
+  find . -type f | wc -l;
   quit
 "
 

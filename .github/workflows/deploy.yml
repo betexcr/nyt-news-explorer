@@ -54,7 +54,7 @@ jobs:
           cp public/_headers build/_headers
           echo "Added _headers file"
 
-      - name: Deploy to Hostinger via lftp (mirror contents, overwrite + delete)
+      - name: Deploy to Hostinger via lftp (complete folder replacement)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -63,14 +63,14 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y lftp
-          echo "Deploying contents of build/ to $REMOTE_DIR using lftp (overwrite + delete)..."
+          echo "Performing complete folder replacement for $REMOTE_DIR..."
           
           # Verify build files before deployment
           echo "Verifying build files:"
           ls -la build/static/js/
           ls -la build/static/css/
           
-          # Deploy with aggressive settings
+          # Complete folder replacement - delete everything first, then upload
           lftp -e "
             set ftp:passive-mode yes;
             set ftp:ssl-allow no;
@@ -78,14 +78,26 @@ jobs:
             set net:timeout 120;
             set xfer:clobber on;
             set mirror:parallel 8;
-            set mirror:delete-first on;
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
+            
+            # Step 1: Delete the entire remote directory and recreate it
+            echo 'Step 1: Removing old directory completely...';
+            rm -rf $REMOTE_DIR;
             mkdir -p $REMOTE_DIR;
             cd $REMOTE_DIR;
-            mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
-            echo 'Deployment completed. Files on server:';
+            
+            # Step 2: Upload fresh build files
+            echo 'Step 2: Uploading fresh build files...';
+            mirror -R --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
+            
+            # Step 3: Verify deployment
+            echo 'Step 3: Verifying deployment...';
+            echo 'Files in static/js/:';
             cls -la static/js/;
+            echo 'Files in static/css/:';
             cls -la static/css/;
+            echo 'Total files deployed:';
+            find . -type f | wc -l;
             quit
           "
 
