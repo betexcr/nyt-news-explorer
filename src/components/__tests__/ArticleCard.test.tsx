@@ -195,32 +195,110 @@ describe('ArticleCard', () => {
       expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/regular-image.jpg");
     });
 
-    test("displays image from Most Popular article media", () => {
-      const article = makeMostPopularArticle({
-        media: [{
-          type: "image",
-          subtype: "photo",
-          caption: "Test caption",
-          copyright: "Test copyright",
-          approved_for_syndication: 1,
-          "media-metadata": [{
-            url: "https://static01.nyt.com/images/2024/05/01/most-popular-image.jpg",
-            format: "Standard Thumbnail",
-            height: 75,
-            width: 75
-          }]
-        }]
-      });
+                    test("displays image from Most Popular article media", () => {
+                  const article = makeMostPopularArticle({
+                    media: [{
+                      type: "image",
+                      subtype: "photo",
+                      caption: "Test caption",
+                      copyright: "Test copyright",
+                      approved_for_syndication: 1,
+                      "media-metadata": [{
+                        url: "https://static01.nyt.com/images/2024/05/01/most-popular-image.jpg",
+                        format: "Standard Thumbnail",
+                        height: 75,
+                        width: 75
+                      }]
+                    }]
+                  });
 
-      render(
-        <MemoryRouter>
-          <ArticleCard article={article} />
-        </MemoryRouter>
-      );
+                  render(
+                    <MemoryRouter>
+                      <ArticleCard article={article} />
+                    </MemoryRouter>
+                  );
 
-      const image = screen.getByAltText("");
-      expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/most-popular-image.jpg");
-    });
+                  const image = screen.getByAltText("");
+                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/most-popular-image.jpg");
+                });
+
+                test("prefers higher resolution images for Most Popular articles", () => {
+                  const article = makeMostPopularArticle({
+                    media: [{
+                      type: "image",
+                      subtype: "photo",
+                      caption: "Test caption",
+                      copyright: "Test copyright",
+                      approved_for_syndication: 1,
+                      "media-metadata": [
+                        {
+                          url: "https://static01.nyt.com/images/2024/05/01/thumbnail.jpg",
+                          format: "Standard Thumbnail",
+                          height: 75,
+                          width: 75
+                        },
+                        {
+                          url: "https://static01.nyt.com/images/2024/05/01/medium.jpg",
+                          format: "mediumThreeByTwo210",
+                          height: 140,
+                          width: 210
+                        },
+                        {
+                          url: "https://static01.nyt.com/images/2024/05/01/high-res.jpg",
+                          format: "mediumThreeByTwo440",
+                          height: 293,
+                          width: 440
+                        }
+                      ]
+                    }]
+                  });
+
+                  render(
+                    <MemoryRouter>
+                      <ArticleCard article={article} />
+                    </MemoryRouter>
+                  );
+
+                  const image = screen.getByAltText("");
+                  // Should prefer the highest resolution available
+                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/high-res.jpg");
+                });
+
+                test("falls back to medium resolution when high resolution not available", () => {
+                  const article = makeMostPopularArticle({
+                    media: [{
+                      type: "image",
+                      subtype: "photo",
+                      caption: "Test caption",
+                      copyright: "Test copyright",
+                      approved_for_syndication: 1,
+                      "media-metadata": [
+                        {
+                          url: "https://static01.nyt.com/images/2024/05/01/thumbnail.jpg",
+                          format: "Standard Thumbnail",
+                          height: 75,
+                          width: 75
+                        },
+                        {
+                          url: "https://static01.nyt.com/images/2024/05/01/medium.jpg",
+                          format: "mediumThreeByTwo210",
+                          height: 140,
+                          width: 210
+                        }
+                      ]
+                    }]
+                  });
+
+                  render(
+                    <MemoryRouter>
+                      <ArticleCard article={article} />
+                    </MemoryRouter>
+                  );
+
+                  const image = screen.getByAltText("");
+                  // Should prefer medium resolution when high resolution not available
+                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/medium.jpg");
+                });
 
     test("falls back to thumbnail when default image not available", () => {
       const article = makeArticle({

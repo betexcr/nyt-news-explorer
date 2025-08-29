@@ -13,9 +13,19 @@ function getImageUrl(article: ArticleWithMedia): string {
   if ('media' in article && article.media && Array.isArray(article.media) && article.media.length > 0) {
     const mediaItem = article.media[0];
     if (mediaItem && 'media-metadata' in mediaItem && mediaItem['media-metadata'] && Array.isArray(mediaItem['media-metadata']) && mediaItem['media-metadata'].length > 0) {
-      const metadata = mediaItem['media-metadata'][0];
-      if (metadata && metadata.url) {
-        return metadata.url;
+      const metadataArray = mediaItem['media-metadata'];
+      
+      // Prefer higher resolution images in this order:
+      // 1. mediumThreeByTwo440 (440x293) - highest resolution
+      // 2. mediumThreeByTwo210 (210x140) - medium resolution
+      // 3. Standard Thumbnail (75x75) - fallback
+      
+      const preferredFormat = metadataArray.find(m => m.format === 'mediumThreeByTwo440') ||
+                             metadataArray.find(m => m.format === 'mediumThreeByTwo210') ||
+                             metadataArray[0]; // fallback to first available
+      
+      if (preferredFormat && preferredFormat.url) {
+        return preferredFormat.url;
       }
     }
   }
@@ -87,16 +97,28 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           snippet: article.abstract,
           lead_paragraph: article.abstract,
           multimedia: article.media.length > 0 ? {
-            default: article.media[0]['media-metadata']?.[0] ? {
-              url: article.media[0]['media-metadata'][0].url,
-              height: article.media[0]['media-metadata'][0].height,
-              width: article.media[0]['media-metadata'][0].width
-            } : undefined,
-            thumbnail: article.media[0]['media-metadata']?.[0] ? {
-              url: article.media[0]['media-metadata'][0].url,
-              height: article.media[0]['media-metadata'][0].height,
-              width: article.media[0]['media-metadata'][0].width
-            } : undefined
+            default: (() => {
+              const metadataArray = article.media[0]['media-metadata'];
+              const preferredFormat = metadataArray?.find(m => m.format === 'mediumThreeByTwo440') ||
+                                    metadataArray?.find(m => m.format === 'mediumThreeByTwo210') ||
+                                    metadataArray?.[0];
+              return preferredFormat ? {
+                url: preferredFormat.url,
+                height: preferredFormat.height,
+                width: preferredFormat.width
+              } : undefined;
+            })(),
+            thumbnail: (() => {
+              const metadataArray = article.media[0]['media-metadata'];
+              const preferredFormat = metadataArray?.find(m => m.format === 'mediumThreeByTwo440') ||
+                                    metadataArray?.find(m => m.format === 'mediumThreeByTwo210') ||
+                                    metadataArray?.[0];
+              return preferredFormat ? {
+                url: preferredFormat.url,
+                height: preferredFormat.height,
+                width: preferredFormat.width
+              } : undefined;
+            })()
           } : {},
           headline: { main: article.title },
           pub_date: article.published_date,
