@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import ArchivePage from '../../pages/ArchivePage';
 
-jest.mock('../../api/nyt-apis', () => ({
+jest.mock('../../api/nyt-graphql', () => ({
   getArchive: jest.fn(async () => [
     {
       abstract: 'Historic event summary',

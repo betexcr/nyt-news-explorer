@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import HomePage from '../HomePage';
 import { MemoryRouter } from 'react-router-dom';
-import { getMostPopular, getTopStories } from '../../api/nyt-apis';
+import { getMostPopular, getTopStories } from '../../api/nyt-graphql';
 
 // Mock the API calls
 jest.mock('../../api/nyt-apis');

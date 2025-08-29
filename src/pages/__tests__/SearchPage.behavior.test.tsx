@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
  
 import SearchPage from '../SearchPage';
-import { searchArticles, makeSearchController } from '../../api/nyt';
+import { searchArticles, makeSearchController } from '../../api/nyt-graphql';
 import { useSearchStore } from '../../store/searchStore';
 import type { Article } from '../../types/nyt';
 

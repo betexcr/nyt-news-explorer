@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
-import { searchArticlesAdv, makeSearchController } from "../api/nyt";
+import { searchArticlesAdv, makeSearchController } from "../api/nyt-graphql";
 import { debounce } from "../utils/debounce";
 import ArticleCard from "../components/ArticleCard";
 import ArticleTable from "../components/ArticleTable";

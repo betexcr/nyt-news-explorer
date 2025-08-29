@@ -1,20 +1,21 @@
-// Quick test server to verify basic setup
-import fastify from 'fastify'
+const fastify = require('fastify')
 
-const server = fastify({ logger: true })
+async function testServer() {
+  const server = fastify({
+    logger: true
+  })
 
-server.get('/', async (request, reply) => {
-  return { hello: 'world' }
-})
+  server.get('/', async (request, reply) => {
+    return { hello: 'world' }
+  })
 
-const start = async () => {
   try {
     await server.listen({ port: 3000, host: '0.0.0.0' })
-    console.log('Server listening on port 3000')
+    console.log('Test server running on port 3000')
   } catch (err) {
-    server.log.error(err)
+    console.error('Error starting test server:', err)
     process.exit(1)
   }
 }
 
-start()
+testServer()

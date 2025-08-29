@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-apis';
+import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-graphql';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
 import '../styles/books.css';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
+import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-graphql';
 import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';

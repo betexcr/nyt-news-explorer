@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories } from "../api/nyt-apis";
+import { getMostPopular, getTopStories } from "../api/nyt-graphql";
 import { formatDate } from "../utils/format";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import SearchPage from '../SearchPage';
-import { searchArticles, searchArticlesAdv } from '../../api/nyt';
+import { searchArticles, searchArticlesAdv } from '../../api/nyt-graphql';
 import { useSearchStore } from '../../store/searchStore';
 import type { Article } from '../../types/nyt';
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getArchive, NytApiError } from '../api/nyt-apis';
+import { getArchive, GraphQLError } from '../api/nyt-graphql';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
@@ -114,7 +114,7 @@ const ArchivePage: React.FC = () => {
         setArticles(filtered.slice(0, 60));
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
-        if ((err as NytApiError).status === 403) {
+        if ((err as GraphQLError).status === 403) {
           setError('Archive API denied (403). Showing sample data.');
           setArticles(mockArchiveArticles);
         } else {
