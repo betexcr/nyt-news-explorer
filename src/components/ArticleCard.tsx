@@ -29,7 +29,8 @@ function getImageUrl(article: ArticleWithMedia): string {
         
         // For now, we'll use articleLarge as it's a good balance of quality and performance
         // In a production app, you might want to implement image loading with fallbacks
-        return articleLargeUrl;
+        // Add cache-busting parameter to ensure fresh images are loaded
+        return `${articleLargeUrl}?v=highres`;
       }
       
       // Fallback to the original logic if URL construction fails
@@ -115,7 +116,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
               const thumbnailMetadata = metadataArray?.find(m => m.format === 'Standard Thumbnail');
               if (thumbnailMetadata?.url) {
                 const baseUrl = thumbnailMetadata.url.replace('-thumbStandard.jpg', '');
-                const articleLargeUrl = `${baseUrl}-articleLarge.jpg`;
+                const articleLargeUrl = `${baseUrl}-articleLarge.jpg?v=highres`;
                 return {
                   url: articleLargeUrl,
                   height: 400, // articleLarge is typically 600x400
@@ -136,7 +137,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
               const thumbnailMetadata = metadataArray?.find(m => m.format === 'Standard Thumbnail');
               if (thumbnailMetadata?.url) {
                 const baseUrl = thumbnailMetadata.url.replace('-thumbStandard.jpg', '');
-                const articleLargeUrl = `${baseUrl}-articleLarge.jpg`;
+                const articleLargeUrl = `${baseUrl}-articleLarge.jpg?v=highres`;
                 return {
                   url: articleLargeUrl,
                   height: 400, // articleLarge is typically 600x400

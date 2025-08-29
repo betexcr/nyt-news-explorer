@@ -219,7 +219,7 @@ describe('ArticleCard', () => {
                   );
 
                   const image = screen.getByAltText("");
-                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/most-popular-image-articleLarge.jpg");
+                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/most-popular-image-articleLarge.jpg?v=highres");
                 });
 
                 test("constructs higher resolution URLs for Most Popular articles", () => {
@@ -260,8 +260,8 @@ describe('ArticleCard', () => {
                   );
 
                   const image = screen.getByAltText("");
-                  // Should construct articleLarge URL from thumbnail
-                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/test-image-articleLarge.jpg");
+                  // Should construct articleLarge URL from thumbnail with cache-busting
+                  expect(image).toHaveAttribute("src", "https://static01.nyt.com/images/2024/05/01/test-image-articleLarge.jpg?v=highres");
                 });
 
                 test("falls back to original formats when URL construction fails", () => {

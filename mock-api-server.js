@@ -115,14 +115,12 @@ app.post('/api/v1/graphql', async (req, res) => {
         section: article.section,
         byline: article.byline,
         multimedia: article.media?.[0] ? [{
-          url: article.media[0]['media-metadata']?.[0]?.url || '',
-          format: 'Standard Thumbnail',
-          height: article.media[0]['media-metadata']?.[0]?.height || 75,
-          width: article.media[0]['media-metadata']?.[0]?.width || 75,
           type: 'image',
           subtype: 'photo',
-          caption: '',
-          copyright: ''
+          caption: article.media[0].caption || '',
+          copyright: article.media[0].copyright || '',
+          approved_for_syndication: article.media[0].approved_for_syndication || 1,
+          'media-metadata': article.media[0]['media-metadata'] || []
         }] : []
       }));
       

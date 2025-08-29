@@ -410,13 +410,8 @@ function transformGraphQLMostPopular(item: any): MostPopularArticle {
     subtype: mm.subtype || 'photo',
     caption: mm.caption || '',
     copyright: mm.copyright || '',
-    approved_for_syndication: 1,
-    "media-metadata": [{
-      url: mm.url || '',
-      format: mm.format || 'Standard Thumbnail',
-      height: mm.height || 75,
-      width: mm.width || 75
-    }]
+    approved_for_syndication: mm.approved_for_syndication || 1,
+    "media-metadata": mm['media-metadata'] || []
   })) : [];
 
   return {
