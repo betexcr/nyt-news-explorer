@@ -1,50 +1,64 @@
 import React from "react";
 import { Link, createSearchParams } from "react-router-dom";
 import type { Article } from "../types/nyt";
+import type { MostPopularArticle } from "../types/nyt.other";
 import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
 
-function getImageUrl(article: Article): string {
+// Union type for articles that can be either regular articles or most popular articles
+type ArticleWithMedia = Article | MostPopularArticle;
+
+function getImageUrl(article: ArticleWithMedia): string {
   // Handle Most Popular articles (which have 'media' property)
-  if ('media' in article && article.media && article.media.length > 0) {
+  if ('media' in article && article.media && Array.isArray(article.media) && article.media.length > 0) {
     const mediaItem = article.media[0];
-    if (mediaItem['media-metadata'] && mediaItem['media-metadata'].length > 0) {
+    if (mediaItem && 'media-metadata' in mediaItem && mediaItem['media-metadata'] && Array.isArray(mediaItem['media-metadata']) && mediaItem['media-metadata'].length > 0) {
       const metadata = mediaItem['media-metadata'][0];
-      if (metadata.url) {
+      if (metadata && metadata.url) {
         return metadata.url;
       }
     }
   }
   
   // Handle regular articles (which have 'multimedia' property)
-  const mm = article.multimedia;
-  if (mm) {
-    // Try default first, then thumbnail as fallback
-    if (mm.default && mm.default.url) {
-      const url = mm.default.url; // URLs are already complete
-      return url;
-    }
-    
-    if (mm.thumbnail && mm.thumbnail.url) {
-      const url = mm.thumbnail.url; // URLs are already complete
-      return url;
+  if ('multimedia' in article) {
+    const mm = article.multimedia;
+    if (mm) {
+      // Try default first, then thumbnail as fallback
+      if (mm.default && mm.default.url) {
+        const url = mm.default.url; // URLs are already complete
+        return url;
+      }
+      
+      if (mm.thumbnail && mm.thumbnail.url) {
+        const url = mm.thumbnail.url; // URLs are already complete
+        return url;
+      }
     }
   }
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
 
 interface Props {
-  article: Article;
+  article: ArticleWithMedia;
 }
 
 const ArticleCard: React.FC<Props> = ({ article }) => {
   const image = getImageUrl(article);
   const { favorites, addFavorite, removeFavorite } = useSearchStore();
-  const isFavorite = favorites?.some(fav => fav.web_url === article.web_url) || false;
+  
+  // Handle both regular articles and Most Popular articles
+  const articleUrl = 'web_url' in article ? article.web_url : article.url;
+  const articleTitle = 'headline' in article ? article.headline?.main : article.title;
+  const articleAbstract = 'snippet' in article ? article.snippet : article.abstract;
+  const articleDate = 'pub_date' in article ? article.pub_date : article.published_date;
+  const articleSection = 'section_name' in article ? article.section_name : article.section;
+  
+  const isFavorite = favorites?.some(fav => fav.web_url === articleUrl) || false;
   
   const to = {
     pathname: "/detail",
-    search: `?${createSearchParams({ url: article.web_url || '' }).toString()}`,
+    search: `?${createSearchParams({ url: articleUrl || '' }).toString()}`,
   };
 
   // Store page-specific scroll position (Search page handles its own restoration)
@@ -61,7 +75,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
     e.stopPropagation();
     
     if (isFavorite) {
-      removeFavorite(article.web_url);
+      removeFavorite(articleUrl);
     } else {
       addFavorite(article);
     }
@@ -73,16 +87,16 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
       state={{ article }}
       onClick={onClick}
       style={{ display: "block", textDecoration: "none", color: "inherit", position: "relative" }}
-      aria-label={article.headline?.main || "Article"}
+      aria-label={articleTitle || "Article"}
     >
       <article className="panel" style={{ padding: ".9rem" }}>
         <img src={image} alt="" className="thumb" />
-        <h3 className="title">{article.headline?.main || ""}</h3>
+        <h3 className="title">{articleTitle || ""}</h3>
         <div className="meta">
-          <span>{formatDate(article.pub_date)}</span>
-          {article.section_name ? <span> · {article.section_name}</span> : null}
+          <span>{formatDate(articleDate)}</span>
+          {articleSection ? <span> · {articleSection}</span> : null}
         </div>
-        <p className="lead">{article.snippet || ""}</p>
+        <p className="lead">{articleAbstract || ""}</p>
         
         {/* Favorite Button */}
         <button
