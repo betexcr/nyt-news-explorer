@@ -64,17 +64,28 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y lftp
           echo "Deploying contents of build/ to $REMOTE_DIR using lftp (overwrite + delete)..."
+          
+          # Verify build files before deployment
+          echo "Verifying build files:"
+          ls -la build/static/js/
+          ls -la build/static/css/
+          
+          # Deploy with aggressive settings
           lftp -e "
             set ftp:passive-mode yes;
-            set ftp:ssl-allow no;            # force plain FTP to avoid CN mismatch on FTPS
-            set net:max-retries 2;
-            set net:timeout 60;
+            set ftp:ssl-allow no;
+            set net:max-retries 3;
+            set net:timeout 120;
             set xfer:clobber on;
+            set mirror:parallel 8;
+            set mirror:delete-first on;
             open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER;
             mkdir -p $REMOTE_DIR;
             cd $REMOTE_DIR;
             mirror -R --delete --ignore-time --overwrite --parallel=8 --verbose ./build/ .;
-            cls -l .;
+            echo 'Deployment completed. Files on server:';
+            cls -la static/js/;
+            cls -la static/css/;
             quit
           "
 
