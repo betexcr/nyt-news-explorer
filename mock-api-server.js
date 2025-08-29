@@ -69,7 +69,7 @@ app.post('/api/v1/graphql', async (req, res) => {
          }
        });
     } else if (query.includes('topStories')) {
-      const section = variables?.section || 'home';
+      const section = (variables?.section || 'home').toLowerCase();
       
       const response = await axios.get(`${NYT_BASE_URL}/topstories/v2/${section}.json`, {
         params: {
