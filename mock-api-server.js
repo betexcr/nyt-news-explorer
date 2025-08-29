@@ -159,22 +159,25 @@ app.post('/api/v1/graphql', async (req, res) => {
       });
       
       const books = response.data.results.books.map(book => ({
-        id: book.primary_isbn13,
         title: book.title,
         author: book.author,
         description: book.description,
         publisher: book.publisher,
         rank: book.rank,
         weeksOnList: book.weeks_on_list,
-        isbn13: book.primary_isbn13,
-        isbn10: book.primary_isbn10,
-        coverImage: book.book_image,
-        buyLinks: book.buy_links || []
+        amazonProductUrl: book.amazon_product_url,
+        bookImage: book.book_image,
+        isbn13: book.primary_isbn13
       }));
       
       res.json({
         data: {
-          bestsellers: books
+          bestsellers: {
+            listName: response.data.results.list_name,
+            displayName: response.data.results.display_name,
+            updated: response.data.results.updated,
+            books: books
+          }
         }
       });
     } else {
