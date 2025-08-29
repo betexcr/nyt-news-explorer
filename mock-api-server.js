@@ -10,7 +10,10 @@ const PORT = 3000;
 const NYT_API_KEY = process.env.NYT_API_KEY || 'test';
 const NYT_BASE_URL = 'https://api.nytimes.com/svc';
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:50479', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Mock GraphQL endpoint
