@@ -55,9 +55,9 @@ const TrendingPage: React.FC = () => {
       const mm = media['media-metadata'] || [];
       // Prefer largest 3x2 image if present, otherwise fallbacks
       const preferred =
-        mm.find(m => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
-        mm.find(m => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
-        mm.find(m => /^(Standard Thumbnail)$/i.test(m.format)) ||
+        mm.find((m: any) => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
+        mm.find((m: any) => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
+        mm.find((m: any) => /^(Standard Thumbnail)$/i.test(m.format)) ||
         mm[0];
       if (preferred?.url) return preferred.url;
     }

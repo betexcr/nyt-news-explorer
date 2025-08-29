@@ -363,25 +363,17 @@ function transformGraphQLArticle(article: any): NytArticle {
     web_url: article.url,
     headline: {
       main: article.title,
-      kicker: article.headline?.kicker,
-      content_kicker: article.headline?.contentKicker,
-      print_headline: article.headline?.printHeadline,
-      name: article.headline?.name,
-      seo: article.headline?.seo,
-      sub: article.headline?.sub,
+      kicker: article.headline?.kicker || undefined,
+      print_headline: article.headline?.printHeadline || undefined,
     },
-    abstract: article.abstract,
     snippet: article.snippet,
     lead_paragraph: article.leadParagraph,
     source: article.source,
     pub_date: article.publishedDate,
     byline: {
-      original: article.author || article.byline?.original,
-      person: article.byline?.person || [],
-      organization: article.byline?.organization,
+      original: article.author || article.byline?.original || undefined,
     },
     section_name: article.section,
-    subsection_name: article.subsection,
     multimedia: article.multimedia || [],
     keywords: article.keywords || [],
   };
@@ -389,40 +381,78 @@ function transformGraphQLArticle(article: any): NytArticle {
 
 function transformGraphQLTopStory(story: any): TopStory {
   return {
-    url: story.url,
-    title: story.title,
-    abstract: story.abstract,
-    published_date: story.publishedDate,
-    byline: story.author || story.byline?.original,
-    section: story.section,
-    subsection: story.subsection,
+    section: story.section || '',
+    subsection: story.subsection || '',
+    title: story.title || '',
+    abstract: story.abstract || '',
+    url: story.url || '',
+    uri: story.uri || story.url || '',
+    byline: story.author || story.byline?.original || '',
+    item_type: story.itemType || 'Article',
+    updated_date: story.updatedDate || story.publishedDate || '',
+    created_date: story.createdDate || story.publishedDate || '',
+    published_date: story.publishedDate || '',
+    material_type_facet: story.materialTypeFacet || '',
+    kicker: story.kicker || '',
+    des_facet: story.desFacet || [],
+    org_facet: story.orgFacet || [],
+    per_facet: story.perFacet || [],
+    geo_facet: story.geoFacet || [],
     multimedia: story.multimedia || [],
+    short_url: story.shortUrl || story.url || '',
   };
 }
 
 function transformGraphQLMostPopular(item: any): MostPopularArticle {
   return {
-    id: item.id,
-    url: item.url,
-    title: item.title,
-    abstract: item.abstract,
-    published_date: item.publishedDate,
-    section: item.section,
-    byline: item.byline,
+    id: item.id || 0,
+    url: item.url || '',
+    adx_keywords: item.adxKeywords || '',
+    column: item.column || null,
+    section: item.section || '',
+    byline: item.byline || '',
+    type: item.type || 'Article',
+    title: item.title || '',
+    abstract: item.abstract || '',
+    published_date: item.publishedDate || '',
+    source: item.source || 'The New York Times',
+    des_facet: item.desFacet || [],
+    org_facet: item.orgFacet || [],
+    per_facet: item.perFacet || [],
+    geo_facet: item.geoFacet || [],
+    media: item.media || [],
+    eta_id: item.etaId || 0,
   };
 }
 
 function transformGraphQLBook(book: any): Book {
   return {
-    title: book.title,
-    author: book.author,
-    description: book.description,
-    publisher: book.publisher,
-    rank: book.rank,
-    weeks_on_list: book.weeksOnList,
-    amazon_product_url: book.amazonProductUrl,
-    book_image: book.bookImage,
-    isbns: book.isbn13?.map((isbn: string) => ({ isbn13: isbn })) || [],
+    rank: book.rank || 0,
+    rank_last_week: book.rankLastWeek || 0,
+    weeks_on_list: book.weeksOnList || 0,
+    asterisk: book.asterisk || 0,
+    dagger: book.dagger || 0,
+    primary_isbn10: book.primaryIsbn10 || '',
+    primary_isbn13: book.primaryIsbn13 || '',
+    publisher: book.publisher || '',
+    description: book.description || '',
+    price: book.price || '',
+    title: book.title || '',
+    author: book.author || '',
+    contributor: book.contributor || '',
+    contributor_note: book.contributorNote || '',
+    book_image: book.bookImage || '',
+    book_image_width: book.bookImageWidth || 0,
+    book_image_height: book.bookImageHeight || 0,
+    amazon_product_url: book.amazonProductUrl || '',
+    age_group: book.ageGroup || '',
+    book_review_link: book.bookReviewLink || '',
+    first_chapter_link: book.firstChapterLink || '',
+    sunday_review_link: book.sundayReviewLink || '',
+    article_chapter_link: book.articleChapterLink || '',
+    isbns: book.isbn13?.map((isbn: string) => ({ isbn10: '', isbn13: isbn })) || [],
+    buy_links: book.buyLinks || [],
+    book_uri: book.bookUri || '',
   };
 }
 
@@ -525,7 +555,7 @@ export async function getArchive(
     signal
   );
   
-  return data.archive.map(transformGraphQLArticle);
+  return data.archive.map(transformGraphQLArticle) as ArchiveArticle[];
 }
 
 export async function searchArticlesByDay(
@@ -540,7 +570,7 @@ export async function searchArticlesByDay(
     signal
   );
   
-  return data.archiveByDay.map(transformGraphQLArticle);
+  return data.archiveByDay.map(transformGraphQLArticle) as ArchiveArticle[];
 }
 
 export async function getBestSellers(
@@ -590,7 +620,6 @@ export async function getArticleByUrl(
   // This could be enhanced with a dedicated GraphQL query
   const articles = await searchArticlesAdv({
     q: '',
-    filteredQuery: `web_url:("${url}")`,
     signal
   });
   
