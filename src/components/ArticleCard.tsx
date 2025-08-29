@@ -15,11 +15,24 @@ function getImageUrl(article: ArticleWithMedia): string {
     if (mediaItem && 'media-metadata' in mediaItem && mediaItem['media-metadata'] && Array.isArray(mediaItem['media-metadata']) && mediaItem['media-metadata'].length > 0) {
       const metadataArray = mediaItem['media-metadata'];
       
-      // Prefer higher resolution images in this order:
-      // 1. mediumThreeByTwo440 (440x293) - highest resolution
-      // 2. mediumThreeByTwo210 (210x140) - medium resolution
-      // 3. Standard Thumbnail (75x75) - fallback
+      // Try to construct higher resolution URLs from the available thumbnail
+      const thumbnailMetadata = metadataArray.find(m => m.format === 'Standard Thumbnail');
+      if (thumbnailMetadata && thumbnailMetadata.url) {
+        // Construct higher resolution URLs by replacing the format in the URL
+        // The URL pattern is: .../image-name-thumbStandard.jpg
+        // We want to replace -thumbStandard.jpg with -articleLarge.jpg
+        const baseUrl = thumbnailMetadata.url.replace('-thumbStandard.jpg', '');
+        
+        // Try superJumbo first (highest resolution), then articleLarge, then fallback to available formats
+        const superJumboUrl = `${baseUrl}-superJumbo.jpg`;
+        const articleLargeUrl = `${baseUrl}-articleLarge.jpg`;
+        
+        // For now, we'll use articleLarge as it's a good balance of quality and performance
+        // In a production app, you might want to implement image loading with fallbacks
+        return articleLargeUrl;
+      }
       
+      // Fallback to the original logic if URL construction fails
       const preferredFormat = metadataArray.find(m => m.format === 'mediumThreeByTwo440') ||
                              metadataArray.find(m => m.format === 'mediumThreeByTwo210') ||
                              metadataArray[0]; // fallback to first available
@@ -99,6 +112,16 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           multimedia: article.media.length > 0 ? {
             default: (() => {
               const metadataArray = article.media[0]['media-metadata'];
+              const thumbnailMetadata = metadataArray?.find(m => m.format === 'Standard Thumbnail');
+              if (thumbnailMetadata?.url) {
+                const baseUrl = thumbnailMetadata.url.replace('-thumbStandard.jpg', '');
+                const articleLargeUrl = `${baseUrl}-articleLarge.jpg`;
+                return {
+                  url: articleLargeUrl,
+                  height: 400, // articleLarge is typically 600x400
+                  width: 600
+                };
+              }
               const preferredFormat = metadataArray?.find(m => m.format === 'mediumThreeByTwo440') ||
                                     metadataArray?.find(m => m.format === 'mediumThreeByTwo210') ||
                                     metadataArray?.[0];
@@ -110,6 +133,16 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
             })(),
             thumbnail: (() => {
               const metadataArray = article.media[0]['media-metadata'];
+              const thumbnailMetadata = metadataArray?.find(m => m.format === 'Standard Thumbnail');
+              if (thumbnailMetadata?.url) {
+                const baseUrl = thumbnailMetadata.url.replace('-thumbStandard.jpg', '');
+                const articleLargeUrl = `${baseUrl}-articleLarge.jpg`;
+                return {
+                  url: articleLargeUrl,
+                  height: 400, // articleLarge is typically 600x400
+                  width: 600
+                };
+              }
               const preferredFormat = metadataArray?.find(m => m.format === 'mediumThreeByTwo440') ||
                                     metadataArray?.find(m => m.format === 'mediumThreeByTwo210') ||
                                     metadataArray?.[0];
