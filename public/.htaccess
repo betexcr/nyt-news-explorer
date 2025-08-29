@@ -1,13 +1,17 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Debug: Log rewrite rules (comment out in production)
-# RewriteLog "/tmp/rewrite.log"
-# RewriteLogLevel 3
-
-# Handle static files first
+# CRITICAL: Handle static files first - prevent rewriting for real files
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
+
+# CRITICAL: Handle directories - prevent rewriting for real directories
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Debug: Log rewrite activity (uncomment for debugging)
+# RewriteLog "/tmp/rewrite.log"
+# RewriteLogLevel 3
 
 # Set MIME types for static assets
 <IfModule mod_mime.c>

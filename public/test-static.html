@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static File Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test { padding: 10px; margin: 10px 0; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Static File Test</h1>
+    <p>This page tests if static files are being served correctly.</p>
+    
+    <div id="results">
+        <div class="test">Testing static file serving...</div>
+    </div>
+
+    <script>
+        async function testFile(url, expectedType) {
+            try {
+                const response = await fetch(url);
+                const contentType = response.headers.get('content-type');
+                const isSuccess = contentType && contentType.includes(expectedType);
+                
+                const result = document.createElement('div');
+                result.className = `test ${isSuccess ? 'success' : 'error'}`;
+                result.innerHTML = `
+                    <strong>${url}</strong><br>
+                    Expected: ${expectedType}<br>
+                    Actual: ${contentType}<br>
+                    Status: ${response.status}<br>
+                    Success: ${isSuccess ? '✅' : '❌'}
+                `;
+                document.getElementById('results').appendChild(result);
+            } catch (error) {
+                const result = document.createElement('div');
+                result.className = 'test error';
+                result.innerHTML = `
+                    <strong>${url}</strong><br>
+                    Error: ${error.message}<br>
+                    Success: ❌
+                `;
+                document.getElementById('results').appendChild(result);
+            }
+        }
+
+        // Test current build files
+        testFile('/static/css/main.2cea4a22.css', 'text/css');
+        testFile('/static/js/main.3f84be32.js', 'application/javascript');
+        
+        // Test old files that might be cached
+        testFile('/static/css/main.2cea4a22.css', 'text/css');
+        testFile('/static/js/main.520592cc.js', 'application/javascript');
+    </script>
+</body>
+</html>
