@@ -5,8 +5,19 @@ import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
 
 function getImageUrl(article: Article): string {
-  const mm = article.multimedia;
+  // Handle Most Popular articles (which have 'media' property)
+  if ('media' in article && article.media && article.media.length > 0) {
+    const mediaItem = article.media[0];
+    if (mediaItem['media-metadata'] && mediaItem['media-metadata'].length > 0) {
+      const metadata = mediaItem['media-metadata'][0];
+      if (metadata.url) {
+        return metadata.url;
+      }
+    }
+  }
   
+  // Handle regular articles (which have 'multimedia' property)
+  const mm = article.multimedia;
   if (mm) {
     // Try default first, then thumbnail as fallback
     if (mm.default && mm.default.url) {

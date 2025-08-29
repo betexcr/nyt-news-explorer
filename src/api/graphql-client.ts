@@ -404,6 +404,21 @@ function transformGraphQLTopStory(story: any): TopStory {
 }
 
 function transformGraphQLMostPopular(item: any): MostPopularArticle {
+  // Transform multimedia data to match the expected media structure
+  const media = item.multimedia ? item.multimedia.map((mm: any) => ({
+    type: mm.type || 'image',
+    subtype: mm.subtype || 'photo',
+    caption: mm.caption || '',
+    copyright: mm.copyright || '',
+    approved_for_syndication: 1,
+    "media-metadata": [{
+      url: mm.url || '',
+      format: mm.format || 'Standard Thumbnail',
+      height: mm.height || 75,
+      width: mm.width || 75
+    }]
+  })) : [];
+
   return {
     id: item.id || 0,
     url: item.url || '',
@@ -420,7 +435,7 @@ function transformGraphQLMostPopular(item: any): MostPopularArticle {
     org_facet: item.orgFacet || [],
     per_facet: item.perFacet || [],
     geo_facet: item.geoFacet || [],
-    media: item.media || [],
+    media: media,
     eta_id: item.etaId || 0,
   };
 }
