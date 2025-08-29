@@ -39,6 +39,13 @@ jobs:
           echo "Build size:"
           du -sh build/
 
+      - name: Fix .htaccess file
+        run: |
+          echo "Replacing build .htaccess with custom configuration..."
+          cp public/.htaccess build/.htaccess
+          echo "Updated .htaccess file:"
+          cat build/.htaccess
+
       - name: Deploy to Hostinger via lftp (mirror contents, overwrite + delete)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
