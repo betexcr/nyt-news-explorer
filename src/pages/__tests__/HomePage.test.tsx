@@ -5,9 +5,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { getMostPopular, getTopStories } from '../../api/nyt-graphql';
 
 // Mock the API calls
-jest.mock('../../api/nyt-apis');
-const mockGetMostPopular = getMostPopular as jest.MockedFunction<typeof getMostPopular>;
-const mockGetTopStories = getTopStories as jest.MockedFunction<typeof getTopStories>;
+jest.mock('../../api/nyt-graphql');
+const mockGetMostPopular = jest.mocked(getMostPopular);
+const mockGetTopStories = jest.mocked(getTopStories);
 
 describe('HomePage', () => {
   beforeEach(() => {

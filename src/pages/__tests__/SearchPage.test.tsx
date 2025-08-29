@@ -7,9 +7,9 @@ import { useSearchStore } from '../../store/searchStore';
 import type { Article } from '../../types/nyt';
 
 // Mock the API
-jest.mock('../../api/nyt');
-const mockSearchArticles = searchArticles as jest.MockedFunction<typeof searchArticles>;
-const mockSearchArticlesAdv = searchArticlesAdv as jest.MockedFunction<typeof searchArticlesAdv>;
+jest.mock('../../api/nyt-graphql');
+const mockSearchArticles = jest.mocked(searchArticles);
+const mockSearchArticlesAdv = jest.mocked(searchArticlesAdv);
 
 // Mock the store
 jest.mock('../../store/searchStore');

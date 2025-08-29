@@ -1,14 +1,22 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
-import * as api from '../../api/nyt-graphql';
 import BooksPage from '../BooksPage';
+
+// Mock the API module
+jest.mock('../../api/nyt-graphql', () => ({
+  getBestSellers: jest.fn(),
+  getBooksListByDate: jest.fn(),
+  BOOKS_LISTS: ['hardcover-fiction', 'hardcover-nonfiction']
+}));
 
 describe('BooksPage', () => {
   test('renders best sellers grid', async () => {
     const originalKey = process.env.REACT_APP_NYT_API_KEY;
     process.env.REACT_APP_NYT_API_KEY = 'test';
-    const spy = jest.spyOn(api, 'getBestSellers').mockResolvedValueOnce([
+    
+    const mockGetBestSellers = require('../../api/nyt-graphql').getBestSellers;
+    mockGetBestSellers.mockResolvedValueOnce([
       {
         rank: 1,
         rank_last_week: 0,
@@ -51,7 +59,7 @@ describe('BooksPage', () => {
         expect(screen.getByText('Test Book')).toBeInTheDocument();
       });
     } finally {
-      spy.mockRestore();
+      mockGetBestSellers.mockRestore();
       process.env.REACT_APP_NYT_API_KEY = originalKey;
     }
   });

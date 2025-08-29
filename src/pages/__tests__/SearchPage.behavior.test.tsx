@@ -8,9 +8,9 @@ import { useSearchStore } from '../../store/searchStore';
 import type { Article } from '../../types/nyt';
 
 // Mock the API
-jest.mock('../../api/nyt');
-const mockSearchArticles = searchArticles as jest.MockedFunction<typeof searchArticles>;
-const mockMakeSearchController = makeSearchController as jest.MockedFunction<typeof makeSearchController>;
+jest.mock('../../api/nyt-graphql');
+const mockSearchArticles = jest.mocked(searchArticles);
+const mockMakeSearchController = jest.mocked(makeSearchController);
 
 // Mock react-router-dom hooks
 jest.mock('react-router-dom', () => ({
