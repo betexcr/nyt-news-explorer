@@ -355,4 +355,192 @@ describe('ArticleCard', () => {
       expect(image).toHaveAttribute("src", "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg");
     });
   });
+
+  describe('Favorite functionality for different article types', () => {
+    test("adds regular article to favorites correctly", () => {
+      const article = makeArticle();
+      useSearchStore.mockReturnValue({
+        favorites: [],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Add to favorites");
+      fireEvent.click(favoriteButton);
+
+      expect(mockAddFavorite).toHaveBeenCalledWith(article);
+    });
+
+    test("adds Most Popular article to favorites with conversion", () => {
+      const article = makeMostPopularArticle();
+      useSearchStore.mockReturnValue({
+        favorites: [],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Add to favorites");
+      fireEvent.click(favoriteButton);
+
+      expect(mockAddFavorite).toHaveBeenCalledWith(expect.objectContaining({
+        _id: "100000001",
+        web_url: "https://www.nytimes.com/2024/05/01/world/example.html",
+        snippet: "Most popular abstract",
+        headline: { main: "Most Popular Headline" },
+        pub_date: "2024-05-01T12:00:00Z",
+        section_name: "World"
+      }));
+    });
+
+    test("removes favorite correctly for regular article", () => {
+      const article = makeArticle();
+      useSearchStore.mockReturnValue({
+        favorites: [article],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Remove from favorites");
+      fireEvent.click(favoriteButton);
+
+      expect(mockRemoveFavorite).toHaveBeenCalledWith(article.web_url);
+    });
+
+    test("removes favorite correctly for Most Popular article", () => {
+      const article = makeMostPopularArticle();
+      // Simulate the converted regular article that would be in favorites
+      const convertedArticle = {
+        _id: String(article.id),
+        web_url: article.url,
+        snippet: article.abstract,
+        lead_paragraph: article.abstract,
+        multimedia: article.media.length > 0 ? {
+          default: article.media[0]['media-metadata']?.[0] ? {
+            url: article.media[0]['media-metadata'][0].url,
+            height: article.media[0]['media-metadata'][0].height,
+            width: article.media[0]['media-metadata'][0].width
+          } : undefined,
+          thumbnail: article.media[0]['media-metadata']?.[0] ? {
+            url: article.media[0]['media-metadata'][0].url,
+            height: article.media[0]['media-metadata'][0].height,
+            width: article.media[0]['media-metadata'][0].width
+          } : undefined
+        } : {},
+        headline: { main: article.title },
+        pub_date: article.published_date,
+        section_name: article.section,
+        keywords: [],
+        byline: { original: article.byline }
+      };
+      
+      useSearchStore.mockReturnValue({
+        favorites: [convertedArticle],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Remove from favorites");
+      fireEvent.click(favoriteButton);
+
+      expect(mockRemoveFavorite).toHaveBeenCalledWith(article.url);
+    });
+
+    test("shows filled heart when Most Popular article is favorited", () => {
+      const article = makeMostPopularArticle();
+      // Simulate the converted regular article that would be in favorites
+      const convertedArticle = {
+        _id: String(article.id),
+        web_url: article.url,
+        snippet: article.abstract,
+        lead_paragraph: article.abstract,
+        multimedia: article.media.length > 0 ? {
+          default: article.media[0]['media-metadata']?.[0] ? {
+            url: article.media[0]['media-metadata'][0].url,
+            height: article.media[0]['media-metadata'][0].height,
+            width: article.media[0]['media-metadata'][0].width
+          } : undefined,
+          thumbnail: article.media[0]['media-metadata']?.[0] ? {
+            url: article.media[0]['media-metadata'][0].url,
+            height: article.media[0]['media-metadata'][0].height,
+            width: article.media[0]['media-metadata'][0].width
+          } : undefined
+        } : {},
+        headline: { main: article.title },
+        pub_date: article.published_date,
+        section_name: article.section,
+        keywords: [],
+        byline: { original: article.byline }
+      };
+      
+      useSearchStore.mockReturnValue({
+        favorites: [convertedArticle],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Remove from favorites");
+      expect(favoriteButton).toBeInTheDocument();
+      expect(favoriteButton).toHaveTextContent("♥");
+    });
+
+    test("handles Most Popular article with no media gracefully in favorites", () => {
+      const article = makeMostPopularArticle({
+        media: []
+      });
+      useSearchStore.mockReturnValue({
+        favorites: [],
+        addFavorite: mockAddFavorite,
+        removeFavorite: mockRemoveFavorite,
+        setScrollY: mockSetScrollY,
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      const favoriteButton = screen.getByTitle("Add to favorites");
+      fireEvent.click(favoriteButton);
+
+      expect(mockAddFavorite).toHaveBeenCalledWith(expect.objectContaining({
+        multimedia: {}
+      }));
+    });
+  });
 });

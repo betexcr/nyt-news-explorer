@@ -54,6 +54,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
   const articleDate = 'pub_date' in article ? article.pub_date : article.published_date;
   const articleSection = 'section_name' in article ? article.section_name : article.section;
   
+  // Check if article is favorited by comparing URLs
   const isFavorite = favorites?.some(fav => fav.web_url === articleUrl) || false;
   
   const to = {
@@ -77,7 +78,37 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
     if (isFavorite) {
       removeFavorite(articleUrl);
     } else {
-      addFavorite(article);
+      // Convert Most Popular articles to regular articles for favorites
+      if ('media' in article) {
+        // This is a Most Popular article, convert it to regular article format
+        const regularArticle = {
+          _id: String(article.id),
+          web_url: article.url,
+          snippet: article.abstract,
+          lead_paragraph: article.abstract,
+          multimedia: article.media.length > 0 ? {
+            default: article.media[0]['media-metadata']?.[0] ? {
+              url: article.media[0]['media-metadata'][0].url,
+              height: article.media[0]['media-metadata'][0].height,
+              width: article.media[0]['media-metadata'][0].width
+            } : undefined,
+            thumbnail: article.media[0]['media-metadata']?.[0] ? {
+              url: article.media[0]['media-metadata'][0].url,
+              height: article.media[0]['media-metadata'][0].height,
+              width: article.media[0]['media-metadata'][0].width
+            } : undefined
+          } : {},
+          headline: { main: article.title },
+          pub_date: article.published_date,
+          section_name: article.section,
+          keywords: [],
+          byline: { original: article.byline }
+        };
+        addFavorite(regularArticle);
+      } else {
+        // This is already a regular article
+        addFavorite(article);
+      }
     }
   };
 
