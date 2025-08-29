@@ -354,6 +354,38 @@ describe('ArticleCard', () => {
       const image = screen.getByAltText("");
       expect(image).toHaveAttribute("src", "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg");
     });
+
+    test("handles article with missing section gracefully", () => {
+      const article = makeMostPopularArticle({
+        section: undefined
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      // Should not crash and should render without section
+      expect(screen.getByText("Most Popular Headline")).toBeInTheDocument();
+      expect(screen.getByText("Most popular abstract")).toBeInTheDocument();
+    });
+
+    test("handles regular article with missing section_name gracefully", () => {
+      const article = makeArticle({
+        section_name: undefined
+      });
+
+      render(
+        <MemoryRouter>
+          <ArticleCard article={article} />
+        </MemoryRouter>
+      );
+
+      // Should not crash and should render without section
+      expect(screen.getByText("Headline")).toBeInTheDocument();
+      expect(screen.getByText("snippet")).toBeInTheDocument();
+    });
   });
 
   describe('Favorite functionality for different article types', () => {

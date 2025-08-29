@@ -52,7 +52,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
   const articleTitle = 'headline' in article ? article.headline?.main : article.title;
   const articleAbstract = 'snippet' in article ? article.snippet : article.abstract;
   const articleDate = 'pub_date' in article ? article.pub_date : article.published_date;
-  const articleSection = 'section_name' in article ? article.section_name : article.section;
+  const articleSection = 'section_name' in article ? article.section_name : ('section' in article ? article.section : undefined);
   
   // Check if article is favorited by comparing URLs
   const isFavorite = favorites?.some(fav => fav.web_url === articleUrl) || false;
