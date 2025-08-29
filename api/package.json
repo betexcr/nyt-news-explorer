@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",
+    "@as-integrations/fastify": "^2.1.1",
     "@fastify/auth": "^4.6.1",
     "@fastify/autoload": "^5.10.0",
     "@fastify/bearer-auth": "^9.4.0",
@@ -63,7 +64,6 @@
     "fastify": "^4.28.1",
     "fastify-plugin": "^4.5.1",
     "graphql": "^16.8.1",
-    "@as-integrations/fastify": "^2.1.1",
     "graphql-yoga": "^5.3.0",
     "ioredis": "^5.4.1",
     "jose": "^5.2.4",
