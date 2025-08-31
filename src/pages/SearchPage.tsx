@@ -216,15 +216,10 @@ const SearchPage: React.FC = () => {
               setLoading(false);
             })
             .catch((error) => {
-              console.log('Search error caught:', error);
-              console.log('Error type:', error.constructor.name);
-              console.log('Error instanceof NytRateLimitError:', error instanceof NytRateLimitError);
               if (error instanceof NytRateLimitError) {
-                console.log('Setting rate limit error to true');
                 setRateLimitError(true);
                 setArticles([]);
               } else {
-                console.log('Setting rate limit error to false');
                 setArticles([]);
               }
               setLoading(false);

@@ -50,8 +50,6 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
     const response = await axios.get(getApiUrl(), { params, signal });
     return response;
   } catch (error: any) {
-    console.log('API error caught:', error);
-    console.log('Error response data:', error.response?.data);
     // Check for rate limit error in response - check multiple possible paths
     const responseData = error.response?.data;
     const isRateLimitError = 
@@ -61,8 +59,6 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
       responseData?.fault?.errorcode === 'policies.ratelimit.QuotaViolation';
     
     if (isRateLimitError) {
-      console.log('Rate limit error detected, throwing NytRateLimitError');
-      console.log('Response data:', responseData);
       throw new NytRateLimitError();
     }
     
@@ -82,7 +78,6 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
           proxyResponseData?.fault?.errorcode === 'policies.ratelimit.QuotaViolation';
         
         if (isProxyRateLimitError) {
-          console.log('Proxy rate limit error detected, throwing NytRateLimitError');
           throw new NytRateLimitError();
         }
         throw proxyError;
@@ -170,35 +165,35 @@ export async function searchArticles(
   };
   
   try {
-    // Make both requests in parallel
-    const [response1, response2] = await Promise.all([
-      makeApiRequest(params1, signal),
-      makeApiRequest(params2, signal)
-    ]);
-    
+    // Make requests sequentially to better handle individual errors
+    const response1 = await makeApiRequest(params1, signal);
     const docs1 = response1?.data?.response?.docs || [];
-    const docs2 = response2?.data?.response?.docs || [];
+    
+    // If first request succeeds, try second request
+    let docs2: any[] = [];
+    try {
+      const response2 = await makeApiRequest(params2, signal);
+      docs2 = response2?.data?.response?.docs || [];
+    } catch (secondError: any) {
+      // If second request fails with rate limit, we still have results from first
+      if (secondError instanceof NytRateLimitError) {
+        return docs1 as NytArticle[];
+      }
+      // For other errors, continue with empty docs2
+    }
     
     // Combine results: 10 from page 0 + 2 from page 1 = 12 total
     const combinedDocs = [...docs1, ...docs2.slice(0, 2)];
     
     return combinedDocs as NytArticle[];
   } catch (error: any) {
-    console.log('searchArticles catch block - error:', error);
-    console.log('Error type:', error.constructor.name);
-    console.log('Error instanceof NytRateLimitError:', error instanceof NytRateLimitError);
-    console.log('Error name:', error.name);
-    console.log('Error message:', error.message);
-    
     // If it's a rate limit error, re-throw it
     if (error instanceof NytRateLimitError) {
-      console.log('Re-throwing NytRateLimitError');
       throw error;
     }
     
     // If it's an abort error, re-throw it
     if (error.name === 'AbortError' || error.message?.includes('aborted')) {
-      console.log('Re-throwing abort error');
       throw error;
     }
     
@@ -208,22 +203,15 @@ export async function searchArticles(
       const docs = response?.data?.response?.docs;
       return Array.isArray(docs) ? docs : [];
     } catch (fallbackError: any) {
-      console.log('Fallback error caught:', fallbackError);
-      console.log('Fallback error type:', fallbackError.constructor.name);
-      console.log('Fallback error instanceof NytRateLimitError:', fallbackError instanceof NytRateLimitError);
-      
       // If fallback also fails with rate limit, re-throw it
       if (fallbackError instanceof NytRateLimitError) {
-        console.log('Re-throwing fallback NytRateLimitError');
         throw fallbackError;
       }
       // If fallback also fails with abort error, re-throw it
       if (fallbackError.name === 'AbortError' || fallbackError.message?.includes('aborted')) {
-        console.log('Re-throwing fallback abort error');
         throw fallbackError;
       }
       // For other errors, return empty array
-      console.log('Returning empty array from fallback');
       return [];
     }
   }
