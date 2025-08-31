@@ -361,7 +361,6 @@ export const SiteHeader: React.FC = () => {
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 transition: "background 0.2s ease",
-                transition: "background 0.2s ease",
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"

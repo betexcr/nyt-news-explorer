@@ -57,7 +57,7 @@ const ViewTransitionWrapper: React.FC<ViewTransitionWrapperProps> = ({
         wrapper.style.viewTransitionName = '';
       }, 300);
 
-      return () => clearTimeout(exitTimer);
+      clearTimeout(exitTimer);
     };
   }, [location.pathname, transitionName, onEnter, onExit]);
 
