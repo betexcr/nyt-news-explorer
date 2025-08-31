@@ -53,8 +53,8 @@ lftp -e "
   echo 'Files in static/css/:';
   cls -la static/css/;
   echo 'Total files deployed:';
-  find . -type f | wc -l;
-  quit
+  ls -la | wc -l;
+  quit;
 "
 
 echo "✅ Force deployment completed!"
