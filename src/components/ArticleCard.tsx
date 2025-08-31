@@ -1,8 +1,10 @@
 import React from "react";
-import { Link, createSearchParams } from "react-router-dom";
+import { createSearchParams } from "react-router-dom";
 import type { Article } from "../types/nyt";
 import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
+import ViewTransitionLink from "./ViewTransitionLink";
+import ViewTransitionImage from "./ViewTransitionImage";
 
 function getImageUrl(article: Article): string {
   const mm = article.multimedia;
@@ -57,21 +59,28 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
   };
 
   return (
-    <Link
+    <ViewTransitionLink
       to={to}
       state={{ article }}
       onClick={onClick}
       style={{ display: "block", textDecoration: "none", color: "inherit", position: "relative" }}
       aria-label={article.headline?.main || "Article"}
+      viewTransitionName="article-card"
     >
-      <article className="panel" style={{ padding: ".9rem" }}>
-        <img src={image} alt="" className="thumb" />
-        <h3 className="title">{article.headline?.main || ""}</h3>
-        <div className="meta">
+      <article className="panel view-transition-article-card" style={{ padding: ".9rem" }}>
+        <ViewTransitionImage
+          src={image}
+          alt=""
+          className="thumb view-transition-article-image"
+          viewTransitionName="article-image"
+          fallbackSrc="/logo.png"
+        />
+        <h3 className="title view-transition-article-title">{article.headline?.main || ""}</h3>
+        <div className="meta view-transition-article-meta">
           <span>{formatDate(article.pub_date)}</span>
           {article.section_name ? <span> · {article.section_name}</span> : null}
         </div>
-        <p className="lead">{article.snippet || ""}</p>
+        <p className="lead view-transition-article-content">{article.snippet || ""}</p>
         
         {/* Favorite Button */}
         <button
@@ -98,7 +107,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           {isFavorite ? "♥" : "♡"}
         </button>
       </article>
-    </Link>
+    </ViewTransitionLink>
   );
 };
 

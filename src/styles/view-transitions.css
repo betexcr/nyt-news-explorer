@@ -1,0 +1,221 @@
+/* View Transitions CSS */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* View Transition Names for different elements */
+.view-transition-hero {
+  view-transition-name: hero-image;
+}
+
+.view-transition-article-card {
+  view-transition-name: article-card;
+}
+
+.view-transition-article-image {
+  view-transition-name: article-image;
+}
+
+.view-transition-article-title {
+  view-transition-name: article-title;
+}
+
+.view-transition-article-meta {
+  view-transition-name: article-meta;
+}
+
+.view-transition-article-content {
+  view-transition-name: article-content;
+}
+
+.view-transition-header {
+  view-transition-name: site-header;
+}
+
+.view-transition-navigation {
+  view-transition-name: navigation;
+}
+
+.view-transition-search {
+  view-transition-name: search-form;
+}
+
+.view-transition-results {
+  view-transition-name: search-results;
+}
+
+.view-transition-detail-hero {
+  view-transition-name: detail-hero-image;
+}
+
+.view-transition-detail-title {
+  view-transition-name: detail-title;
+}
+
+.view-transition-detail-meta {
+  view-transition-name: detail-meta;
+}
+
+.view-transition-detail-body {
+  view-transition-name: detail-body;
+}
+
+/* Smooth transitions for all interactive elements */
+a, button, .button, .action-card, .article-card {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Enhanced hover effects */
+.article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Page transition animations */
+.page-enter {
+  animation: fade-in 0.3s ease-out;
+}
+
+.page-exit {
+  animation: fade-out 0.3s ease-in;
+}
+
+/* Article card transitions */
+.article-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.article-card:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Image loading states */
+.view-transition-image {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.view-transition-image.loaded {
+  opacity: 1;
+}
+
+.view-transition-image.error {
+  opacity: 0.7;
+}
+
+/* Smooth scrolling for view transitions */
+html {
+  scroll-behavior: smooth;
+}
+
+/* View transition specific styles */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(hero-image),
+::view-transition-new(hero-image) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(article-card),
+::view-transition-new(article-card) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(article-image),
+::view-transition-new(article-image) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive view transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode transitions */
+[data-theme="dark"] {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

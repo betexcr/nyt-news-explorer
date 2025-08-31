@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
 import type { MostPopularArticle, TopStory } from "../types/nyt.other";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
 import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
+import ViewTransitionLink from "../components/ViewTransitionLink";
+import ViewTransitionImage from "../components/ViewTransitionImage";
+import ViewTransitionWrapper from "../components/ViewTransitionWrapper";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
 
@@ -85,7 +87,7 @@ const HomePage: React.FC = () => {
   // Always render hero immediately; below content shows as it loads
 
   return (
-    <div className="home-page">
+    <ViewTransitionWrapper transitionName="home-page" className="home-page">
       {/* Hero Section */}
       <section className="home-hero-section">
         <div className="hero-content">
@@ -93,46 +95,25 @@ const HomePage: React.FC = () => {
           <p className="hero-subtitle">Discover the latest news from The New York Times</p>
           
           <div className="hero-actions">
-            <Link to="/search" className="hero-button primary" onClick={handleHomeClick}>
+            <ViewTransitionLink to="/search" className="hero-button primary" onClick={handleHomeClick}>
               Search Articles
-            </Link>
-            <Link to="/archive" className="hero-button secondary">
+            </ViewTransitionLink>
+            <ViewTransitionLink to="/archive" className="hero-button secondary">
               Explore Archive
-            </Link>
+            </ViewTransitionLink>
           </div>
         </div>
         
         <div className="hero-image">
-          <picture>
-            <source
-              type="image/avif"
-              srcSet="/home-hero-800.avif 800w,
-              /home-hero-1200.avif 1200w,
-              /home-hero-1600.avif 1600w,
-              /home-hero-2400.avif 2400w"
-              sizes="100vw"
-            />
-            <source
-              type="image/webp"
-              srcSet="/home-hero-800.webp 800w,
-              /home-hero-1200.webp 1200w,
-              /home-hero-1600.webp 1600w,
-              /home-hero-2400.webp 2400w"
-              sizes="100vw"
-            />
-            <img
-              src="/home-hero.jpg"  
-              srcSet="/home-hero-800.jpg 800w,
-              /home-hero-1200.jpg 1200w,
-              /home-hero-1600.jpg 1600w,
-              /home-hero-2400.jpg 2400w"
-              sizes="100vw"
-              alt="New York Times News Explorer"
-              className="home-hero"
-              fetchPriority="high"
-              decoding="sync" 
-            />
-          </picture>
+          <ViewTransitionImage
+            src="/home-hero.jpg"
+            srcSet="/home-hero-800.jpg 800w, /home-hero-1200.jpg 1200w, /home-hero-1600.jpg 1600w, /home-hero-2400.jpg 2400w"
+            sizes="100vw"
+            alt="New York Times News Explorer"
+            className="home-hero view-transition-hero"
+            viewTransitionName="hero-image"
+            priority="high"
+          />
         </div>
       </section>
 
@@ -145,7 +126,7 @@ const HomePage: React.FC = () => {
           <div className="content-section trending-section">
             <div className="section-header">
               <h2>Trending This Week</h2>
-              <Link to="/trending" className="view-all-link">View All →</Link>
+              <ViewTransitionLink to="/trending" className="view-all-link">View All →</ViewTransitionLink>
             </div>
             
             <div className="articles-grid">
@@ -171,13 +152,12 @@ const HomePage: React.FC = () => {
                   onKeyDown={handleKey}
                 >
                   <div className="article-image">
-                    <img
+                    <ViewTransitionImage
                       src={getImageUrl(article)}
                       alt={article.title}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
+                      className="view-transition-article-image"
+                      viewTransitionName={`trending-image-${index}`}
+                      fallbackSrc="/logo.png"
                     />
                     <div className="trending-badge">
                       <span>#{index + 1}</span>
@@ -207,7 +187,7 @@ const HomePage: React.FC = () => {
           <div className="content-section top-stories-section">
             <div className="section-header">
               <h2>Top Stories</h2>
-              <Link to="/top-stories" className="view-all-link">View All →</Link>
+              <ViewTransitionLink to="/top-stories" className="view-all-link">View All →</ViewTransitionLink>
             </div>
             
             <div className="articles-grid">
@@ -233,13 +213,12 @@ const HomePage: React.FC = () => {
                   onKeyDown={handleKey}
                 >
                   <div className="article-image">
-                    <img
+                    <ViewTransitionImage
                       src={getImageUrl(story)}
                       alt={story.title}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
+                      className="view-transition-article-image"
+                      viewTransitionName={`top-story-image-${_index}`}
+                      fallbackSrc="/logo.png"
                     />
                     <div className="story-badge">
                       <span>Top Story</span>
@@ -273,44 +252,44 @@ const HomePage: React.FC = () => {
       <section className="quick-actions">
         <h2>Explore More</h2>
         <div className="actions-grid">
-          <Link to="/search" className="action-card" onClick={handleHomeClick}>
+          <ViewTransitionLink to="/search" className="action-card" onClick={handleHomeClick}>
             <div className="action-icon" aria-hidden="true" />
             <h3>Search Articles</h3>
             <p>Find specific articles with advanced filters</p>
-          </Link>
+          </ViewTransitionLink>
           
-          <Link to="/trending" className="action-card">
+          <ViewTransitionLink to="/trending" className="action-card">
             <div className="action-icon" aria-hidden="true" />
             <h3>Trending</h3>
             <p>Most popular articles this week</p>
-          </Link>
+          </ViewTransitionLink>
           
-          <Link to="/top-stories" className="action-card">
+          <ViewTransitionLink to="/top-stories" className="action-card">
             <div className="action-icon" aria-hidden="true" />
             <h3>Top Stories</h3>
             <p>Latest top stories by section</p>
-          </Link>
+          </ViewTransitionLink>
           
-          <Link to="/archive" className="action-card">
+          <ViewTransitionLink to="/archive" className="action-card">
             <div className="action-icon" aria-hidden="true" />
             <h3>Archive</h3>
             <p>Browse history back to Oct 1, 1851</p>
-          </Link>
+          </ViewTransitionLink>
           
-          <Link to="/favorites" className="action-card">
+          <ViewTransitionLink to="/favorites" className="action-card">
             <div className="action-icon" aria-hidden="true" />
             <h3>Favorites</h3>
             <p>Your saved articles</p>
-          </Link>
+          </ViewTransitionLink>
           
-          <Link to="/books" className="action-card">
+          <ViewTransitionLink to="/books" className="action-card">
             <div className="action-icon" aria-hidden="true" />
             <h3>Books</h3>
             <p>Best Sellers by list</p>
-          </Link>
+          </ViewTransitionLink>
         </div>
       </section>
-    </div>
+    </ViewTransitionWrapper>
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useSearchStore } from "../store/searchStore";
+import ViewTransitionLink from "./ViewTransitionLink";
 
 export const SiteHeader: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,7 +84,7 @@ export const SiteHeader: React.FC = () => {
         }}
       >
         {/* Logo/Brand */}
-        <Link to="/" style={{ textDecoration: "none", color: "var(--text)" }}>
+        <ViewTransitionLink to="/" style={{ textDecoration: "none", color: "var(--text)" }} viewTransitionName="site-header">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <img
               src="/logo.webp"
@@ -100,7 +101,7 @@ export const SiteHeader: React.FC = () => {
               <span style={{ fontSize: 12, opacity: 0.7, marginLeft: 4 }}>by Alberto Muñoz</span>
             </div>
           </div>
-        </Link>
+        </ViewTransitionLink>
 
         {/* Desktop Navigation */}
         <nav 
@@ -108,50 +109,57 @@ export const SiteHeader: React.FC = () => {
             alignItems: "center", 
             gap: "0.5rem"
           }}
-          className="desktop-nav"
+          className="desktop-nav view-transition-navigation"
         >
-          <Link
+          <ViewTransitionLink
             to="/"
             className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
+            viewTransitionName="nav-home"
           >
             Home
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/trending"
             className={`nav-link ${location.pathname === "/trending" ? "active" : ""}`}
+            viewTransitionName="nav-trending"
           >
             Trending
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/top-stories"
             className={`nav-link ${location.pathname === "/top-stories" ? "active" : ""}`}
+            viewTransitionName="nav-top-stories"
           >
             Top Stories
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/archive"
             className={`nav-link ${location.pathname === "/archive" ? "active" : ""}`}
+            viewTransitionName="nav-archive"
           >
             Archive
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/books"
             className={`nav-link ${location.pathname === "/books" ? "active" : ""}`}
+            viewTransitionName="nav-books"
           >
             Books
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/search"
             className={`nav-link ${location.pathname === "/search" ? "active" : ""}`}
+            viewTransitionName="nav-search"
           >
             Search
-          </Link>
-          <Link
+          </ViewTransitionLink>
+          <ViewTransitionLink
             to="/favorites"
             className={`nav-link ${location.pathname === "/favorites" ? "active" : ""}`}
+            viewTransitionName="nav-favorites"
           >
             Favorites
-          </Link>
+          </ViewTransitionLink>
           
           {/* Options Dropdown */}
           <div style={{ position: "relative" }} ref={optionsRef}>
@@ -312,7 +320,7 @@ export const SiteHeader: React.FC = () => {
           }}
         >
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <Link
+            <ViewTransitionLink
               to="/"
               style={{
                 color: "var(--text)",
@@ -324,10 +332,11 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-home"
             >
               Home
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/trending"
               style={{
                 color: "var(--text)",
@@ -339,10 +348,11 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-trending"
             >
               Trending
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/top-stories"
               style={{
                 color: "var(--text)",
@@ -351,13 +361,15 @@ export const SiteHeader: React.FC = () => {
                 padding: "0.75rem 1rem",
                 borderRadius: "8px",
                 transition: "background 0.2s ease",
+                transition: "background 0.2s ease",
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-top-stories"
             >
               Top Stories
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/archive"
               style={{
                 color: "var(--text)",
@@ -369,10 +381,11 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-archive"
             >
               Archive
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/books"
               style={{
                 color: "var(--text)",
@@ -384,10 +397,11 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-books"
             >
               Books
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/search"
               style={{
                 color: "var(--text)",
@@ -399,10 +413,11 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-search"
             >
               Search
-            </Link>
-            <Link
+            </ViewTransitionLink>
+            <ViewTransitionLink
               to="/favorites"
               style={{
                 color: "var(--text)",
@@ -414,9 +429,10 @@ export const SiteHeader: React.FC = () => {
               }}
               onClick={() => setIsMenuOpen(false)}
               className="mobile-nav-link"
+              viewTransitionName="mobile-nav-favorites"
             >
               Favorites
-            </Link>
+            </ViewTransitionLink>
             
             <div style={{ 
               borderTop: "1px solid var(--border)", 
@@ -437,7 +453,7 @@ export const SiteHeader: React.FC = () => {
               <div style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                 Developer
               </div>
-              <Link
+              <ViewTransitionLink
                 to="/api-docs"
                 style={{
                   color: "var(--text)",
@@ -450,9 +466,10 @@ export const SiteHeader: React.FC = () => {
                 }}
                 onClick={() => setIsMenuOpen(false)}
                 className="mobile-nav-link"
+                viewTransitionName="mobile-nav-api-docs"
               >
                 API Documentation
-              </Link>
+              </ViewTransitionLink>
             </div>
             
             <div style={{ 

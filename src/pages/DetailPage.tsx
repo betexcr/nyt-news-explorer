@@ -8,6 +8,8 @@ import {
 import type { Article } from "../types/nyt";
 import { getArticleByUrl } from "../api/nyt";
 import { formatDate } from "../utils/format";
+import ViewTransitionImage from "../components/ViewTransitionImage";
+import ViewTransitionWrapper from "../components/ViewTransitionWrapper";
 import "../styles/detail.css";
 
 function getImageUrl(article: Article | null): string {
@@ -54,17 +56,23 @@ const DetailPage: React.FC = () => {
   if (!url && !article) return null;
 
   return (
-    <div className="detail-wrap">
+    <ViewTransitionWrapper transitionName="detail-page" className="detail-wrap">
       <article className="panel" style={{ padding: "1rem" }}>
         {loading ? (
           <div>Loading...</div>
         ) : (
           <>
-            <img className="detail-hero" src={getImageUrl(article)} alt="" />
-            <h1 style={{ marginBottom: ".25rem" }}>
+            <ViewTransitionImage
+              className="detail-hero view-transition-detail-hero"
+              src={getImageUrl(article)}
+              alt=""
+              viewTransitionName="detail-hero-image"
+              fallbackSrc="/logo.png"
+            />
+            <h1 className="view-transition-detail-title" style={{ marginBottom: ".25rem" }}>
               {article?.headline?.main || ""}
             </h1>
-            <div className="detail-meta">
+            <div className="detail-meta view-transition-detail-meta">
               <span>{formatDate(article?.pub_date)}</span>
               {article?.section_name ? (
                 <span>{article.section_name}</span>
@@ -73,7 +81,7 @@ const DetailPage: React.FC = () => {
                 <span>{article.byline.original}</span>
               ) : null}
             </div>
-            <div className="detail-body">
+            <div className="detail-body view-transition-detail-body">
               {article?.lead_paragraph ? <p>{article.lead_paragraph}</p> : null}
               {article?.snippet ? <p>{article.snippet}</p> : null}
             </div>
@@ -97,7 +105,7 @@ const DetailPage: React.FC = () => {
           </>
         )}
       </article>
-    </div>
+    </ViewTransitionWrapper>
   );
 };
 
