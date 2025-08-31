@@ -164,9 +164,14 @@ export async function searchArticles(
     const combinedDocs = [...docs1, ...docs2.slice(0, 2)];
     
     return combinedDocs as NytArticle[];
-  } catch (error) {
+  } catch (error: any) {
     // If it's a rate limit error, re-throw it
     if (error instanceof NytRateLimitError) {
+      throw error;
+    }
+    
+    // If it's an abort error, re-throw it
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
       throw error;
     }
     
@@ -175,9 +180,13 @@ export async function searchArticles(
       const response = await makeApiRequest(params1, signal);
       const docs = response?.data?.response?.docs;
       return Array.isArray(docs) ? docs : [];
-    } catch (fallbackError) {
+    } catch (fallbackError: any) {
       // If fallback also fails with rate limit, re-throw it
       if (fallbackError instanceof NytRateLimitError) {
+        throw fallbackError;
+      }
+      // If fallback also fails with abort error, re-throw it
+      if (fallbackError.name === 'AbortError' || fallbackError.message?.includes('aborted')) {
         throw fallbackError;
       }
       // For other errors, return empty array

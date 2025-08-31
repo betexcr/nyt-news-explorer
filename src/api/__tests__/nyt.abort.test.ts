@@ -88,28 +88,26 @@ describe('NYT API - Abort Signal Tests', () => {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Mock successful response
-    mockedAxios.get.mockResolvedValueOnce({
+    // Mock successful response for both page 0 and page 1
+    mockedAxios.get.mockResolvedValue({
       data: {
         response: {
-          docs: [
-            {
-              _id: 'test-id',
-              web_url: 'https://example.com',
-              snippet: 'Test snippet',
-              headline: { main: 'Test Headline' },
-              pub_date: '2023-01-01T00:00:00Z',
-              multimedia: null,
-              keywords: [],
-            },
-          ],
+          docs: Array.from({ length: 10 }, (_, i) => ({
+            _id: `test-id-${i}`,
+            web_url: `https://example.com/${i}`,
+            snippet: `Test snippet ${i}`,
+            headline: { main: `Test Headline ${i}` },
+            pub_date: '2023-01-01T00:00:00Z',
+            multimedia: null,
+            keywords: [],
+          })),
         },
       },
     });
 
     const result = await searchArticles('test query', signal);
 
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(12);
     expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({

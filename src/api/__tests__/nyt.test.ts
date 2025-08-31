@@ -32,34 +32,39 @@ test('searchArticles: success, includes api-key and trimmed query', async () => 
     expect(params.q).toBe('climate'); 
     expect(Number.isInteger(params.page) && params.page >= 0).toBe(true);
     expect(signal).toBeUndefined();  
+    
+    // Return 10 results for each page (mimicking NYT API behavior)
+    const page = params.page || 0;
+    const docs = Array.from({ length: 10 }, (_, i) => ({ 
+      _id: `A-${page}-${i}`,
+      web_url: `https://example.com/${page}-${i}`,
+      snippet: `Test article ${page}-${i}`,
+      multimedia: {
+        caption: 'Test caption',
+        credit: 'Test credit',
+        default: {
+          url: 'https://example.com/image.jpg',
+          height: 600,
+          width: 600
+        },
+        thumbnail: {
+          url: 'https://example.com/thumb.jpg',
+          height: 75,
+          width: 75
+        }
+      },
+      headline: { main: `Test Headline ${page}-${i}` },
+      keywords: [],
+      pub_date: '2024-01-01T00:00:00Z'
+    }));
+    
     return Promise.resolve({
       data: { 
         status: 'OK',
         copyright: 'Copyright (c) 2024 The New York Times Company',
         response: { 
-          docs: [{ 
-            _id: 'A',
-            web_url: 'https://example.com',
-            snippet: 'Test article',
-            multimedia: {
-              caption: 'Test caption',
-              credit: 'Test credit',
-              default: {
-                url: 'https://example.com/image.jpg',
-                height: 600,
-                width: 600
-              },
-              thumbnail: {
-                url: 'https://example.com/thumb.jpg',
-                height: 75,
-                width: 75
-              }
-            },
-            headline: { main: 'Test Headline' },
-            keywords: [],
-            pub_date: '2024-01-01T00:00:00Z'
-          }],
-          meta: { hits: 1, offset: 0, time: 10 }
+          docs,
+          meta: { hits: 20, offset: page * 10, time: 10 }
         } 
       },
     });
@@ -69,10 +74,15 @@ test('searchArticles: success, includes api-key and trimmed query', async () => 
   
   const { searchArticles } = await import('../nyt');
   const res = await searchArticles('  climate  ');
-  expect(res).toEqual([{ 
-    _id: 'A',
-    web_url: 'https://example.com',
-    snippet: 'Test article',
+  
+  // Now returns 12 results (10 from page 0 + 2 from page 1)
+  expect(res).toHaveLength(12);
+  
+  // Check first result (now has page-specific ID)
+  expect(res[0]).toEqual({ 
+    _id: 'A-0-0',
+    web_url: 'https://example.com/0-0',
+    snippet: 'Test article 0-0',
     multimedia: {
       caption: 'Test caption',
       credit: 'Test credit',
@@ -87,10 +97,17 @@ test('searchArticles: success, includes api-key and trimmed query', async () => 
         width: 75
       }
     },
-    headline: { main: 'Test Headline' },
+    headline: { main: 'Test Headline 0-0' },
     keywords: [],
     pub_date: '2024-01-01T00:00:00Z'
-  }]);
+  });
+  
+  // Check that all results have the same structure
+  res.forEach(article => {
+    expect(article).toHaveProperty('_id');
+    expect(article).toHaveProperty('web_url');
+    expect(article).toHaveProperty('snippet');
+  });
 });
 
 test('searchArticles: handles empty response', async () => {
