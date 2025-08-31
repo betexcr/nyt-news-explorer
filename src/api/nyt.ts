@@ -46,6 +46,7 @@ function esc(str: string) {
 function baseParams(): Record<string, string> {
   return { 
     "api-key": API_KEY,
+    "fl": "web_url,headline,abstract,byline,multimedia,pub_date,section_name,subsection_name",
   };
 }
 
@@ -100,19 +101,39 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  const params = { 
+  // Make two requests to get 12 results total
+  const params1 = { 
     ...baseParams(), 
     q, 
     "page": 0
   };
   
-  const response = await makeApiRequest(params, signal);
+  const params2 = { 
+    ...baseParams(), 
+    q, 
+    "page": 1
+  };
   
-  const docs = response?.data?.response?.docs;
-  // For testing: return first 12 results to simulate page size
-  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 12) : [];
-  
-  return limitedDocs as NytArticle[];
+  try {
+    // Make both requests in parallel
+    const [response1, response2] = await Promise.all([
+      makeApiRequest(params1, signal),
+      makeApiRequest(params2, signal)
+    ]);
+    
+    const docs1 = response1?.data?.response?.docs || [];
+    const docs2 = response2?.data?.response?.docs || [];
+    
+    // Combine results: 10 from page 0 + 2 from page 1 = 12 total
+    const combinedDocs = [...docs1, ...docs2.slice(0, 2)];
+    
+    return combinedDocs as NytArticle[];
+  } catch {
+    // If parallel requests fail, fall back to single request
+    const response = await makeApiRequest(params1, signal);
+    const docs = response?.data?.response?.docs;
+    return Array.isArray(docs) ? docs : [];
+  }
 }
 
 // Advanced search with pagination, sorting, and date filters
@@ -150,10 +171,8 @@ export async function searchArticlesAdv(params: {
   const response = await makeApiRequest(query, signal);
   const docs = response?.data?.response?.docs;
   
-  // For testing: return first 12 results to simulate page size
-  const limitedDocs = Array.isArray(docs) ? docs.slice(0, 12) : [];
-  
-  return limitedDocs as NytArticle[];
+  // Return all results from the API (NYT API has its own pagination)
+  return Array.isArray(docs) ? docs : [];
 }
 
 export async function getArticleByUrl(

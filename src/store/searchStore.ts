@@ -102,8 +102,8 @@ export const useSearchStore = create<SearchState>()(
       setArticles: (a) => set({ 
         articles: a, 
         currentPage: 0, 
-        // If we get less than 12 results, there are no more pages (for testing)
-        hasMore: a.length === 12 
+        // If we get 12 results, there might be more pages
+        hasMore: a.length >= 12 
       }),
       appendArticles: (a) => set((state) => ({ 
         articles: [...state.articles, ...a],
