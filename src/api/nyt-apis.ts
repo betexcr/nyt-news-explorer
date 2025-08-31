@@ -13,7 +13,10 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
-const BASE_URL = "https://api.nytimes.com/svc";
+
+// Use proxy in development, direct API in production
+const isDevelopment = process.env.NODE_ENV === 'development';
+const BASE_URL = isDevelopment ? "/svc" : "https://api.nytimes.com/svc";
 
 // API endpoints
 const ENDPOINTS = {
@@ -58,7 +61,7 @@ class NytApiError extends Error {
   }
 }
 
-// Generic API request function with error handling
+// Generic API request function with error handling and CORS fallback
 async function makeApiRequest<T>(
   url: string,
   params: Record<string, any> = {},
@@ -76,6 +79,23 @@ async function makeApiRequest<T>(
     if (error.name === 'AbortError') {
       throw new NytApiError('Request was cancelled', 0, 'ABORTED');
     }
+    
+    // If it's a CORS error and we're in development, try with the full URL
+    if (isDevelopment && error.message?.includes('CORS')) {
+      console.warn('CORS error detected, trying direct API call...');
+      try {
+        const fullUrl = url.replace('/svc', 'https://api.nytimes.com/svc');
+        const response: AxiosResponse<T> = await axios.get(fullUrl, {
+          params: { ...baseParams(), ...params },
+          signal,
+          timeout: options?.timeoutMs,
+        });
+        return response.data;
+      } catch (fallbackError: any) {
+        console.warn('Direct API call also failed:', fallbackError.message);
+      }
+    }
+    
     const status = error.response?.status;
     const message = error.response?.data?.message || error.response?.data?.fault?.faultstring || error.message;
     const code = error.code || (status === 403 ? 'FORBIDDEN' : undefined);
