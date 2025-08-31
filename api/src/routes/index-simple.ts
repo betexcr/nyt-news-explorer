@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { graphqlRoutes } from './graphql.js'
 
 /**
  * Register simplified routes for initial testing
@@ -83,4 +84,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (request, reply) => {
     reply.redirect(302, '/docs')
   })
+
+  // Minimal GraphQL route for simple server
+  await fastify.register(graphqlRoutes, { prefix: '/api/v1/graphql' })
 }

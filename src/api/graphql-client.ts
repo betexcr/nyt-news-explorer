@@ -10,7 +10,7 @@ import type { NytArticle } from "../types/nyt";
 // GraphQL endpoint configuration
 const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL 
   ? `${process.env.REACT_APP_API_URL}/api/v1/graphql`
-  : 'http://localhost:3001/api/v1/graphql';
+  : 'http://localhost:3000/api/v1/graphql';
 
 // GraphQL query definitions
 const QUERIES = {
@@ -404,15 +404,37 @@ function transformGraphQLTopStory(story: any): TopStory {
 }
 
 function transformGraphQLMostPopular(item: any): MostPopularArticle {
-  // Transform multimedia data to match the expected media structure
-  const media = item.multimedia ? item.multimedia.map((mm: any) => ({
-    type: mm.type || 'image',
-    subtype: mm.subtype || 'photo',
-    caption: mm.caption || '',
-    copyright: mm.copyright || '',
-    approved_for_syndication: mm.approved_for_syndication || 1,
-    "media-metadata": mm['media-metadata'] || []
-  })) : [];
+  // Transform API multimedia (flat list) into MostPopular media structure
+  let media: any[] = [];
+  if (Array.isArray(item.multimedia) && item.multimedia.length > 0) {
+    // If server already provided nested media-metadata, preserve
+    const firstHasNested = !!item.multimedia[0]?.['media-metadata'];
+    if (firstHasNested) {
+      media = item.multimedia.map((mm: any) => ({
+        type: mm.type || 'image',
+        subtype: mm.subtype || 'photo',
+        caption: mm.caption || '',
+        copyright: mm.copyright || '',
+        approved_for_syndication: mm.approved_for_syndication || 1,
+        'media-metadata': mm['media-metadata'] || []
+      }));
+    } else {
+      // Group flat entries into a single media with media-metadata array
+      media = [{
+        type: item.multimedia[0]?.type || 'image',
+        subtype: item.multimedia[0]?.subtype || 'photo',
+        caption: item.multimedia[0]?.caption || '',
+        copyright: item.multimedia[0]?.copyright || '',
+        approved_for_syndication: 1,
+        'media-metadata': item.multimedia.map((mm: any) => ({
+          url: mm.url,
+          format: mm.format || 'Standard Thumbnail',
+          height: mm.height || 0,
+          width: mm.width || 0,
+        }))
+      }];
+    }
+  }
 
   return {
     id: item.id || 0,

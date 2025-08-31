@@ -17,20 +17,16 @@ const BooksPage: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        if (!USE_KEY) {
-          if (!cancelled) setBooks(mockBooks);
-          return;
-        }
         const results = date === 'current'
           ? await getBestSellers(listName)
           : await getBooksListByDate(listName, date);
         if (!cancelled) setBooks(results);
       } catch (err: any) {
+        // Do not use mock data; surface error state and keep current list
         if (!cancelled) setError(err?.message || 'Failed to load books');
       } finally {
         if (!cancelled) setLoading(false);

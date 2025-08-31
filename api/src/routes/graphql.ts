@@ -238,6 +238,7 @@ const typeDefs = /* GraphQL */ `
     publishedDate: String
     section: String
     byline: String
+    multimedia: [MultimediaItem!]!
   }
 
   extend type Query {
@@ -451,37 +452,42 @@ const resolvers = {
       const list = encodeURIComponent(args.list)
       const cacheKey = `graphql:books:bestsellers:${date}:${list}`
       const cached = await fastify.cache?.get?.(cacheKey)
-      if (cached) return cached
       const url = `https://api.nytimes.com/svc/books/v3/lists/${date}/${list}.json?api-key=${process.env.NYT_API_KEY}`
-      const data = await (fastify.circuitBreaker?.execute
-        ? fastify.circuitBreaker.execute('external', async () => {
-            const res = await fetch(url)
-            if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
-            return res.json()
-          })
-        : (async () => {
-            const res = await fetch(url)
-            if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
-            return res.json()
-          })())
-      const result = {
-        listName: data.results?.list_name || args.list,
-        displayName: data.results?.display_name || args.list,
-        updated: data.results?.updated || null,
-        books: (data.results?.books || []).map((b: any) => ({
-          title: b.title,
-          author: b.author,
-          description: b.description,
-          publisher: b.publisher,
-          rank: b.rank,
-          weeksOnList: b.weeks_on_list,
-          amazonProductUrl: b.amazon_product_url,
-          bookImage: b.book_image,
-          isbn13: b.isbns?.map((i: any) => i.isbn13).filter(Boolean) || [],
-        })),
+      try {
+        const data = await (fastify.circuitBreaker?.execute
+          ? fastify.circuitBreaker.execute('external', async () => {
+              const res = await fetch(url, { headers: { 'X-API-Key': process.env.NYT_API_KEY! } })
+              if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
+              return res.json()
+            })
+          : (async () => {
+              const res = await fetch(url, { headers: { 'X-API-Key': process.env.NYT_API_KEY! } })
+              if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
+              return res.json()
+            })())
+        const result = {
+          listName: data.results?.list_name || args.list,
+          displayName: data.results?.display_name || args.list,
+          updated: data.results?.updated || null,
+          books: (data.results?.books || []).map((b: any) => ({
+            title: b.title,
+            author: b.author,
+            description: b.description,
+            publisher: b.publisher,
+            rank: b.rank,
+            weeksOnList: b.weeks_on_list,
+            amazonProductUrl: b.amazon_product_url,
+            bookImage: b.book_image,
+            isbn13: b.isbns?.map((i: any) => i.isbn13).filter(Boolean) || [],
+          })),
+        }
+        await fastify.cache?.set?.(cacheKey, result, 900)
+        return result
+      } catch (err) {
+        // If we have a cached value, serve it; otherwise bubble up the error
+        if (cached) return cached
+        throw err
       }
-      await fastify.cache?.set?.(cacheKey, result, 900)
-      return result
     },
 
     mostPopular: async (_parent, args, context) => {
@@ -591,6 +597,35 @@ function transformNYTTopStory(story: any) {
 }
 
 function transformNYTMostPopular(item: any) {
+  // Map NYT Most Popular "media" → flat MultimediaItem[]
+  const multimedia: any[] = []
+  try {
+    if (Array.isArray(item.media) && item.media.length > 0) {
+      const m = item.media[0]
+      const caption = m.caption || ''
+      const copyright = m.copyright || ''
+      const subtype = m.subtype || 'photo'
+      const type = m.type || 'image'
+      if (Array.isArray(m["media-metadata"])) {
+        for (const meta of m["media-metadata"]) {
+          if (meta && meta.url) {
+            multimedia.push({
+              url: meta.url,
+              format: meta.format || 'Standard Thumbnail',
+              height: meta.height || 0,
+              width: meta.width || 0,
+              type,
+              subtype,
+              caption,
+              copyright,
+            })
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore mapping errors; fallback to empty multimedia
+  }
   return {
     id: item.id || item.url,
     url: item.url,
@@ -599,6 +634,7 @@ function transformNYTMostPopular(item: any) {
     publishedDate: item.published_date,
     section: item.section,
     byline: item.byline,
+    multimedia,
   }
 }
 
@@ -627,6 +663,8 @@ export async function graphqlRoutes(fastify: FastifyInstance) {
       user: (request as any).user,
     }),
     graphiql: process.env.NODE_ENV === 'development',
+    // Defer CORS to Fastify @fastify/cors so we can reflect dynamic dev ports
+    cors: false,
     logging: {
       debug: (...args) => fastify.log.debug(args),
       info: (...args) => fastify.log.info(args),

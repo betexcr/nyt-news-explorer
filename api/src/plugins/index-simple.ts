@@ -41,7 +41,15 @@ export async function registerPlugins(fastify: FastifyInstance) {
   
   // CORS
   await fastify.register(cors as any, {
-    origin: true, // Allow all origins for development
+    // Allow CRA dev server dynamic ports
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true)
+      try {
+        const url = new URL(origin)
+        if (url.hostname === 'localhost') return cb(null, true)
+      } catch {}
+      cb(null, false)
+    },
     credentials: true,
   })
   
