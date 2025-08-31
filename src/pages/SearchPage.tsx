@@ -267,26 +267,27 @@ const SearchPage: React.FC = () => {
     }
   }, []);
 
-  // Dynamic height calculation for virtualized list
+  // Dynamic height calculation for virtualized list (only when needed)
   const [listHeight, setListHeight] = useState(600);
   const [itemHeight, setItemHeight] = useState(400);
   const [cardMin, setCardMin] = useState<number>(300);
 
   useEffect(() => {
+    // Only calculate dimensions if we're using list view (virtualized)
+    if (viewMode !== 'list') return;
+
     const updateDimensions = () => {
-      if (containerRef.current) {
-        const containerHeight = window.innerHeight - 200; // Account for header and padding
-        setListHeight(Math.max(400, containerHeight));
-        
-        // Adjust item height based on viewport
-        const viewportWidth = window.innerWidth;
-        if (viewportWidth < 768) {
-          setItemHeight(350); // Mobile
-        } else if (viewportWidth < 1024) {
-          setItemHeight(380); // Tablet
-        } else {
-          setItemHeight(400); // Desktop
-        }
+      const containerHeight = window.innerHeight - 200; // Account for header and padding
+      setListHeight(Math.max(400, containerHeight));
+      
+      // Adjust item height based on viewport
+      const viewportWidth = window.innerWidth;
+      if (viewportWidth < 768) {
+        setItemHeight(350); // Mobile
+      } else if (viewportWidth < 1024) {
+        setItemHeight(380); // Tablet
+      } else {
+        setItemHeight(400); // Desktop
       }
     };
 
@@ -294,24 +295,26 @@ const SearchPage: React.FC = () => {
     window.addEventListener('resize', updateDimensions);
 
     return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
+  }, [viewMode]);
 
-  // ResizeObserver for more precise height updates
+  // ResizeObserver for more precise height updates (only for list view)
   useEffect(() => {
-    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
-      try {
-        const resizeObserver = new ResizeObserver(() => {
-          const containerHeight = window.innerHeight - 200;
-          setListHeight(Math.max(400, containerHeight));
-        });
+    if (viewMode !== 'list' || !containerRef.current || typeof ResizeObserver === 'undefined') {
+      return;
+    }
 
-        resizeObserver.observe(containerRef.current);
+    try {
+      const resizeObserver = new ResizeObserver(() => {
+        const containerHeight = window.innerHeight - 200;
+        setListHeight(Math.max(400, containerHeight));
+      });
 
-        return () => resizeObserver.disconnect();
-      } catch {
-        // Fallback if ResizeObserver is not available or fails
-        // Silently handle the error to avoid test warnings
-      }
+      resizeObserver.observe(containerRef.current);
+
+      return () => resizeObserver.disconnect();
+    } catch {
+      // Fallback if ResizeObserver is not available or fails
+      // Silently handle the error to avoid test warnings
     }
   }, [viewMode]);
 
@@ -429,17 +432,19 @@ const SearchPage: React.FC = () => {
       return <ArticleTable articles={articles} />;
     }
 
-    // Use virtualization for grid view when there are many articles
-    if (viewMode === 'list' || articles.length > 50) {
+    // Use virtualization only for list view
+    if (viewMode === 'list') {
       return (
-        <VirtualizedArticleList
-          articles={articles}
-          height={listHeight}
-          itemHeight={itemHeight}
-          hasMore={hasMore}
-          loadingMore={loadingMore}
-          onLoadMore={handleLoadMore}
-        />
+        <div ref={containerRef}>
+          <VirtualizedArticleList
+            articles={articles}
+            height={listHeight}
+            itemHeight={itemHeight}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={handleLoadMore}
+          />
+        </div>
       );
     }
 
@@ -464,7 +469,7 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef}>
+    <div>
       {/* Page Header */}
       <header className="page-header">
         <div>
