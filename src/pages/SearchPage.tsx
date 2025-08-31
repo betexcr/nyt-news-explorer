@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
-import { searchArticlesAdv, makeSearchController } from "../api/nyt";
+import { searchArticlesAdv, makeSearchController, NytRateLimitError } from "../api/nyt";
 import { debounce } from "../utils/debounce";
 import ArticleCard from "../components/ArticleCard";
 import ArticleTable from "../components/ArticleTable";
@@ -54,6 +54,7 @@ const SECTIONS = [
 const SearchPage: React.FC = () => {
   const location = useLocation() as { state?: FromHomeState };
   const containerRef = useRef<HTMLDivElement>(null);
+  const [rateLimitError, setRateLimitError] = useState(false);
 
   const {
     query,
@@ -208,13 +209,19 @@ const SearchPage: React.FC = () => {
         if (text.trim()) {
           setLoading(true);
           setHasSearched(true);
+          setRateLimitError(false);
           runSearch(text.trim())
             .then((result) => {
               setArticles(result);
               setLoading(false);
             })
-            .catch(() => {
-              setArticles([]);
+            .catch((error) => {
+              if (error instanceof NytRateLimitError) {
+                setRateLimitError(true);
+                setArticles([]);
+              } else {
+                setArticles([]);
+              }
               setLoading(false);
             });
         }
@@ -229,6 +236,7 @@ const SearchPage: React.FC = () => {
     
     setLoading(true);
     setHasSearched(true);
+    setRateLimitError(false);
     setAdvancedParams({ query: text, ...advancedForm });
     
     try {
@@ -242,8 +250,13 @@ const SearchPage: React.FC = () => {
       });
       
       setArticles(result);
-    } catch {
-      setArticles([]);
+    } catch (error) {
+      if (error instanceof NytRateLimitError) {
+        setRateLimitError(true);
+        setArticles([]);
+      } else {
+        setArticles([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -321,6 +334,10 @@ const SearchPage: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setQuery(v);
+    // Clear rate limit error when user starts typing
+    if (rateLimitError) {
+      setRateLimitError(false);
+    }
     debouncedSearch(v);
   };
 
@@ -335,12 +352,18 @@ const SearchPage: React.FC = () => {
 
     setLoading(true);
     setHasSearched(true);
+    setRateLimitError(false);
 
     try {
       const result = await runSearch(text);
       setArticles(result);
-    } catch {
-      setArticles([]);
+    } catch (error) {
+      if (error instanceof NytRateLimitError) {
+        setRateLimitError(true);
+        setArticles([]);
+      } else {
+        setArticles([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -373,9 +396,15 @@ const SearchPage: React.FC = () => {
         // No more results
         setHasMore(false);
       }
-    } catch {
-      // Error loading more articles
-      setHasMore(false);
+    } catch (error) {
+      if (error instanceof NytRateLimitError) {
+        // Don't set hasMore to false for rate limit errors
+        // User can try again after waiting
+        console.warn('Rate limit hit during load more, will retry on next scroll');
+      } else {
+        // Error loading more articles
+        setHasMore(false);
+      }
     } finally {
       setLoadingMore(false);
     }
@@ -420,6 +449,18 @@ const SearchPage: React.FC = () => {
     }
 
     if (!articles || articles.length === 0) {
+      if (rateLimitError) {
+        return (
+          <div className="panel empty">
+            <h3>API Rate Limit Exceeded</h3>
+            <p>You've reached the limit for API requests. Please wait a moment before making another search.</p>
+            <p style={{ fontSize: '0.9em', opacity: 0.8, marginTop: '1rem' }}>
+              This is a free API with rate limits. Try again in a few minutes.
+            </p>
+          </div>
+        );
+      }
+      
       return (
         <div className="panel empty">
           <h3>No results found</h3>

@@ -1,6 +1,29 @@
 import axios from "axios";
 import type { NytArticle } from "../types/nyt";
 
+// Custom error types for API responses
+export class NytApiError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'NytApiError';
+  }
+}
+
+export class NytRateLimitError extends NytApiError {
+  constructor() {
+    super(
+      'API rate limit exceeded. Please wait a moment before making another request.',
+      429,
+      'RATE_LIMIT_EXCEEDED'
+    );
+    this.name = 'NytRateLimitError';
+  }
+}
+
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
 // Use proxy in development, direct API in production
@@ -27,11 +50,24 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
     const response = await axios.get(getApiUrl(), { params, signal });
     return response;
   } catch (error: any) {
+    // Check for rate limit error in response
+    if (error.response?.data?.fault?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation') {
+      throw new NytRateLimitError();
+    }
+    
     // If it's a CORS error and we're in development, try the proxy
     if (isDevelopment && error.message?.includes('CORS') && CORS_PROXY_URL) {
       console.warn('CORS error detected, trying fallback proxy...');
-      const proxyResponse = await axios.get(CORS_PROXY_URL, { params, signal });
-      return proxyResponse;
+      try {
+        const proxyResponse = await axios.get(CORS_PROXY_URL, { params, signal });
+        return proxyResponse;
+      } catch (proxyError: any) {
+        // Check for rate limit error in proxy response too
+        if (proxyError.response?.data?.fault?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation') {
+          throw new NytRateLimitError();
+        }
+        throw proxyError;
+      }
     }
     throw error;
   }
@@ -128,11 +164,25 @@ export async function searchArticles(
     const combinedDocs = [...docs1, ...docs2.slice(0, 2)];
     
     return combinedDocs as NytArticle[];
-  } catch {
-    // If parallel requests fail, fall back to single request
-    const response = await makeApiRequest(params1, signal);
-    const docs = response?.data?.response?.docs;
-    return Array.isArray(docs) ? docs : [];
+  } catch (error) {
+    // If it's a rate limit error, re-throw it
+    if (error instanceof NytRateLimitError) {
+      throw error;
+    }
+    
+    // If parallel requests fail for other reasons, fall back to single request
+    try {
+      const response = await makeApiRequest(params1, signal);
+      const docs = response?.data?.response?.docs;
+      return Array.isArray(docs) ? docs : [];
+    } catch (fallbackError) {
+      // If fallback also fails with rate limit, re-throw it
+      if (fallbackError instanceof NytRateLimitError) {
+        throw fallbackError;
+      }
+      // For other errors, return empty array
+      return [];
+    }
   }
 }
 
@@ -168,11 +218,20 @@ export async function searchArticlesAdv(params: {
     }
   }
   
-  const response = await makeApiRequest(query, signal);
-  const docs = response?.data?.response?.docs;
-  
-  // Return all results from the API (NYT API has its own pagination)
-  return Array.isArray(docs) ? docs : [];
+  try {
+    const response = await makeApiRequest(query, signal);
+    const docs = response?.data?.response?.docs;
+    
+    // Return all results from the API (NYT API has its own pagination)
+    return Array.isArray(docs) ? docs : [];
+  } catch (error) {
+    // If it's a rate limit error, re-throw it
+    if (error instanceof NytRateLimitError) {
+      throw error;
+    }
+    // For other errors, return empty array
+    return [];
+  }
 }
 
 export async function getArticleByUrl(
