@@ -373,7 +373,7 @@ const SearchPage: React.FC = () => {
         // No more results
         setHasMore(false);
       }
-      } catch {
+    } catch {
       // Error loading more articles
       setHasMore(false);
     } finally {
@@ -383,7 +383,7 @@ const SearchPage: React.FC = () => {
 
   // Add scroll detection for regular grid view
   useEffect(() => {
-    if (!hasMore || loadingMore || !articles || articles.length < 12) return;
+    if (!hasMore || loadingMore || !articles) return;
 
     const handleScroll = () => {
       const scrollTop = window.scrollY;
