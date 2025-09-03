@@ -1,14 +1,12 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
-import * as api from '../../api/nyt-apis';
+import * as gql from '../../api/graphql-client';
 import BooksPage from '../BooksPage';
 
 describe('BooksPage', () => {
   test('renders best sellers grid', async () => {
-    const originalKey = process.env.REACT_APP_NYT_API_KEY;
-    process.env.REACT_APP_NYT_API_KEY = 'test';
-    const spy = jest.spyOn(api, 'getBestSellers').mockResolvedValueOnce([
+    const spy = jest.spyOn(gql, 'fetchBestsellers').mockResolvedValueOnce([
       {
         rank: 1,
         rank_last_week: 0,
@@ -52,7 +50,6 @@ describe('BooksPage', () => {
       });
     } finally {
       spy.mockRestore();
-      process.env.REACT_APP_NYT_API_KEY = originalKey;
     }
   });
 });

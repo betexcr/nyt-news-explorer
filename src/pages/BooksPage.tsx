@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-apis';
+import { BOOKS_LISTS } from '../api/nyt-apis';
+import { fetchBestsellers } from '../api/graphql-client';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
 import '../styles/books.css';
@@ -17,18 +18,16 @@ const BooksPage: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
+    const USE_GRAPHQL = !!process.env.REACT_APP_GRAPHQL_ENDPOINT || true;
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
-        if (!USE_KEY) {
+        if (!USE_GRAPHQL) {
           if (!cancelled) setBooks(mockBooks);
           return;
         }
-        const results = date === 'current'
-          ? await getBestSellers(listName)
-          : await getBooksListByDate(listName, date);
+        const results = await fetchBestsellers(listName, date);
         if (!cancelled) setBooks(results);
       } catch (err: any) {
         if (!cancelled) setError(err?.message || 'Failed to load books');
@@ -39,6 +38,18 @@ const BooksPage: React.FC = () => {
     load();
     return () => { cancelled = true; };
   }, [listName, date]);
+
+  const formatPrice = (price: string) => {
+    if (!price || price === '0.00') return 'Price not available';
+    return `$${price}`;
+  };
+
+  const getRankChange = (current: number, last: number) => {
+    if (last === 0) return null;
+    const change = last - current;
+    if (change === 0) return null;
+    return change > 0 ? `↑${change}` : `↓${Math.abs(change)}`;
+  };
 
   return (
     <div className="books-page">
@@ -69,6 +80,7 @@ const BooksPage: React.FC = () => {
             aria-label="Pick date for list (optional)"
             value={date === 'current' ? '' : date}
             max={new Date().toISOString().slice(0,10)}
+            min="2008-01-01"
             onChange={(e) => setDate(e.target.value ? e.target.value : 'current')}
           />
         </label>
@@ -97,24 +109,105 @@ const BooksPage: React.FC = () => {
                   ) : (
                     <div className="book-placeholder" aria-hidden />
                   )}
-                  <div className="rank-badge">#{b.rank}</div>
+                  <div className="rank-badge">
+                    #{b.rank}
+                    {getRankChange(b.rank, b.rank_last_week) && (
+                      <span className="rank-change">{getRankChange(b.rank, b.rank_last_week)}</span>
+                    )}
+                  </div>
+                  {b.asterisk > 0 && (
+                    <div className="asterisk-badge" title="New this week">★</div>
+                  )}
+                  {b.dagger > 0 && (
+                    <div className="dagger-badge" title="Returning to list">†</div>
+                  )}
                 </div>
                 <div className="book-body">
                   <h3 className="book-title">{b.title}</h3>
+                  
                   <div className="book-meta">
                     <span className="author">{b.author}</span>
-                    {b.weeks_on_list ? (
+                    {b.contributor && b.contributor !== b.author && (
                       <>
                         <span className="dot" aria-hidden>•</span>
-                        <span className="weeks">{b.weeks_on_list} weeks</span>
+                        <span className="contributor">{b.contributor}</span>
                       </>
-                    ) : null}
+                    )}
                   </div>
+
+                  {b.publisher && (
+                    <div className="book-publisher">
+                      <span className="publisher-label">Publisher:</span> {b.publisher}
+                    </div>
+                  )}
+
                   {b.description && (
                     <p className="book-desc">{b.description}</p>
                   )}
+
+                  <div className="book-details">
+                    {b.weeks_on_list > 0 && (
+                      <span className="detail-badge weeks">
+                        {b.weeks_on_list} week{b.weeks_on_list !== 1 ? 's' : ''} on list
+                      </span>
+                    )}
+                    {b.price && b.price !== '0.00' && (
+                      <span className="detail-badge price">{formatPrice(b.price)}</span>
+                    )}
+                    {b.age_group && (
+                      <span className="detail-badge age-group">{b.age_group}</span>
+                    )}
+                  </div>
+
+                  {b.isbns && b.isbns.length > 0 && (
+                    <div className="book-isbns">
+                      {b.isbns.map((isbn, index) => (
+                        <span key={index} className="isbn-badge">
+                          {isbn.isbn13 ? `ISBN-13: ${isbn.isbn13}` : `ISBN-10: ${isbn.isbn10}`}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="book-links">
+                    {b.book_review_link && (
+                      <a
+                        className="book-link review-link"
+                        href={b.book_review_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Read Review →
+                      </a>
+                    )}
+                    {b.first_chapter_link && (
+                      <a
+                        className="book-link chapter-link"
+                        href={b.first_chapter_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Read First Chapter →
+                      </a>
+                    )}
+                  </div>
+
                   <div className="book-actions">
-                    {b.amazon_product_url && (
+                    {b.buy_links && b.buy_links.length > 0 ? (
+                      <div className="buy-links">
+                        {b.buy_links.slice(0, 3).map((link, index) => (
+                          <a
+                            key={index}
+                            className="buy-link"
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {link.name} →
+                          </a>
+                        ))}
+                      </div>
+                    ) : b.amazon_product_url ? (
                       <a
                         className="buy-link"
                         href={b.amazon_product_url}
@@ -123,7 +216,7 @@ const BooksPage: React.FC = () => {
                       >
                         Buy on Amazon →
                       </a>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </article>

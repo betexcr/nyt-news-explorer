@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getArchive, NytApiError } from '../api/nyt-apis';
+import { fetchArchiveByDay } from '../api/graphql-client';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
@@ -95,23 +96,27 @@ const ArchivePage: React.FC = () => {
           setTimeoutHit(true);
         }, 12000);
 
-        const docs = await getArchive(query.year, query.month, controller.signal);
-        // Optional client-side day filtering or range filtering
-        const filtered = (() => {
-          const s = query.dayStart;
-          const e = query.dayEnd;
-          if (s != null && e != null) {
-            return docs.filter(d => {
-              const dn = new Date(d.pub_date).getUTCDate();
-              return dn >= s && dn <= e;
-            });
-          }
-          if (s != null) {
-            return docs.filter(d => new Date(d.pub_date).getUTCDate() === s);
-          }
-          return docs;
-        })();
-        setArticles(filtered.slice(0, 60));
+        // If a single day is selected, fetch directly from GraphQL one-day endpoint to avoid month-sized payloads
+        if (query.dayStart != null && (query.dayEnd == null || query.dayEnd === query.dayStart)) {
+          const day = query.dayStart;
+          const byDay = await fetchArchiveByDay(query.year, query.month, day!, 60);
+          setArticles(byDay);
+        } else {
+          // Fallback: month fetch, then client-side filter if a range
+          const docs = await getArchive(query.year, query.month, controller.signal);
+          const filtered = (() => {
+            const s = query.dayStart;
+            const e = query.dayEnd;
+            if (s != null && e != null) {
+              return docs.filter(d => {
+                const dn = new Date(d.pub_date).getUTCDate();
+                return dn >= s && dn <= e;
+              });
+            }
+            return docs;
+          })();
+          setArticles(filtered.slice(0, 60));
+        }
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
         if ((err as NytApiError).status === 403) {
@@ -353,10 +358,10 @@ const ArchivePage: React.FC = () => {
             className={`archive-grid${cardMin >= 520 ? ' single-column' : ''}`}
             style={{ ['--card-min' as any]: `${cardMin}px` }}
           >
-          {articles.length === 0 ? (
+          {(Array.isArray(articles) ? articles : []).length === 0 ? (
             <div className="empty-state">No results for selected range.</div>
           ) : (
-              articles.map((a) => {
+              (Array.isArray(articles) ? articles : []).map((a) => {
               const href = getSafeUrl(a.web_url) || undefined;
               const date = new Date(a.pub_date);
               const keywords = (a.keywords || []).slice(0, 3).map(k => k.value).filter(Boolean);
