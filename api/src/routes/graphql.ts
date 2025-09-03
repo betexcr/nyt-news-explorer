@@ -386,14 +386,36 @@ const resolvers = {
     archiveByDay: async (_parent, args, context) => {
       const { fastify } = context
       const { year, month, day, limit = 50 } = args
-      const cacheKey = `graphql:archive:${year}:${month}:${day}:${limit}`
+      const cacheKey = `graphql:archiveByDay:${year}:${month}:${day}:${limit}`
       const cached = await fastify.cache?.get?.(cacheKey)
       if (cached) return cached
-      const all = await resolvers.Query.archive(_parent, { year, month }, context)
-      const dayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      const filtered = all.filter((a: any) => (a.publishedDate || '').startsWith(dayStr)).slice(0, limit)
-      await fastify.cache?.set?.(cacheKey, filtered, 600)
-      return filtered
+
+      // Use Article Search API for precise day-range to avoid fetching entire month
+      const beginDate = `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`
+      const endDate = beginDate
+      const url = new URL('https://api.nytimes.com/svc/search/v2/articlesearch.json')
+      url.searchParams.set('begin_date', beginDate)
+      url.searchParams.set('end_date', endDate)
+      url.searchParams.set('sort', 'newest')
+      url.searchParams.set('page', '0')
+      url.searchParams.set('api-key', process.env.NYT_API_KEY!)
+
+      const data = await (fastify.circuitBreaker?.execute
+        ? fastify.circuitBreaker.execute('external', async () => {
+            const response = await fetch(url.toString())
+            if (!response.ok) throw new Error(`NYT API error: ${response.status}`)
+            return response.json()
+          })
+        : (async () => {
+            const response = await fetch(url.toString())
+            if (!response.ok) throw new Error(`NYT API error: ${response.status}`)
+            return response.json()
+          })())
+
+      const docs = (data?.response?.docs || [])
+      const articles = docs.map(transformNYTArticle).slice(0, limit)
+      await fastify.cache?.set?.(cacheKey, articles, 600)
+      return articles
     },
 
     me: async (_parent, _args, context) => {

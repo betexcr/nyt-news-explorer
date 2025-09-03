@@ -9,11 +9,13 @@ import ViewTransitionImage from "../components/ViewTransitionImage";
 import ViewTransitionWrapper from "../components/ViewTransitionWrapper";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
+import DayLikeTodayWidget from "../components/DayLikeTodayWidget";
 
 const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
+  const [isTopStoriesExpanded, setIsTopStoriesExpanded] = useState(false);
   
   // No blocking loading state for Home hero
   // Keep local error handling but do not surface in UI
@@ -187,10 +189,22 @@ const HomePage: React.FC = () => {
           <div className="content-section top-stories-section">
             <div className="section-header">
               <h2>Top Stories</h2>
-              <ViewTransitionLink to="/top-stories" className="view-all-link">View All →</ViewTransitionLink>
+              <div className="section-controls">
+                <button
+                  type="button"
+                  className="toggle-button"
+                  onClick={() => setIsTopStoriesExpanded(!isTopStoriesExpanded)}
+                  aria-expanded={isTopStoriesExpanded}
+                  aria-label={isTopStoriesExpanded ? "Collapse top stories" : "Expand top stories"}
+                >
+                  {isTopStoriesExpanded ? "−" : "+"}
+                </button>
+                <ViewTransitionLink to="/top-stories" className="view-all-link">View All →</ViewTransitionLink>
+              </div>
             </div>
             
-            <div className="articles-grid">
+            {isTopStoriesExpanded && (
+              <div className="articles-grid">
               {topStories.map((story, _index) => {
                 const href = getSafeUrl(story.url) || undefined;
                 const handleOpen = () => {
@@ -242,8 +256,14 @@ const HomePage: React.FC = () => {
                 </article>
               );})}
             </div>
+            )}
           </div>
         </div>
+      </section>
+
+      {/* A day like today */}
+      <section className="day-like-today-wrap">
+        <DayLikeTodayWidget />
       </section>
 
       
