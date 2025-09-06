@@ -35,7 +35,7 @@ const ArchivePage: React.FC = () => {
   const [articles, setArticles] = useState<ArchiveArticle[]>([]);
   const [cardMin, setCardMin] = useState<number>(300);
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
-  // Applied query (set when user presses Search)
+  // Applied query (set when user presses Search or on initial load)
   const [query, setQuery] = useState<
     { year: number; month: number; dayStart: number | null; dayEnd: number | null } | null
   >(null);
@@ -74,6 +74,17 @@ const ArchivePage: React.FC = () => {
     }
     return () => {};
   }, []);
+
+  // Initial search on mount with default values
+  useEffect(() => {
+    // Only run initial search if no query has been set yet
+    if (query === null) {
+      const daysInTargetMonth = new Date(year, month, 0).getDate();
+      const s = dayStart != null ? Math.min(dayStart, daysInTargetMonth) : dayStart;
+      const e = dayEnd != null ? Math.min(dayEnd, daysInTargetMonth) : dayEnd;
+      setQuery({ year, month, dayStart: s, dayEnd: e });
+    }
+  }, [year, month, dayStart, dayEnd, query]);
 
   // Fetch archive data only when user presses Search (query is set)
   useEffect(() => {
