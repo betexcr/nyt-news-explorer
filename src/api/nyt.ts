@@ -26,20 +26,15 @@ export class NytRateLimitError extends NytApiError {
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use proxy in development, backend API in production
+// Always use NYT API directly
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = isDevelopment 
-  ? "/svc/search/v2/articlesearch.json"
-  : "/api/v1/articles/search";
+const BASE_URL = "/svc/search/v2/articlesearch.json";
 
 // Fallback CORS proxy for development if proxy doesn't work
 const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Function to get the appropriate API URL with fallback
 function getApiUrl(): string {
-  if (isDevelopment) {
-    return BASE_URL;
-  }
   return BASE_URL;
 }
 
@@ -87,8 +82,8 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
   }
 }
 
-// Function to make backend API request (no api-key parameter)
-async function makeBackendApiRequest(params: Record<string, string | number>, signal?: AbortSignal) {
+// Function to make NYT API request with api-key parameter
+async function makeNytApiRequest(params: Record<string, string | number>, signal?: AbortSignal) {
   try {
     const response = await axios.get(getApiUrl(), { params, signal });
     return response;
@@ -173,17 +168,12 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  // Use different request functions based on environment
-  const requestFn = isDevelopment ? makeApiRequest : makeBackendApiRequest;
+  // Always use NYT API request function
+  const requestFn = makeApiRequest;
   
   // Make two requests to get 12 results total
-  const params1 = isDevelopment 
-    ? { ...baseParams(), q, "page": 0 }
-    : { q, "page": 0 };
-  
-  const params2 = isDevelopment 
-    ? { ...baseParams(), q, "page": 1 }
-    : { q, "page": 1 };
+  const params1 = { ...baseParams(), q, "page": 0 };
+  const params2 = { ...baseParams(), q, "page": 1 };
   
   try {
     // Make requests sequentially to better handle individual errors
@@ -250,12 +240,10 @@ export async function searchArticlesAdv(params: {
 }): Promise<NytArticle[]> {
   const { q, page = 0, sort, begin, end, section, signal } = params;
   
-  // Use different request functions based on environment
-  const requestFn = isDevelopment ? makeApiRequest : makeBackendApiRequest;
+  // Always use NYT API request function
+  const requestFn = makeApiRequest;
   
-  const query: Record<string, string | number> = isDevelopment 
-    ? { ...baseParams(), q, "page": page }
-    : { q, "page": page };
+  const query: Record<string, string | number> = { ...baseParams(), q, "page": page };
   
   // Add sort parameter
   if (sort) query.sort = sort;

@@ -1,10 +1,8 @@
 // API Configuration
 export const API_CONFIG = {
-  // NYT API Configuration
+  // NYT API Configuration - Always use proxy in development, direct API in production
   NYT: {
-    BASE_URL: process.env.NODE_ENV === 'development' 
-      ? "/svc" 
-      : "https://api.nytimes.com/svc",
+    BASE_URL: "/svc", // Proxy handles the full URL in development
     API_KEY: process.env.REACT_APP_NYT_API_KEY || "",
     ENDPOINTS: {
       ARTICLE_SEARCH: "/search/v2/articlesearch.json",
