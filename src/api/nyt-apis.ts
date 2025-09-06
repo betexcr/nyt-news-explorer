@@ -14,32 +14,32 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use proxy in development, direct API in production
+// Use proxy in development, backend API in production
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = isDevelopment ? "/svc" : "https://api.nytimes.com/svc";
+const BASE_URL = isDevelopment ? "/svc" : "/api/v1/articles";
 
 // API endpoints
 const ENDPOINTS = {
   // Article Search API
   ARTICLE_SEARCH: `${BASE_URL}/search/v2/articlesearch.json`,
   
-  // Most Popular API
-  MOST_POPULAR: `${BASE_URL}/mostpopular/v2`,
+  // Most Popular API (direct NYT API - no backend endpoint available)
+  MOST_POPULAR: isDevelopment ? `${BASE_URL}/mostpopular/v2` : "https://api.nytimes.com/svc/mostpopular/v2",
   
   // Top Stories API
   TOP_STORIES: `${BASE_URL}/topstories/v2`,
   
-  // Movie Reviews API
-  MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
+  // Movie Reviews API (direct NYT API - no backend endpoint available)
+  MOVIE_REVIEWS: isDevelopment ? `${BASE_URL}/movies/v2/reviews` : "https://api.nytimes.com/svc/movies/v2/reviews",
   
-  // Books API
-  BOOKS: `${BASE_URL}/books/v3`,
+  // Books API (direct NYT API - no backend endpoint available)
+  BOOKS: isDevelopment ? `${BASE_URL}/books/v3` : "https://api.nytimes.com/svc/books/v3",
   
   // Archive API
-  ARCHIVE: `${BASE_URL}/archive/v1`,
+  ARCHIVE: `${BASE_URL}/archive`,
   
-  // Semantic API
-  SEMANTIC: `${BASE_URL}/semantic/v2`,
+  // Semantic API (direct NYT API - no backend endpoint available)
+  SEMANTIC: isDevelopment ? `${BASE_URL}/semantic/v2` : "https://api.nytimes.com/svc/semantic/v2",
 } as const;
 
 // Base parameters for all API calls
@@ -141,7 +141,9 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
-  const url = `${ENDPOINTS.TOP_STORIES}/${section}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.TOP_STORIES}/${section}.json`
+    : `${ENDPOINTS.TOP_STORIES}/top-stories/${section}`;
   const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
 }
@@ -233,8 +235,10 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  // Call NYT API directly; this endpoint supports CORS and can be large, so allow more time
-  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
+  // Use backend API in production, direct NYT API in development
+  const url = isDevelopment 
+    ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
+    : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
   const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 });
   return response.response.docs;
 }

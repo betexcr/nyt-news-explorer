@@ -26,11 +26,11 @@ export class NytRateLimitError extends NytApiError {
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use proxy in development, direct API in production
+// Use proxy in development, backend API in production
 const isDevelopment = process.env.NODE_ENV === 'development';
 const BASE_URL = isDevelopment 
   ? "/svc/search/v2/articlesearch.json"
-  : "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+  : "/api/v1/articles/search";
 
 // Fallback CORS proxy for development if proxy doesn't work
 const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.com/svc/search/v2/articlesearch.json";
