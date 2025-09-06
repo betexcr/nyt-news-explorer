@@ -266,15 +266,14 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  // Use backend API in production, direct NYT API in development
-  const url = isDevelopment 
-    ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
-    : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
+  // Use direct NYT API for now since backend proxy isn't working
+  const url = `https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`;
   
-  // Use different request functions based on environment
-  const response = isDevelopment 
-    ? await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 })
-    : await makeBackendApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 });
+  const params = {
+    'api-key': API_KEY,
+  };
+  
+  const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });
   
   return response.response.docs;
 }
