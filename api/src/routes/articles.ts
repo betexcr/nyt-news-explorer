@@ -349,6 +349,130 @@ export async function articlesRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Archive-by-day random endpoint
+  fastify.get('/archive/:year/:month/:day/random', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get one random article for a specific day',
+      description: 'Fetches articles for a given YYYY-MM-DD and returns one random normalized article',
+      params: {
+        type: 'object',
+        properties: {
+          year: { type: 'integer', minimum: 1851, maximum: new Date().getFullYear() },
+          month: { type: 'integer', minimum: 1, maximum: 12 },
+          day: { type: 'integer', minimum: 1, maximum: 31 },
+        },
+        required: ['year', 'month', 'day'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            url: { type: 'string' },
+            title: { type: 'string' },
+            abstract: { type: 'string' },
+            snippet: { type: 'string' },
+            leadParagraph: { type: 'string' },
+            source: { type: 'string' },
+            publishedDate: { type: 'string' },
+            author: { type: 'string' },
+            section: { type: 'string' },
+            subsection: { type: 'string' },
+          },
+        },
+        204: { description: 'No content for that day' },
+        400: { $ref: '#/components/responses/400' },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { year, month, day } = request.params as any
+      // Validate year/month with existing schema, and day range
+      archiveParamsSchema.parse({ year, month })
+      const d = Number(day)
+      if (!Number.isInteger(d) || d < 1 || d > 31) {
+        return reply.code(400).send({
+          type: 'https://api.nyt-news-explorer.com/problems/invalid-archive-params',
+          title: 'Invalid Archive Parameters',
+          status: 400,
+          detail: 'Day must be an integer between 1 and 31',
+          instance: request.url,
+          correlationId: request.headers['x-correlation-id'],
+        })
+      }
+
+      const begin = `${year}${String(month).padStart(2, '0')}${String(d).padStart(2, '0')}`
+      const url = new URL('https://api.nytimes.com/svc/search/v2/articlesearch.json')
+      url.searchParams.set('begin_date', begin)
+      url.searchParams.set('end_date', begin)
+      url.searchParams.set('sort', 'newest')
+      url.searchParams.set('page', '0')
+      url.searchParams.set('api-key', config.externalApis.nytApiKey)
+
+      const data = await fastify.circuitBreaker.execute('external', async () => {
+        const response = await fetch(url.toString(), {
+          headers: {
+            'User-Agent': 'NYT-News-Explorer-API/1.0',
+            'Accept': 'application/json',
+          },
+          signal: AbortSignal.timeout(8000),
+        })
+        if (!response.ok) {
+          throw new Error(`NYT API error: ${response.status}`)
+        }
+        return response.json()
+      })
+
+      const docs = (data?.response?.docs || []) as any[]
+      if (!docs.length) {
+        return reply.code(204).send()
+      }
+
+      const pick = docs[Math.floor(Math.random() * docs.length)]
+      const article = {
+        id: pick._id,
+        url: pick.web_url,
+        title: pick.headline?.main || '',
+        abstract: pick.abstract,
+        snippet: pick.snippet,
+        leadParagraph: pick.lead_paragraph,
+        source: pick.source,
+        publishedDate: pick.pub_date,
+        author: pick.byline?.original,
+        section: pick.section_name,
+        subsection: pick.subsection_name,
+      }
+
+      // Short cache since this is randomized from a fixed set for a day
+      reply
+        .header('cache-control', 'public, max-age=120, stale-while-revalidate=300')
+        .send(article)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return reply.code(400).send({
+          type: 'https://api.nyt-news-explorer.com/problems/invalid-archive-params',
+          title: 'Invalid Archive Parameters',
+          status: 400,
+          detail: 'Year, month, or day are invalid',
+          instance: request.url,
+          errors: error.errors,
+          correlationId: request.headers['x-correlation-id'],
+        })
+      }
+      request.log.error({ error, params: request.params }, 'Archive-by-day random fetch failed')
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/archive-unavailable',
+        title: 'Archive Service Unavailable',
+        status: 503,
+        detail: 'The archive service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
   // Top Stories endpoint
   fastify.get('/top-stories/:section', {
     schema: {

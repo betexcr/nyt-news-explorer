@@ -1,27 +1,44 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { fetchArchiveByDay } from '../api/graphql-client';
-import type { ArchiveArticle } from '../types/nyt.other';
-import type { NytArticle } from '../types/nyt';
-import { normalizeArchive } from '../utils/normalize';
+import React, { useEffect, useMemo, useState } from 'react';
 import '../styles/archive.css';
 
 interface DayLikeTodayWidgetProps {
   className?: string;
 }
 
-const PAGE_SIZE = 5;
+interface RandomArticle {
+  id: string;
+  url: string;
+  title: string;
+  abstract: string;
+  snippet: string;
+  leadParagraph: string;
+  source: string;
+  publishedDate: string;
+  author: string;
+  section: string;
+  subsection: string;
+}
 
 const DayLikeTodayWidget: React.FC<DayLikeTodayWidgetProps> = ({ className }) => {
   const today = useMemo(() => new Date(), []);
-  const [all, setAll] = useState<NytArticle[]>([]);
-  const [visible, setVisible] = useState<NytArticle[]>([]);
+  const [articles, setArticles] = useState<RandomArticle[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
-  const [hasMore, setHasMore] = useState<boolean>(false);
 
   const year = today.getUTCFullYear();
   const month = today.getUTCMonth() + 1;
   const day = today.getUTCDate();
+
+  const fetchRandomArticle = async (year: number, month: number, day: number): Promise<RandomArticle | null> => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/v1/articles/archive/${year}/${month}/${day}/random`);
+      if (response.status === 204) return null; // No content
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.warn(`Failed to fetch article for ${year}-${month}-${day}:`, error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -42,34 +59,19 @@ const DayLikeTodayWidget: React.FC<DayLikeTodayWidgetProps> = ({ className }) =>
         const pick = pool.slice(0, Math.min(MAX_YEARS, pool.length));
 
         const results = await Promise.allSettled(
-          pick.map((yy) => fetchArchiveByDay(yy, month, day, 50))
+          pick.map((yy) => fetchRandomArticle(yy, month, day))
         );
-        let combined: ArchiveArticle[] = [];
-        for (const r of results) {
-          if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-            combined = combined.concat(r.value);
-          }
-        }
-        let normalized = combined.map(normalizeArchive);
-        // Keep only valid external links, deduplicate by web_url, and sort by date desc
-        const seen = new Set<string>();
-        normalized = normalized.filter((n) => {
-          if (!/^https?:\/\//i.test(n.web_url || '')) return false;
-          const key = n.web_url;
-          if (!key || seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).sort((a, b) => new Date(b.pub_date).getTime() - new Date(a.pub_date).getTime());
+        
+        const validArticles = results
+          .filter((r): r is PromiseFulfilledResult<RandomArticle | null> => r.status === 'fulfilled' && r.value !== null)
+          .map((r) => r.value as RandomArticle)
+          .filter((article) => article && article.url && /^https?:\/\//i.test(article.url));
+
         if (cancelled) return;
-        setAll(normalized);
-        const first = normalized.slice(0, PAGE_SIZE);
-        setVisible(first);
-        setHasMore(normalized.length > first.length);
+        setArticles(validArticles);
       } catch {
         if (!cancelled) {
-          setAll([]);
-          setVisible([]);
-          setHasMore(false);
+          setArticles([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -78,27 +80,6 @@ const DayLikeTodayWidget: React.FC<DayLikeTodayWidgetProps> = ({ className }) =>
     load();
     return () => { cancelled = true; };
   }, [year, month, day, today]);
-
-  const onLoadMore = useCallback(() => {
-    if (loadingMore || loading) return;
-    setLoadingMore(true);
-    setTimeout(() => {
-      setVisible((prev) => {
-        const next = all.slice(0, prev.length + PAGE_SIZE);
-        setHasMore(next.length < all.length);
-        return next;
-      });
-      setLoadingMore(false);
-    }, 0);
-  }, [all, loadingMore, loading]);
-
-  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const threshold = 120;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < threshold && hasMore && !loadingMore) {
-      onLoadMore();
-    }
-  }, [hasMore, loadingMore, onLoadMore]);
 
   const heading = useMemo(() => {
     const opts: Intl.DateTimeFormatOptions = { month: 'short', day: '2-digit' };
@@ -120,32 +101,23 @@ const DayLikeTodayWidget: React.FC<DayLikeTodayWidgetProps> = ({ className }) =>
       <h2>{heading}</h2>
       {loading ? (
         <div style={{ padding: '1rem 0' }}>Loading…</div>
-      ) : (visible.length > 0 ? (
-        <div style={{ height: 360, overflowY: 'auto' }} onScroll={onScroll}>
+      ) : (articles.length > 0 ? (
+        <div style={{ height: 'auto', overflowY: 'visible' }}>
           <section className={`archive-grid single-column`} style={{ ['--card-min' as any]: `520px` }}>
-            {visible.map((a: NytArticle) => {
-              const href = getSafeUrl(a.web_url) || undefined;
-              const date = new Date(a.pub_date);
-              const keywords = (a.keywords || []).slice(0, 3).map((k: any) => k.value).filter(Boolean);
+            {articles.map((article) => {
+              const href = getSafeUrl(article.url) || undefined;
+              const date = new Date(article.publishedDate);
               return (
-                <article key={a.uri} className="archive-card" tabIndex={0} style={{ position: 'relative' }}>
+                <article key={article.id} className="archive-card" tabIndex={0} style={{ position: 'relative' }}>
                   <div className="card-body">
                     <div className="card-meta">
-                      <span className="badge section">{a.section_name || 'Archive'}</span>
+                      <span className="badge section">{article.section || 'Archive'}</span>
                       <span className="dot" aria-hidden>•</span>
-                      <time className="date" dateTime={a.pub_date}>{date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</time>
-                      {a['word_count' as keyof NytArticle] ? (<><span className="dot" aria-hidden>•</span><span className="badge wc">{(a as any).word_count} words</span></>) : null}
+                      <time className="date" dateTime={article.publishedDate}>{date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}</time>
                     </div>
-                    <h3 className="card-title">{(a as any).headline?.main || (a as any).abstract}</h3>
-                    {(a as any).byline?.original && <div className="byline">{(a as any).byline.original}</div>}
-                    <p className="card-abstract">{(a as any).snippet || (a as any).lead_paragraph || ''}</p>
-                    {keywords.length > 0 && (
-                      <div className="chips">
-                        {keywords.map((kw) => (
-                          <span key={kw} className="chip">{kw}</span>
-                        ))}
-                      </div>
-                    )}
+                    <h3 className="card-title">{article.title}</h3>
+                    {article.author && <div className="byline">{article.author}</div>}
+                    <p className="card-abstract">{article.abstract || article.snippet || ''}</p>
                     <div className="card-actions">
                       {href && (
                         <a className="read-link" href={href} target="_blank" rel="noopener noreferrer">Read on NYTimes →</a>
@@ -156,8 +128,6 @@ const DayLikeTodayWidget: React.FC<DayLikeTodayWidgetProps> = ({ className }) =>
               );
             })}
           </section>
-          {loadingMore && <div style={{ padding: '0.5rem 0' }}>Loading more…</div>}
-          {!hasMore && visible.length > 0 && <div style={{ padding: '0.5rem 0', opacity: 0.7 }}>No more articles</div>}
         </div>
       ) : (
         <div style={{ padding: '0.5rem 0', opacity: 0.8 }}>No articles available for today.</div>
