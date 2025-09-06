@@ -14,32 +14,32 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use proxy in development, backend API in production
+// Use NYT API directly for now (backend API will be implemented in another branch)
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = isDevelopment ? "/svc" : "/api/v1/articles";
+const BASE_URL = "https://api.nytimes.com/svc";
 
-// API endpoints
+// API endpoints - all using direct NYT API
 const ENDPOINTS = {
   // Article Search API
   ARTICLE_SEARCH: `${BASE_URL}/search/v2/articlesearch.json`,
   
-  // Most Popular API (direct NYT API - no backend endpoint available)
-  MOST_POPULAR: isDevelopment ? `${BASE_URL}/mostpopular/v2` : "https://api.nytimes.com/svc/mostpopular/v2",
+  // Most Popular API
+  MOST_POPULAR: `${BASE_URL}/mostpopular/v2`,
   
   // Top Stories API
   TOP_STORIES: `${BASE_URL}/topstories/v2`,
   
-  // Movie Reviews API (direct NYT API - no backend endpoint available)
-  MOVIE_REVIEWS: isDevelopment ? `${BASE_URL}/movies/v2/reviews` : "https://api.nytimes.com/svc/movies/v2/reviews",
+  // Movie Reviews API
+  MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
   
-  // Books API (direct NYT API - no backend endpoint available)
-  BOOKS: isDevelopment ? `${BASE_URL}/books/v3` : "https://api.nytimes.com/svc/books/v3",
+  // Books API
+  BOOKS: `${BASE_URL}/books/v3`,
   
   // Archive API
-  ARCHIVE: `${BASE_URL}/archive`,
+  ARCHIVE: `${BASE_URL}/archive/v1`,
   
-  // Semantic API (direct NYT API - no backend endpoint available)
-  SEMANTIC: isDevelopment ? `${BASE_URL}/semantic/v2` : "https://api.nytimes.com/svc/semantic/v2",
+  // Semantic API
+  SEMANTIC: `${BASE_URL}/semantic/v2`,
 } as const;
 
 // Base parameters for all API calls
@@ -103,31 +103,6 @@ async function makeApiRequest<T>(
   }
 }
 
-// Backend API request function (no api-key parameter)
-async function makeBackendApiRequest<T>(
-  url: string,
-  params: Record<string, any> = {},
-  signal?: AbortSignal,
-  options?: { timeoutMs?: number }
-): Promise<T> {
-  try {
-    const response: AxiosResponse<T> = await axios.get(url, {
-      params,
-      signal,
-      timeout: options?.timeoutMs,
-    });
-    return response.data;
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      throw new NytApiError('Request was cancelled', 0, 'ABORTED');
-    }
-    
-    const status = error.response?.status;
-    const message = error.response?.data?.message || error.response?.data?.fault?.faultstring || error.message;
-    const code = error.code || (status === 403 ? 'FORBIDDEN' : undefined);
-    throw new NytApiError(`API request failed: ${message}`, status, code);
-  }
-}
 
 // Type definitions for different APIs
 // Movie Reviews kept local since endpoint is deprecated and may be removed from app usage
@@ -167,15 +142,8 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
-  const url = isDevelopment 
-    ? `${ENDPOINTS.TOP_STORIES}/${section}.json`
-    : `${ENDPOINTS.TOP_STORIES}/top-stories/${section}`;
-  
-  // Use different request functions based on environment
-  const response = isDevelopment 
-    ? await makeApiRequest<TopStoriesResponse>(url, {}, signal)
-    : await makeBackendApiRequest<TopStoriesResponse>(url, {}, signal);
-  
+  const url = `${ENDPOINTS.TOP_STORIES}/${section}.json`;
+  const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
 }
 
@@ -209,6 +177,7 @@ export async function searchArticlesByDay(
       'news_desk',
     ].join(','),
   } as Record<string, string>;
+  
   const data = await makeApiRequest<any>(url, params, signal, { timeoutMs: 15000 });
   const docs = Array.isArray(data?.response?.docs) ? data.response.docs : [];
   return docs as unknown as ArchiveArticle[];
@@ -266,15 +235,9 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  // Use direct NYT API for now since backend proxy isn't working
-  const url = `https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`;
-  
-  const params = {
-    'api-key': API_KEY,
-  };
-  
+  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
+  const params = { 'api-key': API_KEY };
   const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });
-  
   return response.response.docs;
 }
 
