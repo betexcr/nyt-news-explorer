@@ -87,6 +87,28 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
   }
 }
 
+// Function to make backend API request (no api-key parameter)
+async function makeBackendApiRequest(params: Record<string, string | number>, signal?: AbortSignal) {
+  try {
+    const response = await axios.get(getApiUrl(), { params, signal });
+    return response;
+  } catch (error: any) {
+    // Check for rate limit error in response
+    const responseData = error.response?.data;
+    const isRateLimitError = 
+      responseData?.fault?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
+      responseData?.fault?.fault?.errorcode === 'policies.ratelimit.QuotaViolation' ||
+      responseData?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
+      responseData?.fault?.errorcode === 'policies.ratelimit.QuotaViolation';
+    
+    if (isRateLimitError) {
+      throw new NytRateLimitError();
+    }
+    
+    throw error;
+  }
+}
+
 type NytSort = "newest" | "oldest" | "best" | "relevance";
 
 function esc(str: string) {
@@ -151,28 +173,27 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
-  // Make two requests to get 12 results total
-  const params1 = { 
-    ...baseParams(), 
-    q, 
-    "page": 0
-  };
+  // Use different request functions based on environment
+  const requestFn = isDevelopment ? makeApiRequest : makeBackendApiRequest;
   
-  const params2 = { 
-    ...baseParams(), 
-    q, 
-    "page": 1
-  };
+  // Make two requests to get 12 results total
+  const params1 = isDevelopment 
+    ? { ...baseParams(), q, "page": 0 }
+    : { q, "page": 0 };
+  
+  const params2 = isDevelopment 
+    ? { ...baseParams(), q, "page": 1 }
+    : { q, "page": 1 };
   
   try {
     // Make requests sequentially to better handle individual errors
-    const response1 = await makeApiRequest(params1, signal);
+    const response1 = await requestFn(params1, signal);
     const docs1 = response1?.data?.response?.docs || [];
     
     // If first request succeeds, try second request
     let docs2: any[] = [];
     try {
-      const response2 = await makeApiRequest(params2, signal);
+      const response2 = await requestFn(params2, signal);
       docs2 = response2?.data?.response?.docs || [];
     } catch (secondError: any) {
       // If second request fails with rate limit, we still have results from first
@@ -199,7 +220,7 @@ export async function searchArticles(
     
     // If parallel requests fail for other reasons, fall back to single request
     try {
-      const response = await makeApiRequest(params1, signal);
+      const response = await requestFn(params1, signal);
       const docs = response?.data?.response?.docs;
       return Array.isArray(docs) ? docs : [];
     } catch (fallbackError: any) {
@@ -228,11 +249,13 @@ export async function searchArticlesAdv(params: {
   signal?: AbortSignal;
 }): Promise<NytArticle[]> {
   const { q, page = 0, sort, begin, end, section, signal } = params;
-  const query: Record<string, string | number> = { 
-    ...baseParams(), 
-    q, 
-    "page": page
-  };
+  
+  // Use different request functions based on environment
+  const requestFn = isDevelopment ? makeApiRequest : makeBackendApiRequest;
+  
+  const query: Record<string, string | number> = isDevelopment 
+    ? { ...baseParams(), q, "page": page }
+    : { q, "page": page };
   
   // Add sort parameter
   if (sort) query.sort = sort;
@@ -250,7 +273,7 @@ export async function searchArticlesAdv(params: {
   }
   
   try {
-    const response = await makeApiRequest(query, signal);
+    const response = await requestFn(query, signal);
     const docs = response?.data?.response?.docs;
     
     // Return all results from the API (NYT API has its own pagination)

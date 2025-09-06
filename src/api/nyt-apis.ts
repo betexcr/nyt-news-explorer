@@ -103,6 +103,32 @@ async function makeApiRequest<T>(
   }
 }
 
+// Backend API request function (no api-key parameter)
+async function makeBackendApiRequest<T>(
+  url: string,
+  params: Record<string, any> = {},
+  signal?: AbortSignal,
+  options?: { timeoutMs?: number }
+): Promise<T> {
+  try {
+    const response: AxiosResponse<T> = await axios.get(url, {
+      params,
+      signal,
+      timeout: options?.timeoutMs,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      throw new NytApiError('Request was cancelled', 0, 'ABORTED');
+    }
+    
+    const status = error.response?.status;
+    const message = error.response?.data?.message || error.response?.data?.fault?.faultstring || error.message;
+    const code = error.code || (status === 403 ? 'FORBIDDEN' : undefined);
+    throw new NytApiError(`API request failed: ${message}`, status, code);
+  }
+}
+
 // Type definitions for different APIs
 // Movie Reviews kept local since endpoint is deprecated and may be removed from app usage
 export interface MovieReview {
@@ -144,7 +170,12 @@ export async function getTopStories(
   const url = isDevelopment 
     ? `${ENDPOINTS.TOP_STORIES}/${section}.json`
     : `${ENDPOINTS.TOP_STORIES}/top-stories/${section}`;
-  const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
+  
+  // Use different request functions based on environment
+  const response = isDevelopment 
+    ? await makeApiRequest<TopStoriesResponse>(url, {}, signal)
+    : await makeBackendApiRequest<TopStoriesResponse>(url, {}, signal);
+  
   return response.results;
 }
 
@@ -239,7 +270,12 @@ export async function getArchive(
   const url = isDevelopment 
     ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
     : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
-  const response = await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 });
+  
+  // Use different request functions based on environment
+  const response = isDevelopment 
+    ? await makeApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 })
+    : await makeBackendApiRequest<ArchiveResponse>(url, {}, signal, { timeoutMs: 20000 });
+  
   return response.response.docs;
 }
 

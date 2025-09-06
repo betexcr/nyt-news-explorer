@@ -8,7 +8,7 @@ const mockAxios = axios as jest.Mocked<typeof axios>;
 const OLD_ENV = process.env;
 
 beforeEach(() => {
-  process.env = { ...OLD_ENV, REACT_APP_NYT_API_KEY: 'test-key' };
+  process.env = { ...OLD_ENV, REACT_APP_NYT_API_KEY: 'test-key', NODE_ENV: 'development' };
   jest.clearAllMocks();
 });
 
