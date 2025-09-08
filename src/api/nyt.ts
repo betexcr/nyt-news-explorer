@@ -29,13 +29,16 @@ const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 // Always use NYT API directly
 const isDevelopment = process.env.NODE_ENV === 'development';
 const BASE_URL = "/svc/search/v2/articlesearch.json";
+const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Fallback CORS proxy for development if proxy doesn't work
 const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Function to get the appropriate API URL with fallback
 function getApiUrl(): string {
-  return BASE_URL;
+  // In development, CRA proxy forwards /svc to https://api.nytimes.com
+  // In production, we must call NYT directly
+  return isDevelopment ? BASE_URL : ABSOLUTE_URL;
 }
 
 // Function to make API request with fallback
