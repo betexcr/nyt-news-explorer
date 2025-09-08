@@ -85,27 +85,7 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
   }
 }
 
-// Function to make NYT API request with api-key parameter
-async function makeNytApiRequest(params: Record<string, string | number>, signal?: AbortSignal) {
-  try {
-    const response = await axios.get(getApiUrl(), { params, signal });
-    return response;
-  } catch (error: any) {
-    // Check for rate limit error in response
-    const responseData = error.response?.data;
-    const isRateLimitError = 
-      responseData?.fault?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-      responseData?.fault?.fault?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-      responseData?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-      responseData?.fault?.errorcode === 'policies.ratelimit.QuotaViolation';
-    
-    if (isRateLimitError) {
-      throw new NytRateLimitError();
-    }
-    
-    throw error;
-  }
-}
+// (removed unused makeNytApiRequest helper)
 
 type NytSort = "newest" | "oldest" | "best" | "relevance";
 
