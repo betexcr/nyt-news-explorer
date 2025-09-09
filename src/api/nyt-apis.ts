@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { graphqlRequest } from "./graphqlClient";
 import type {
   MostPopularArticle,
   MostPopularResponse,
@@ -13,6 +14,7 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
+const GRAPHQL_URL: string = process.env.REACT_APP_GRAPHQL_URL ?? "";
 
 // Use NYT API directly for now (backend API will be implemented in another branch)
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -132,6 +134,15 @@ export async function getMostPopular(
   period: '1' | '7' | '30' = '7',
   signal?: AbortSignal
 ): Promise<MostPopularArticle[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ mostPopular: MostPopularArticle[] }>(
+      GRAPHQL_URL,
+      `query($period: String){ mostPopular(period: $period){ id title abstract url byline published_date section subsection des_facet org_facet per_facet geo_facet } }`,
+      { period },
+      { signal }
+    );
+    return data.mostPopular ?? [];
+  }
   const url = `${ENDPOINTS.MOST_POPULAR}/viewed/${period}.json`;
   const response = await makeApiRequest<MostPopularResponse>(url, {}, signal);
   return response.results;
@@ -142,6 +153,15 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ topStories: TopStory[] }>(
+      GRAPHQL_URL,
+      `query($section: String){ topStories(section: $section){ id title abstract url byline published_date section subsection des_facet org_facet per_facet geo_facet } }`,
+      { section },
+      { signal }
+    );
+    return data.topStories ?? [];
+  }
   const url = `${ENDPOINTS.TOP_STORIES}/${section}.json`;
   const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
@@ -183,11 +203,40 @@ export async function searchArticlesByDay(
   return docs as unknown as ArchiveArticle[];
 }
 
+// Archive by Day - use GraphQL if available, otherwise fall back to Article Search constrained to a single day
+export async function getArchiveByDay(
+  year: number,
+  month: number,
+  day: number,
+  signal?: AbortSignal
+): Promise<ArchiveArticle[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ archiveByDay: ArchiveArticle[] }>(
+      GRAPHQL_URL,
+      `query($year: Int!, $month: Int!, $day: Int!, $limit: Int){ archiveByDay(year: $year, month: $month, day: $day, limit: $limit){ web_url uri pub_date headline { main } abstract snippet byline { original } section_name news_desk } }`,
+      { year, month, day, limit: 100 },
+      { signal }
+    );
+    return data.archiveByDay ?? [];
+  }
+  // Fallback: query Article Search API constrained to a single day
+  return searchArticlesByDay(year, month, day, signal);
+}
+
 // Movie Reviews API
 export async function getMovieReviews(
   type: 'all' | 'picks' = 'all',
   signal?: AbortSignal
 ): Promise<MovieReview[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ movieReviews: any[] }>(
+      GRAPHQL_URL,
+      `query($type: String){ movieReviews(type: $type){ displayTitle mpaaRating criticsPick byline headline summaryShort publicationDate openingDate dateUpdated link { type url suggestedLinkText } multimedia { type src height width } } }`,
+      { type },
+      { signal }
+    );
+    return (data.movieReviews ?? []) as unknown as MovieReview[];
+  }
   const url = `${ENDPOINTS.MOVIE_REVIEWS}/${type}.json`;
   const response = await makeApiRequest<MovieReviewsResponse>(url, {}, signal);
   return response.results;
@@ -198,6 +247,15 @@ export async function getBestSellers(
   list: string = 'hardcover-fiction',
   signal?: AbortSignal
 ): Promise<Book[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ bestsellers: { books: Book[] } }>(
+      GRAPHQL_URL,
+      `query($list: String!, $date: String){ bestsellers(list: $list, date: $date){ books { title author description publisher rank weeksOnList amazonProductUrl bookImage isbn13 } } }`,
+      { list, date: "current" },
+      { signal }
+    );
+    return data.bestsellers?.books ?? [];
+  }
   const url = `${ENDPOINTS.BOOKS}/lists/current/${list}.json`;
   const data = await makeApiRequest<any>(url, {}, signal);
   // Handle both our local type and the real NYT response shape
@@ -211,6 +269,15 @@ export async function getBestSellers(
 export async function getBooksListsOverview(
   signal?: AbortSignal
 ): Promise<any> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ listNames: any[] }>(
+      GRAPHQL_URL,
+      `query { listNames { listName displayName listNameEncoded oldestPublishedDate newestPublishedDate updated } }`,
+      undefined,
+      { signal }
+    );
+    return data.listNames ?? [];
+  }
   const url = `${ENDPOINTS.BOOKS}/lists/overview.json`;
   const data = await makeApiRequest<any>(url, {}, signal);
   return data?.results ?? data;
@@ -222,6 +289,15 @@ export async function getBooksListByDate(
   date: string, // 'current' or 'YYYY-MM-DD'
   signal?: AbortSignal
 ): Promise<Book[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ bestsellers: { books: Book[] } }>(
+      GRAPHQL_URL,
+      `query($list: String!, $date: String){ bestsellers(list: $list, date: $date){ books { title author description publisher rank weeksOnList amazonProductUrl bookImage isbn13 } } }`,
+      { list, date },
+      { signal }
+    );
+    return data.bestsellers?.books ?? [];
+  }
   const url = `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`;
   const data = await makeApiRequest<any>(url, {}, signal);
   const results = data?.results;
@@ -235,6 +311,15 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ archive: ArchiveArticle[] }>(
+      GRAPHQL_URL,
+      `query($year: Int!, $month: Int!){ archive(year: $year, month: $month){ web_url uri pub_date headline { main } abstract snippet byline { original } section_name news_desk } }`,
+      { year, month },
+      { signal }
+    );
+    return data.archive ?? [];
+  }
   const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
   const params = { 'api-key': API_KEY };
   const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });

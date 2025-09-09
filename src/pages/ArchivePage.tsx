@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getArchive, NytApiError } from '../api/nyt-apis';
+import { getArchive, getArchiveByDay, NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
@@ -106,23 +106,29 @@ const ArchivePage: React.FC = () => {
           setTimeoutHit(true);
         }, 12000);
 
-        const docs = await getArchive(query.year, query.month, controller.signal);
-        // Optional client-side day filtering or range filtering
-        const filtered = (() => {
-          const s = query.dayStart;
-          const e = query.dayEnd;
-          if (s != null && e != null) {
-            return docs.filter(d => {
-              const dn = new Date(d.pub_date).getUTCDate();
-              return dn >= s && dn <= e;
-            });
-          }
-          if (s != null) {
-            return docs.filter(d => new Date(d.pub_date).getUTCDate() === s);
-          }
-          return docs;
-        })();
-        setArticles(filtered.slice(0, 60));
+        const dayS = query.dayStart;
+        const dayE = query.dayEnd;
+        let docs: ArchiveArticle[];
+        if (dayS != null && dayE == null) {
+          // Single-day request: fetch only that day from the source to avoid full month payload
+          docs = await getArchiveByDay(query.year, query.month, dayS, controller.signal);
+          setArticles(docs.slice(0, 60));
+        } else {
+          // Month or range: fetch month once, then filter client-side
+          const monthly = await getArchive(query.year, query.month, controller.signal);
+          const filtered = (() => {
+            const s = dayS;
+            const e = dayE;
+            if (s != null && e != null) {
+              return monthly.filter(d => {
+                const dn = new Date(d.pub_date).getUTCDate();
+                return dn >= s && dn <= e;
+              });
+            }
+            return monthly;
+          })();
+          setArticles(filtered.slice(0, 60));
+        }
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
         if ((err as NytApiError).status === 403) {

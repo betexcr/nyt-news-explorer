@@ -1,4 +1,5 @@
 import axios from "axios";
+import { graphqlRequest } from "./graphqlClient";
 import type { NytArticle } from "../types/nyt";
 
 // Custom error types for API responses
@@ -25,6 +26,7 @@ export class NytRateLimitError extends NytApiError {
 }
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
+const GRAPHQL_URL: string = process.env.REACT_APP_GRAPHQL_URL ?? "";
 
 // Always use NYT API directly
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -151,6 +153,16 @@ export async function searchArticles(
   const q = (query || "").trim();
   if (!q) return [];
   
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ searchArticles: NytArticle[] }>(
+      GRAPHQL_URL,
+      `query($query: String!, $page: Int){ searchArticles(query: $query, page: $page){ web_url uri pub_date headline { main } abstract snippet byline { original } section_name subsection_name multimedia } }`,
+      { query: q, page: 0 },
+      { signal }
+    );
+    return data.searchArticles ?? [];
+  }
+
   // Always use NYT API request function
   const requestFn = makeApiRequest;
   
@@ -223,6 +235,16 @@ export async function searchArticlesAdv(params: {
 }): Promise<NytArticle[]> {
   const { q, page = 0, sort, begin, end, section, signal } = params;
   
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ searchArticles: NytArticle[] }>(
+      GRAPHQL_URL,
+      `query($q: String!, $page: Int, $sort: String, $beginDate: String, $endDate: String){ searchArticles(query: $q, page: $page, sort: $sort, beginDate: $beginDate, endDate: $endDate){ web_url uri pub_date headline { main } abstract snippet byline { original } section_name subsection_name multimedia } }`,
+      { q, page, sort, beginDate: begin, endDate: end },
+      { signal }
+    );
+    return data.searchArticles ?? [];
+  }
+
   // Always use NYT API request function
   const requestFn = makeApiRequest;
   
@@ -265,6 +287,15 @@ export async function getArticleByUrl(
 ): Promise<NytArticle | null> {
   const u = (url || "").trim();
   if (!u) return null;
+  if (GRAPHQL_URL) {
+    const data = await graphqlRequest<{ articleByUrl: NytArticle | null }>(
+      GRAPHQL_URL,
+      `query($url: String!){ articleByUrl(url: $url){ web_url uri pub_date headline { main } abstract snippet byline { original } section_name subsection_name multimedia } }`,
+      { url: u },
+      { signal }
+    );
+    return data.articleByUrl ?? null;
+  }
   const response = await makeApiRequest({ 
     ...baseParams(), 
     fq: `web_url:("${esc(u)}")`, 
