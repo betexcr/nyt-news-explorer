@@ -1,0 +1,26 @@
+{
+  "name": "nyt-news-graphql-backend",
+  "version": "1.0.0",
+  "description": "GraphQL backend for NYT News Explorer",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required for Vercel'",
+    "deploy": "vercel --prod",
+    "test": "echo 'Tests will be added later'"
+  },
+  "dependencies": {
+    "apollo-server-micro": "^3.12.0",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
+    "axios": "^1.6.0",
+    "micro": "^9.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
