@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import ArticleCard from './ArticleCard';
 import Spinner from './Spinner';
@@ -33,24 +33,18 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
     );
   };
 
-  // Use window scroll instead of internal scroll to match grid view behavior
-  useEffect(() => {
-    if (!hasMore || loadingMore || !articles) return;
+  const handleScroll = useCallback(({ scrollOffset, scrollUpdateWasRequested }: any) => {
+    if (scrollUpdateWasRequested) return;
 
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      
-      // Trigger load more when user is near bottom (same as grid view)
-      if (documentHeight - scrollTop - windowHeight < 200) {
-        onLoadMore();
-      }
-    };
+    // Fallback based on known itemHeight and list height to ensure scroll works in all modes
+    const totalContentHeight = articles.length * itemHeight;
+    const visibleHeight = height;
+    const threshold = 200; // pixels from bottom to trigger load more
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, articles, onLoadMore]);
+    if (totalContentHeight - scrollOffset - visibleHeight < threshold && hasMore && !loadingMore) {
+      onLoadMore();
+    }
+  }, [articles.length, itemHeight, height, hasMore, loadingMore, onLoadMore]);
 
   return (
     <div className="virtualized-list-container">
@@ -61,6 +55,7 @@ const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
         itemSize={itemHeight}
         width="100%"
         className="virtualized-list"
+        onScroll={handleScroll}
       >
         {Row}
       </List>

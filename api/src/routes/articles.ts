@@ -459,6 +459,478 @@ export async function articlesRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Most Popular endpoint
+  fastify.get('/most-popular/:period', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get Most Popular Articles',
+      description: 'Get most popular articles from NYT for specified period',
+      params: {
+        type: 'object',
+        properties: {
+          period: { type: 'string', enum: ['1', '7', '30'], description: 'Period in days' },
+        },
+        required: ['period'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            num_results: { type: 'integer' },
+            results: { type: 'array' },
+          },
+        },
+        400: { $ref: '#/components/responses/400' },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { period } = request.params as { period: string }
+      
+      const cacheKey = `most-popular:${period}`
+      
+      const cached = await fastify.cache.get(cacheKey)
+      if (cached) {
+        const etag = `"${createHash('md5').update(JSON.stringify(cached)).digest('hex')}"`
+        
+        if (request.headers['if-none-match'] === etag) {
+          return reply.code(304).header('etag', etag).send()
+        }
+        
+        return reply
+          .header('etag', etag)
+          .header('x-cache', 'HIT')
+          .send(cached)
+      }
+      
+      const url = `https://api.nytimes.com/svc/mostpopular/v2/viewed/${period}.json?api-key=${config.externalApis.nytApiKey}`
+      
+      const data = await fastify.circuitBreaker.execute(
+        'external',
+        async () => {
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'NYT-News-Explorer-API/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          })
+          
+          if (!response.ok) {
+            throw new Error(`NYT API error: ${response.status}`)
+          }
+          
+          return response.json()
+        }
+      )
+      
+      // Cache for 15 minutes
+      await fastify.cache.set(cacheKey, data, 900)
+      
+      const etag = `"${createHash('md5').update(JSON.stringify(data)).digest('hex')}"`
+      
+      reply
+        .header('etag', etag)
+        .header('cache-control', 'public, max-age=900, stale-while-revalidate=1800')
+        .header('x-cache', 'MISS')
+        .send(data)
+      
+    } catch (error) {
+      request.log.error({ error, params: request.params }, 'Most popular fetch failed')
+      
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/most-popular-unavailable',
+        title: 'Most Popular Service Unavailable',
+        status: 503,
+        detail: 'The most popular service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Books API - Best Sellers
+  fastify.get('/books/bestsellers/:list', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get Best Sellers',
+      description: 'Get NYT best sellers list',
+      params: {
+        type: 'object',
+        properties: {
+          list: { type: 'string', description: 'List name (e.g., hardcover-fiction)' },
+        },
+        required: ['list'],
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          date: { type: 'string', description: 'Date in YYYY-MM-DD format or "current"' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            num_results: { type: 'integer' },
+            results: { type: 'object' },
+          },
+        },
+        400: { $ref: '#/components/responses/400' },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { list } = request.params as { list: string }
+      const { date = 'current' } = request.query as { date?: string }
+      
+      const cacheKey = `books:bestsellers:${list}:${date}`
+      
+      const cached = await fastify.cache.get(cacheKey)
+      if (cached) {
+        const etag = `"${createHash('md5').update(JSON.stringify(cached)).digest('hex')}"`
+        
+        if (request.headers['if-none-match'] === etag) {
+          return reply.code(304).header('etag', etag).send()
+        }
+        
+        return reply
+          .header('etag', etag)
+          .header('x-cache', 'HIT')
+          .send(cached)
+      }
+      
+      const url = `https://api.nytimes.com/svc/books/v3/lists/${date}/${encodeURIComponent(list)}.json?api-key=${config.externalApis.nytApiKey}`
+      
+      const data = await fastify.circuitBreaker.execute(
+        'external',
+        async () => {
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'NYT-News-Explorer-API/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          })
+          
+          if (!response.ok) {
+            throw new Error(`NYT API error: ${response.status}`)
+          }
+          
+          return response.json()
+        }
+      )
+      
+      // Cache for 1 hour (books lists change weekly)
+      await fastify.cache.set(cacheKey, data, 3600)
+      
+      const etag = `"${createHash('md5').update(JSON.stringify(data)).digest('hex')}"`
+      
+      reply
+        .header('etag', etag)
+        .header('cache-control', 'public, max-age=3600, stale-while-revalidate=7200')
+        .header('x-cache', 'MISS')
+        .send(data)
+      
+    } catch (error) {
+      request.log.error({ error, params: request.params }, 'Books bestsellers fetch failed')
+      
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/books-unavailable',
+        title: 'Books Service Unavailable',
+        status: 503,
+        detail: 'The books service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Books API - List Names
+  fastify.get('/books/lists', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get Book List Names',
+      description: 'Get available NYT book list names',
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            num_results: { type: 'integer' },
+            results: { type: 'array' },
+          },
+        },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const cacheKey = 'books:list-names'
+      
+      const cached = await fastify.cache.get(cacheKey)
+      if (cached) {
+        const etag = `"${createHash('md5').update(JSON.stringify(cached)).digest('hex')}"`
+        
+        if (request.headers['if-none-match'] === etag) {
+          return reply.code(304).header('etag', etag).send()
+        }
+        
+        return reply
+          .header('etag', etag)
+          .header('x-cache', 'HIT')
+          .send(cached)
+      }
+      
+      const url = `https://api.nytimes.com/svc/books/v3/lists/names.json?api-key=${config.externalApis.nytApiKey}`
+      
+      const data = await fastify.circuitBreaker.execute(
+        'external',
+        async () => {
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'NYT-News-Explorer-API/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          })
+          
+          if (!response.ok) {
+            throw new Error(`NYT API error: ${response.status}`)
+          }
+          
+          return response.json()
+        }
+      )
+      
+      // Cache for 24 hours (list names rarely change)
+      await fastify.cache.set(cacheKey, data, 86400)
+      
+      const etag = `"${createHash('md5').update(JSON.stringify(data)).digest('hex')}"`
+      
+      reply
+        .header('etag', etag)
+        .header('cache-control', 'public, max-age=86400, stale-while-revalidate=172800')
+        .header('x-cache', 'MISS')
+        .send(data)
+      
+    } catch (error) {
+      request.log.error({ error }, 'Books list names fetch failed')
+      
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/books-unavailable',
+        title: 'Books Service Unavailable',
+        status: 503,
+        detail: 'The books service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Movie Reviews endpoint
+  fastify.get('/movies/reviews/:type', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get Movie Reviews',
+      description: 'Get NYT movie reviews',
+      params: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['all', 'picks'], description: 'Review type' },
+        },
+        required: ['type'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            has_more: { type: 'boolean' },
+            num_results: { type: 'integer' },
+            results: { type: 'array' },
+          },
+        },
+        400: { $ref: '#/components/responses/400' },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { type } = request.params as { type: string }
+      
+      const cacheKey = `movies:reviews:${type}`
+      
+      const cached = await fastify.cache.get(cacheKey)
+      if (cached) {
+        const etag = `"${createHash('md5').update(JSON.stringify(cached)).digest('hex')}"`
+        
+        if (request.headers['if-none-match'] === etag) {
+          return reply.code(304).header('etag', etag).send()
+        }
+        
+        return reply
+          .header('etag', etag)
+          .header('x-cache', 'HIT')
+          .send(cached)
+      }
+      
+      const url = `https://api.nytimes.com/svc/movies/v2/reviews/${type}.json?api-key=${config.externalApis.nytApiKey}`
+      
+      const data = await fastify.circuitBreaker.execute(
+        'external',
+        async () => {
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'NYT-News-Explorer-API/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          })
+          
+          if (!response.ok) {
+            throw new Error(`NYT API error: ${response.status}`)
+          }
+          
+          return response.json()
+        }
+      )
+      
+      // Cache for 1 hour
+      await fastify.cache.set(cacheKey, data, 3600)
+      
+      const etag = `"${createHash('md5').update(JSON.stringify(data)).digest('hex')}"`
+      
+      reply
+        .header('etag', etag)
+        .header('cache-control', 'public, max-age=3600, stale-while-revalidate=7200')
+        .header('x-cache', 'MISS')
+        .send(data)
+      
+    } catch (error) {
+      request.log.error({ error, params: request.params }, 'Movie reviews fetch failed')
+      
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/movies-unavailable',
+        title: 'Movies Service Unavailable',
+        status: 503,
+        detail: 'The movies service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Article by URL endpoint
+  fastify.get('/by-url', {
+    schema: {
+      tags: ['Articles'],
+      summary: 'Get Article by URL',
+      description: 'Get article details by URL',
+      querystring: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', format: 'uri', description: 'Article URL' },
+        },
+        required: ['url'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            response: {
+              type: 'object',
+              properties: {
+                docs: { type: 'array' },
+                meta: { type: 'object' },
+              },
+            },
+          },
+        },
+        400: { $ref: '#/components/responses/400' },
+        404: { $ref: '#/components/responses/404' },
+        429: { $ref: '#/components/responses/429' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { url } = request.query as { url: string }
+      
+      const cacheKey = `article:by-url:${createHash('md5').update(url).digest('hex')}`
+      
+      const cached = await fastify.cache.get(cacheKey)
+      if (cached) {
+        const etag = `"${createHash('md5').update(JSON.stringify(cached)).digest('hex')}"`
+        
+        if (request.headers['if-none-match'] === etag) {
+          return reply.code(304).header('etag', etag).send()
+        }
+        
+        return reply
+          .header('etag', etag)
+          .header('x-cache', 'HIT')
+          .send(cached)
+      }
+      
+      const nytUrl = new URL('https://api.nytimes.com/svc/search/v2/articlesearch.json')
+      nytUrl.searchParams.set('api-key', config.externalApis.nytApiKey)
+      nytUrl.searchParams.set('fq', `web_url:("${url.replace(/"/g, '\\"')}")`)
+      nytUrl.searchParams.set('page', '0')
+      
+      const data = await fastify.circuitBreaker.execute(
+        'external',
+        async () => {
+          const response = await fetch(nytUrl.toString(), {
+            headers: {
+              'User-Agent': 'NYT-News-Explorer-API/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(5000),
+          })
+          
+          if (!response.ok) {
+            throw new Error(`NYT API error: ${response.status}`)
+          }
+          
+          return response.json()
+        }
+      )
+      
+      // Cache for 1 hour
+      await fastify.cache.set(cacheKey, data, 3600)
+      
+      const etag = `"${createHash('md5').update(JSON.stringify(data)).digest('hex')}"`
+      
+      reply
+        .header('etag', etag)
+        .header('cache-control', 'public, max-age=3600, stale-while-revalidate=7200')
+        .header('x-cache', 'MISS')
+        .send(data)
+      
+    } catch (error) {
+      request.log.error({ error, url: request.query.url }, 'Article by URL fetch failed')
+      
+      reply.code(503).send({
+        type: 'https://api.nyt-news-explorer.com/problems/article-lookup-unavailable',
+        title: 'Article Lookup Service Unavailable',
+        status: 503,
+        detail: 'The article lookup service is currently unavailable',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
   // Article detail endpoint (for individual articles)
   fastify.get('/:id', {
     schema: {

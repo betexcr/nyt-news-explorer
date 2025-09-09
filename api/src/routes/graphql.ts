@@ -240,10 +240,38 @@ const typeDefs = /* GraphQL */ `
     byline: String
   }
 
+  type MovieReview {
+    displayTitle: String!
+    mpaaRating: String
+    criticsPick: Int
+    byline: String
+    headline: String
+    summaryShort: String
+    publicationDate: String
+    openingDate: String
+    dateUpdated: String
+    link: MovieLink
+    multimedia: MovieMultimedia
+  }
+
+  type MovieLink {
+    type: String
+    url: String
+    suggestedLinkText: String
+  }
+
+  type MovieMultimedia {
+    type: String
+    src: String
+    height: Int
+    width: Int
+  }
+
   extend type Query {
     listNames: [BookListName!]!
     bestsellers(list: String!, date: String): BookList!
     mostPopular(category: MostPopularCategory!, period: Int!, type: String): [MostPopularItem!]!
+    movieReviews(type: String = "all"): [MovieReview!]!
   }
 `
 
@@ -510,6 +538,50 @@ const resolvers = {
       const items = (data.results || []).map(transformNYTMostPopular)
       await fastify.cache?.set?.(cacheKey, items, 600)
       return items
+    },
+
+    movieReviews: async (_parent, args, context) => {
+      const { fastify } = context
+      const type = args.type || 'all'
+      const cacheKey = `graphql:movieReviews:${type}`
+      const cached = await fastify.cache?.get?.(cacheKey)
+      if (cached) return cached
+      const url = `https://api.nytimes.com/svc/movies/v2/reviews/${type}.json?api-key=${process.env.NYT_API_KEY}`
+      const data = await (fastify.circuitBreaker?.execute
+        ? fastify.circuitBreaker.execute('external', async () => {
+            const res = await fetch(url)
+            if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
+            return res.json()
+          })
+        : (async () => {
+            const res = await fetch(url)
+            if (!res.ok) throw new Error(`NYT API error: ${res.status}`)
+            return res.json()
+          })())
+      const reviews = (data.results || []).map((review: any) => ({
+        displayTitle: review.display_title,
+        mpaaRating: review.mpaa_rating,
+        criticsPick: review.critics_pick,
+        byline: review.byline,
+        headline: review.headline,
+        summaryShort: review.summary_short,
+        publicationDate: review.publication_date,
+        openingDate: review.opening_date,
+        dateUpdated: review.date_updated,
+        link: review.link ? {
+          type: review.link.type,
+          url: review.link.url,
+          suggestedLinkText: review.link.suggested_link_text
+        } : null,
+        multimedia: review.multimedia ? {
+          type: review.multimedia.type,
+          src: review.multimedia.src,
+          height: review.multimedia.height,
+          width: review.multimedia.width
+        } : null
+      }))
+      await fastify.cache?.set?.(cacheKey, reviews, 3600)
+      return reviews
     },
   },
 
