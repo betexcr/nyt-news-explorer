@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchStore } from "../store/searchStore";
-import type { MostPopularArticle, TopStory } from "../types/nyt.other";
-import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories } from "../api/nyt-apis";
+import type { MostPopularArticle, TopStory, ArchiveArticle } from "../types/nyt.other";
+import { mockTrendingArticles, mockTopStories, mockArchiveArticles } from "../api/mock-data";
+import { getMostPopular, getTopStories, getArchiveByDay } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
 import ViewTransitionLink from "../components/ViewTransitionLink";
 import ViewTransitionImage from "../components/ViewTransitionImage";
@@ -14,6 +14,8 @@ const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
   const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
   const [topStories, setTopStories] = useState<TopStory[]>([]);
+  const [todayLike, setTodayLike] = useState<ArchiveArticle[]>([]);
+  const [todayLikeYear, setTodayLikeYear] = useState<number | null>(null);
   
   // No blocking loading state for Home hero
   // Keep local error handling but do not surface in UI
@@ -33,13 +35,28 @@ const HomePage: React.FC = () => {
         if (USE_MOCK) {
           setTrendingArticles(mockTrendingArticles.slice(0, 3));
           setTopStories(mockTopStories.slice(0, 3));
+          setTodayLike(mockArchiveArticles.slice(0, 3));
+          setTodayLikeYear(1969);
         } else {
-          const [popular, stories] = await Promise.all([
+          const now = new Date();
+          const month = now.getMonth() + 1; // 1-12
+          const day = now.getDate();
+          const currentYear = now.getFullYear();
+          const minYear = 1852; // exclude 1851 since archive starts Oct 1
+          const maxYear = Math.max(minYear, currentYear - 1);
+          const randomYear = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;
+
+          const [popular, stories, dayDocs] = await Promise.all([
             getMostPopular('7'),
             getTopStories('home'),
+            getArchiveByDay(randomYear, month, day),
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
+          // pick up to 3 random from that day's docs
+          const shuffled = [...dayDocs].sort(() => Math.random() - 0.5);
+          setTodayLike(shuffled.slice(0, 3));
+          setTodayLikeYear(randomYear);
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
@@ -247,6 +264,77 @@ const HomePage: React.FC = () => {
       </section>
 
       
+
+      {/* A Day Like Today */}
+      <section className="featured-content">
+        <div className="content-grid">
+          <div className="content-section trending-section">
+            <div className="section-header">
+              <h2>A day like today</h2>
+              {todayLikeYear != null && (
+                <div className="view-all-link" aria-hidden>
+                  {new Date().toLocaleString(undefined, { month: 'long', day: '2-digit' })}, {todayLikeYear}
+                </div>
+              )}
+            </div>
+
+            <div className="articles-grid">
+              {todayLike.map((article, index) => {
+                const href = getSafeUrl(article.web_url) || undefined;
+                const handleOpen = () => {
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer');
+                };
+                const handleKey = (e: React.KeyboardEvent) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && href) {
+                    e.preventDefault();
+                    handleOpen();
+                  }
+                };
+                const date = new Date(article.pub_date);
+                return (
+                  <article
+                    key={article.uri}
+                    className="article-card trending-card"
+                    role={href ? 'link' : undefined}
+                    tabIndex={href ? 0 : -1}
+                    aria-label={href ? `Open: ${article.headline?.main || article.abstract}` : undefined}
+                    onClick={handleOpen}
+                    onKeyDown={handleKey}
+                  >
+                    <div className="article-image">
+                      <ViewTransitionImage
+                        src={'/logo.png'}
+                        alt={article.headline?.main || article.abstract || 'Archive article'}
+                        className="view-transition-article-image"
+                        viewTransitionName={`todaylike-image-${index}`}
+                        fallbackSrc="/logo.png"
+                      />
+                      <div className="trending-badge">
+                        <span>{date.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })}</span>
+                      </div>
+                    </div>
+
+                    <div className="article-content">
+                      <div className="article-meta">
+                        <span className="section">{article.section_name || article.news_desk || 'Archive'}</span>
+                        <span className="date">{date.getFullYear()}</span>
+                      </div>
+
+                      <h3 className="article-title">{article.headline?.main || article.abstract}</h3>
+
+                      <p className="article-abstract">{article.snippet || article.lead_paragraph || ''}</p>
+
+                      <div className="article-footer">
+                        {article.byline?.original && <span className="byline">{article.byline.original}</span>}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Quick Actions */}
       <section className="quick-actions">
