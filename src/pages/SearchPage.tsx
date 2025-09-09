@@ -410,9 +410,9 @@ const SearchPage: React.FC = () => {
     }
   }, [loadingMore, hasMore, currentPage, query, advancedForm, appendArticles, setHasMore, setLoadingMore]);
 
-  // Add scroll detection for regular grid view
+  // Add scroll detection for grid view only (list view handles its own scroll)
   useEffect(() => {
-    if (!hasMore || loadingMore || !articles) return;
+    if (!hasMore || loadingMore || !articles || viewMode === 'list') return;
 
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -427,7 +427,7 @@ const SearchPage: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, articles, handleLoadMore]);
+  }, [hasMore, loadingMore, articles, handleLoadMore, viewMode]);
 
   const renderResults = () => {
     if (loading) {
