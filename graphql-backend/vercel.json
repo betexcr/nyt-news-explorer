@@ -15,8 +15,5 @@
       "src": "/",
       "dest": "/api/index.js"
     }
-  ],
-  "env": {
-    "NYT_API_KEY": "@nyt_api_key"
-  }
+  ]
 }
