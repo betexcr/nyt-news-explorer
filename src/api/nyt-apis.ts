@@ -14,7 +14,7 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
-const GRAPHQL_URL: string = process.env.REACT_APP_GRAPHQL_URL ?? "";
+const GRAPHQL_URL: string = (process.env.REACT_APP_GRAPHQL_URL ?? "").trim() || (process.env.VERCEL_GRAPHQL_URL ? "/graphql" : "");
 
 // Use NYT API directly for now (backend API will be implemented in another branch)
 const isDevelopment = process.env.NODE_ENV === 'development';
