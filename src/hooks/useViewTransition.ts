@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useViewTransitions } from '../components/ViewTransitionsProvider';
 
 interface ViewTransitionOptions {
   onStart?: () => void;
@@ -7,40 +8,28 @@ interface ViewTransitionOptions {
 }
 
 export const useViewTransition = () => {
+  const { start, enabled } = useViewTransitions();
+
   const startTransition = useCallback((
     callback: () => void | Promise<void>,
     options: ViewTransitionOptions = {}
   ) => {
-    // Check if View Transitions API is supported
-    if (!document.startViewTransition) {
-      // Fallback for browsers that don't support View Transitions
-      callback();
-      return;
-    }
-
     const { onStart, onFinish, onError } = options;
 
     try {
       onStart?.();
       
-      const transition = document.startViewTransition(async () => {
+      start(async () => {
         await callback();
-      });
-
-      transition.finished.then(() => {
         onFinish?.();
-      }).catch((error) => {
-        onError?.(error);
       });
     } catch (error) {
       onError?.(error as Error);
     }
-  }, []);
-
-  const isSupported = typeof document !== 'undefined' && !!document.startViewTransition;
+  }, [start]);
 
   return {
     startTransition,
-    isSupported,
+    isSupported: enabled,
   };
 };

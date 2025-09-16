@@ -60,7 +60,7 @@ export const SiteHeader: React.FC = () => {
 
   return (
     <header
-      className="site-header"
+      className="site-header view-transition-app-chrome"
       style={{
         position: "fixed",
         top: 0,
@@ -70,7 +70,8 @@ export const SiteHeader: React.FC = () => {
         backdropFilter: "saturate(180%) blur(12px)",
         background: "rgba(var(--panel-rgb, 255, 255, 255), 0.8)",
         borderBottom: "1px solid var(--border)",
-        transition: "all 0.3s ease",
+        transition: "all var(--vt-duration) var(--vt-ease)",
+        viewTransitionName: "app-chrome",
       }}
     >
       <div

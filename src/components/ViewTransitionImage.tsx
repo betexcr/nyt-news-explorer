@@ -11,6 +11,11 @@ interface ViewTransitionImageProps {
   priority?: 'high' | 'low';
   sizes?: string;
   srcSet?: string;
+  // Enhanced props for dynamic naming
+  articleId?: string;
+  // Lightbox support
+  onLightboxOpen?: () => void;
+  lightboxEnabled?: boolean;
 }
 
 const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
@@ -24,6 +29,9 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
   priority = 'low',
   sizes,
   srcSet,
+  articleId,
+  onLightboxOpen,
+  lightboxEnabled = false,
 }) => {
   const [imageSrc, setImageSrc] = useState(src);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -51,9 +59,22 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
 
   const handleClick = () => {
     // Add view transition name when image is clicked
-    if (viewTransitionName && imgRef.current) {
-      imgRef.current.style.viewTransitionName = viewTransitionName;
+    const transitionName = viewTransitionName || (articleId ? `article-img-${articleId}` : undefined);
+    if (transitionName && imgRef.current) {
+      imgRef.current.style.viewTransitionName = transitionName;
     }
+
+    // Handle lightbox if enabled
+    if (lightboxEnabled && onLightboxOpen) {
+      onLightboxOpen();
+    }
+  };
+
+  // Generate dynamic view transition name
+  const getViewTransitionName = () => {
+    if (viewTransitionName) return viewTransitionName;
+    if (articleId) return `article-img-${articleId}`;
+    return undefined;
   };
 
   return (
@@ -61,7 +82,7 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       ref={imgRef}
       src={imageSrc}
       alt={alt}
-      className={`${className} ${isLoaded ? 'loaded' : ''} ${hasError ? 'error' : ''}`}
+      className={`${className} ${isLoaded ? 'loaded' : ''} ${hasError ? 'error' : ''} ${lightboxEnabled ? 'lightbox-enabled' : ''}`}
       onLoad={handleLoad}
       onError={handleError}
       onClick={handleClick}
@@ -69,9 +90,10 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       sizes={sizes}
       srcSet={srcSet}
       style={{
-        viewTransitionName: viewTransitionName || undefined,
+        viewTransitionName: getViewTransitionName(),
         opacity: isLoaded ? 1 : 0,
-        transition: 'opacity 0.3s ease-in-out',
+        transition: 'opacity var(--vt-duration) var(--vt-ease)',
+        cursor: lightboxEnabled ? 'zoom-in' : 'default',
       }}
     />
   );

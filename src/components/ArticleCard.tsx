@@ -33,6 +33,9 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
   const { favorites, addFavorite, removeFavorite } = useSearchStore();
   const isFavorite = favorites?.some(fav => fav.web_url === article.web_url) || false;
   
+  // Generate article ID for view transitions
+  const articleId = article._id || article.web_url?.split('/').pop() || Math.random().toString(36).substr(2, 9);
+  
   const to = {
     pathname: "/detail",
     search: `?${createSearchParams({ url: article.web_url || '' }).toString()}`,
@@ -65,21 +68,54 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
       onClick={onClick}
       style={{ display: "block", textDecoration: "none", color: "inherit", position: "relative" }}
       aria-label={article.headline?.main || "Article"}
-      viewTransitionName="article-card"
+      articleId={articleId}
+      elementType="container"
     >
-      <article className="panel view-transition-article-card" style={{ padding: ".9rem" }}>
+      <article 
+        className="panel view-transition-article-card" 
+        style={{ 
+          padding: ".9rem",
+          viewTransitionName: `article-${articleId}`,
+        }}
+      >
         <ViewTransitionImage
           src={image}
           alt=""
           className="thumb view-transition-article-image"
-          viewTransitionName="article-image"
+          articleId={articleId}
           fallbackSrc="/logo.png"
         />
-        <h3 className="title view-transition-article-title">{article.headline?.main || ""}</h3>
-        <div className="meta view-transition-article-meta">
+        <h3 
+          className="title view-transition-article-title"
+          style={{ viewTransitionName: `article-title-${articleId}` }}
+        >
+          {article.headline?.main || ""}
+        </h3>
+        <div 
+          className="meta view-transition-article-meta"
+          style={{ viewTransitionName: `article-byline-${articleId}` }}
+        >
           <span>{formatDate(article.pub_date)}</span>
           {article.section_name ? <span> · {article.section_name}</span> : null}
         </div>
+        {article.section_name && (
+          <div 
+            className="section-chip"
+            style={{ 
+              viewTransitionName: `article-section-${articleId}`,
+              display: "inline-block",
+              background: "var(--accent)",
+              color: "var(--accent-foreground)",
+              padding: "0.25rem 0.5rem",
+              borderRadius: "0.375rem",
+              fontSize: "0.75rem",
+              fontWeight: "500",
+              marginTop: "0.5rem",
+            }}
+          >
+            {article.section_name}
+          </div>
+        )}
         <p className="lead view-transition-article-content">{article.snippet || ""}</p>
         
         {/* Favorite Button */}
@@ -100,7 +136,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
             alignItems: "center",
             justifyContent: "center",
             fontSize: "16px",
-            transition: "all 0.2s ease",
+            transition: "all var(--vt-duration-fast) var(--vt-ease)",
           }}
           title={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >

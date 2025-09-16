@@ -10,7 +10,7 @@ import DetailPage from "./pages/DetailPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
 import BooksPage from "./pages/BooksPage";
-import ViewTransitionsProvider from "./components/ViewTransitionsProvider";
+import { ViewTransitionsProvider } from "./components/ViewTransitionsProvider";
 import "./index.css";
 import "./styles/header.css";
 import "./styles/api-docs.css";
@@ -23,7 +23,10 @@ function App() {
       <ViewTransitionsProvider>
         <SiteHeader />
         <main style={{ paddingTop: "70px" }}>
-          <div className="container">
+          <div 
+            className="container view-transition-page-root"
+            style={{ viewTransitionName: "page-root" }}
+          >
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/home" element={<HomePage />} />

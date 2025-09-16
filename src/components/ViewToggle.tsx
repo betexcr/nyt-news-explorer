@@ -1,5 +1,6 @@
 import React from 'react';
 import { type ViewMode } from '../store/searchStore';
+import { useViewTransitionState } from '../hooks/useViewTransitionState';
 import '../styles/view-toggle.css';
 
 interface ViewToggleProps {
@@ -8,12 +9,35 @@ interface ViewToggleProps {
 }
 
 const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
+  const { updateState } = useViewTransitionState();
+
+  const handleViewChange = (mode: ViewMode) => {
+    updateState(() => {
+      onViewChange(mode);
+    }, {
+      onStart: () => {
+        // Add morphing class to the results container
+        const resultsContainer = document.querySelector('.results-container');
+        if (resultsContainer) {
+          resultsContainer.classList.add('morphing');
+        }
+      },
+      onFinish: () => {
+        // Remove morphing class after transition
+        const resultsContainer = document.querySelector('.results-container');
+        if (resultsContainer) {
+          resultsContainer.classList.remove('morphing');
+        }
+      }
+    });
+  };
+
   return (
     <div className="view-toggle">
       <div className="toggle-buttons">
         <button
           className={`button ${viewMode === 'grid' ? 'active' : ''}`}
-          onClick={() => onViewChange('grid')}
+          onClick={() => handleViewChange('grid')}
           aria-label="Grid view"
           title="Grid view"
         >
@@ -23,7 +47,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
         </button>
         <button
           className={`button ${viewMode === 'list' ? 'active' : ''}`}
-          onClick={() => onViewChange('list')}
+          onClick={() => handleViewChange('list')}
           aria-label="List view"
           title="List view"
         >
@@ -33,7 +57,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, onViewChange }) => {
         </button>
         <button
           className={`button ${viewMode === 'table' ? 'active' : ''}`}
-          onClick={() => onViewChange('table')}
+          onClick={() => handleViewChange('table')}
           aria-label="Table view"
           title="Table view"
         >

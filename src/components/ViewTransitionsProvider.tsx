@@ -1,51 +1,60 @@
-import React, { useEffect, useRef } from 'react';
+import React, { createContext, useContext, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigationType } from 'react-router-dom';
+
+type Ctx = {
+  start(cb: () => void): void;
+  enabled: boolean;
+};
+
+const VTContext = createContext<Ctx>({ start: (cb) => cb(), enabled: false });
 
 interface ViewTransitionsProviderProps {
   children: React.ReactNode;
 }
 
-const ViewTransitionsProvider: React.FC<ViewTransitionsProviderProps> = ({ children }) => {
+export function ViewTransitionsProvider({ children }: ViewTransitionsProviderProps) {
   const location = useLocation();
   const navigationType = useNavigationType();
   const isNavigatingRef = useRef(false);
 
+  const enabled =
+    typeof document !== "undefined" &&
+    "startViewTransition" in document &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const start = (cb: () => void) => {
+    if (!enabled) return cb();
+    (document as any).startViewTransition(() => cb());
+  };
+
+  const value = useMemo(() => ({ start, enabled }), [enabled]);
+
   useEffect(() => {
-    // Check if View Transitions API is supported
-    if (!document.startViewTransition) {
-      return;
-    }
-
-    // Handle navigation transitions
-    const handleNavigation = () => {
-      if (isNavigatingRef.current) return;
-      
-      isNavigatingRef.current = true;
-      
-      // Start view transition
-      const transition = document.startViewTransition(() => {
-        // The transition will complete when this promise resolves
-        return new Promise<void>((resolve) => {
-          // Small delay to ensure DOM updates are complete
-          setTimeout(resolve, 50);
-        });
+    // Handle automatic route transitions
+    if (!enabled || isNavigatingRef.current) return;
+    
+    isNavigatingRef.current = true;
+    
+    // Start view transition for route changes
+    const transition = document.startViewTransition(() => {
+      return new Promise<void>((resolve) => {
+        // Small delay to ensure DOM updates are complete
+        setTimeout(resolve, 50);
       });
+    });
 
-      // Handle transition completion
-      transition.finished.then(() => {
-        isNavigatingRef.current = false;
-      }).catch(() => {
-        isNavigatingRef.current = false;
-      });
-    };
+    // Handle transition completion
+    transition.finished.then(() => {
+      isNavigatingRef.current = false;
+    }).catch(() => {
+      isNavigatingRef.current = false;
+    });
+  }, [location.pathname, navigationType, enabled]);
 
-    // Trigger transition on route change
-    if (navigationType !== 'POP') {
-      handleNavigation();
-    }
-  }, [location.pathname, navigationType]);
+  return <VTContext.Provider value={value}>{children}</VTContext.Provider>;
+}
 
-  return <>{children}</>;
-};
+export const useViewTransitions = () => useContext(VTContext);
 
+// Keep the old export for backward compatibility
 export default ViewTransitionsProvider;

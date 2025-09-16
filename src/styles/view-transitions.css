@@ -1,4 +1,15 @@
-/* View Transitions CSS */
+/* View Transitions CSS - Enhanced */
+
+/* CSS Custom Properties for View Transitions */
+:root {
+  --vt-duration: 0.3s;
+  --vt-duration-slow: 0.5s;
+  --vt-duration-fast: 0.2s;
+  --vt-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --vt-ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --vt-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -41,7 +52,7 @@
 
 @keyframes scale-in {
   from {
-    transform: scale(0.8);
+    transform: scale(0.98);
     opacity: 0;
   }
   to {
@@ -56,12 +67,117 @@
     opacity: 1;
   }
   to {
-    transform: scale(0.8);
+    transform: scale(0.98);
     opacity: 0;
   }
 }
 
-/* View Transition Names for different elements */
+@keyframes page-wipe {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rise-fade {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes morph-smooth {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+/* View Transition Names - Comprehensive System */
+
+/* Global Chrome Elements */
+.view-transition-app-chrome {
+  view-transition-name: app-chrome;
+}
+
+.view-transition-site-header {
+  view-transition-name: site-header;
+}
+
+.view-transition-navigation {
+  view-transition-name: navigation;
+}
+
+/* Page Root Transitions */
+.view-transition-page-root {
+  view-transition-name: page-root;
+}
+
+/* Article Elements - Dynamic IDs */
+.view-transition-article-container {
+  /* Will be set dynamically: article-{id} */
+}
+
+.view-transition-article-image {
+  /* Will be set dynamically: article-img-{id} */
+}
+
+.view-transition-article-title {
+  /* Will be set dynamically: article-title-{id} */
+}
+
+.view-transition-article-byline {
+  /* Will be set dynamically: article-byline-{id} */
+}
+
+.view-transition-article-section {
+  /* Will be set dynamically: article-section-{id} */
+}
+
+/* View Mode Transitions */
+.view-transition-grid-item {
+  /* Will be set dynamically: article-{id} for morphing */
+}
+
+.view-transition-list-item {
+  /* Will be set dynamically: article-{id} for morphing */
+}
+
+.view-transition-table-row {
+  /* Will be set dynamically: article-{id} for morphing */
+}
+
+/* Archive Transitions */
+.view-transition-archive-date {
+  view-transition-name: archive-date;
+}
+
+/* Favorites Transitions */
+.view-transition-favorites-grid {
+  view-transition-name: favorites-grid;
+}
+
+/* API Docs Transitions */
+.view-transition-docs-pane {
+  view-transition-name: docs-pane;
+}
+
+/* Active State Indicators */
+.view-transition-active-underline {
+  view-transition-name: stories-active-underline;
+}
+
+/* Legacy Support */
 .view-transition-hero {
   view-transition-name: hero-image;
 }
@@ -70,28 +186,12 @@
   view-transition-name: article-card;
 }
 
-.view-transition-article-image {
-  view-transition-name: article-image;
-}
-
-.view-transition-article-title {
-  view-transition-name: article-title;
-}
-
 .view-transition-article-meta {
   view-transition-name: article-meta;
 }
 
 .view-transition-article-content {
   view-transition-name: article-content;
-}
-
-.view-transition-header {
-  view-transition-name: site-header;
-}
-
-.view-transition-navigation {
-  view-transition-name: navigation;
 }
 
 .view-transition-search {
@@ -170,29 +270,95 @@ html {
   scroll-behavior: smooth;
 }
 
-/* View transition specific styles */
+/* Enhanced View Transition Styles */
+
+/* Root page transitions - page wipe + subtle scale-in */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.3s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
 }
 
+::view-transition-new(root) {
+  animation-name: page-wipe;
+}
+
+/* App chrome continuity - stable header */
+::view-transition-old(app-chrome),
+::view-transition-new(app-chrome) {
+  animation-duration: var(--vt-duration-fast);
+  animation-timing-function: var(--vt-ease-smooth);
+}
+
+/* Article image transitions - shared hero */
 ::view-transition-old(hero-image),
 ::view-transition-new(hero-image) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: var(--vt-duration-slow);
+  animation-timing-function: var(--vt-ease-smooth);
 }
 
+/* Dynamic article image transitions */
+::view-transition-old([name^="article-img-"]),
+::view-transition-new([name^="article-img-"]) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Article container morphing */
+::view-transition-old([name^="article-"]),
+::view-transition-new([name^="article-"]) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Title and byline transitions */
+::view-transition-old([name^="article-title-"]),
+::view-transition-new([name^="article-title-"]),
+::view-transition-old([name^="article-byline-"]),
+::view-transition-new([name^="article-byline-"]) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Section chip transitions */
+::view-transition-old([name^="article-section-"]),
+::view-transition-new([name^="article-section-"]) {
+  animation-duration: var(--vt-duration-fast);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Archive date transitions */
+::view-transition-old(archive-date),
+::view-transition-new(archive-date) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Active underline transitions */
+::view-transition-old(stories-active-underline),
+::view-transition-new(stories-active-underline) {
+  animation-duration: var(--vt-duration-fast);
+  animation-timing-function: var(--vt-ease-smooth);
+}
+
+/* API docs pane transitions */
+::view-transition-old(docs-pane),
+::view-transition-new(docs-pane) {
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
+}
+
+/* Legacy support */
 ::view-transition-old(article-card),
 ::view-transition-new(article-card) {
-  animation-duration: 0.4s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
 }
 
 ::view-transition-old(article-image),
 ::view-transition-new(article-image) {
-  animation-duration: 0.4s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: var(--vt-duration);
+  animation-timing-function: var(--vt-ease);
 }
 
 /* Responsive view transitions */
@@ -209,6 +375,55 @@ html {
   ::view-transition-new(*) {
     animation-duration: 0.01ms !important;
   }
+}
+
+/* View Mode Morphing Transitions */
+.results-container.morphing {
+  transition: all var(--vt-duration) var(--vt-ease);
+}
+
+.results-container.morphing .article-card,
+.results-container.morphing .article-list-item,
+.results-container.morphing .article-table-row {
+  transition: all var(--vt-duration) var(--vt-ease);
+}
+
+/* Staggered animations for new items */
+@keyframes rise-fade-stagger {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.article-card[data-item-index],
+.article-list-item[data-item-index],
+.article-table-row[data-item-index] {
+  animation: rise-fade-stagger var(--vt-duration) var(--vt-ease) both;
+}
+
+/* Infinite scroll append animations */
+.infinite-scroll-item {
+  animation: rise-fade var(--vt-duration) var(--vt-ease) both;
+}
+
+/* Favorites teleport transitions */
+.favorites-teleport {
+  view-transition-name: favorites-teleport;
+}
+
+/* Lightbox transitions */
+.lightbox-enabled {
+  cursor: zoom-in;
+}
+
+.lightbox-enabled:hover {
+  transform: scale(1.02);
+  transition: transform var(--vt-duration-fast) var(--vt-ease);
 }
 
 /* Dark mode transitions */

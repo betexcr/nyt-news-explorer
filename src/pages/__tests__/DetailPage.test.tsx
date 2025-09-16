@@ -61,7 +61,7 @@ describe('DetailPage', () => {
     expect(screen.getByText('Test Headline')).toBeInTheDocument();
     expect(screen.getByText('Test article snippet')).toBeInTheDocument();
     expect(screen.getByText('By John Doe')).toBeInTheDocument();
-    expect(screen.getByText('World')).toBeInTheDocument();
+    expect(screen.getAllByText('World')).toHaveLength(2); // Should appear in both meta and section chip
     expect(screen.getByText('This is the lead paragraph.')).toBeInTheDocument();
     // Note: No "Open full article" link when no URL parameter
   });
