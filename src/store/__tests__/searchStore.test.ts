@@ -182,7 +182,7 @@ describe('searchStore', () => {
       web_url: 'https://example.com/complex',
       snippet: 'Complex article snippet',
       headline: { main: 'Complex Headline' },
-      keywords: [{ name: 'keyword1', value: 'value1' }, { name: 'keyword2', value: 'value2' }],
+      keywords: [{ name: 'keyword1', value: 'value1', rank: 1 }, { name: 'keyword2', value: 'value2', rank: 2 }],
       pub_date: '2024-01-01T00:00:00Z',
       multimedia: {
         caption: 'Test caption',

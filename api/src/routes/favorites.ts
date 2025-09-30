@@ -87,7 +87,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const userId = request.user!.id
+      const userId = (request.user as any)!.id
       const query = request.query as any
       
       // Build cache key
@@ -123,7 +123,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
         .send(favorites)
       
     } catch (error) {
-      request.log.error({ error, userId: request.user?.id }, 'Failed to get favorites')
+      request.log.error({ error, userId: (request.user as any)?.id }, 'Failed to get favorites')
       
       reply.code(500).send({
         type: 'https://api.nyt-news-explorer.com/problems/favorites-fetch-failed',
@@ -190,7 +190,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const userId = request.user!.id
+      const userId = (request.user as any)!.id
       const favoriteData = addFavoriteSchema.parse(request.body)
       const idempotencyKey = request.headers['x-idempotency-key'] as string
       
@@ -265,7 +265,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
         })
       }
       
-      request.log.error({ error, userId: request.user?.id }, 'Failed to add favorite')
+      request.log.error({ error, userId: (request.user as any)?.id }, 'Failed to add favorite')
       
       reply.code(500).send({
         type: 'https://api.nyt-news-explorer.com/problems/favorite-add-failed',
@@ -330,7 +330,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const userId = request.user!.id
+      const userId = (request.user as any)!.id
       const { id } = request.params as { id: string }
       const updates = updateFavoriteSchema.parse(request.body)
       const ifMatch = request.headers['if-match'] as string
@@ -369,7 +369,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
       
       // Update favorite
       const updatedFavorite = {
-        ...favorite,
+        ...(favorite as any),
         ...updates,
         updatedAt: new Date().toISOString(),
       }
@@ -437,7 +437,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     try {
-      const userId = request.user!.id
+      const userId = (request.user as any)!.id
       const { id } = request.params as { id: string }
       
       // Check if favorite exists and belongs to user

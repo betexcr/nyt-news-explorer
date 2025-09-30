@@ -1,0 +1,455 @@
+[
+  {
+    "name": "albmunmu’s team",
+    "slug": "albmunmu",
+    "role": "Owner",
+    "capabilities": {
+      "dev_servers": {
+        "included": 1,
+        "max": 1,
+        "used": 0
+      },
+      "dev_server_cpu_cores": {
+        "included": 1,
+        "max": 1,
+        "used": 0
+      },
+      "dev_server_memory_gb": {
+        "included": 4,
+        "max": 4,
+        "used": 0
+      },
+      "dev_server_auto_shutdown_after_minutes": {
+        "included": 30,
+        "used": 0
+      },
+      "custom_identity_email_templates": {
+        "included": true
+      },
+      "custom_outgoing_email_address": {
+        "included": true
+      },
+      "custom_provider_credentials": {
+        "included": true
+      },
+      "identity": {
+        "included": true
+      },
+      "identity_active_logins": {
+        "included": null
+      },
+      "identity_invited_users": {
+        "included": null
+      },
+      "accumulate_overages": {
+        "included": false
+      },
+      "advanced_web_security": {
+        "included": false
+      },
+      "analytics": {
+        "included": true
+      },
+      "accessible_from_india_plans": {
+        "included": false
+      },
+      "background_functions": {
+        "included": true
+      },
+      "be_auto_spammed": {
+        "included": true
+      },
+      "be_banned_for_crypto_mining": {
+        "included": true
+      },
+      "billable_members": {
+        "included": 1,
+        "max": 1,
+        "used": 0
+      },
+      "collaborators": {
+        "included": 1,
+        "max": 1,
+        "used": 1
+      },
+      "block_builds_on_unmatched_git_contributors": {
+        "included": true
+      },
+      "block_unmatched_git_contributors_strict": {
+        "included": true
+      },
+      "block_builds_when_usage_exceeded": {
+        "included": true
+      },
+      "cdn_fanout": {
+        "included": false
+      },
+      "compare_lighthouse_stats_with_prod": {
+        "included": false
+      },
+      "concurrent_builds": {
+        "included": 1,
+        "max": 1,
+        "used": 0
+      },
+      "connect_api": {
+        "included": false
+      },
+      "credits": {
+        "included": 300,
+        "used": 0
+      },
+      "custom_prerender": {
+        "included": false
+      },
+      "deploy_diagnostics": {
+        "included": true
+      },
+      "deploy_private_corp_repos": {
+        "included": false
+      },
+      "deploy_url_hooks": {
+        "included": true
+      },
+      "domains": {
+        "included": 10,
+        "used": 0
+      },
+      "env_var_scopes": {
+        "included": false
+      },
+      "env_var_secrets": {
+        "included": true
+      },
+      "exceed_max_collaborators": {
+        "included": false
+      },
+      "exclude_git_contributors_from_billing": {
+        "included": true
+      },
+      "global_access_controls": {
+        "included": false
+      },
+      "have_domains_capability_removed": {
+        "included": true
+      },
+      "ipv6_domain": {
+        "included": "cdn.makerloop.com"
+      },
+      "odb_limit": {
+        "included": 10000,
+        "used": 0
+      },
+      "pro_trial": {
+        "included": false
+      },
+      "real_user_metrics": {
+        "included": true
+      },
+      "requires_git_contributor_verification": {
+        "included": false
+      },
+      "role_access_control": {
+        "included": false
+      },
+      "safe_to_mark_members_as_spam": {
+        "included": true
+      },
+      "secure_site": {
+        "included": false
+      },
+      "secure_site_context": {
+        "included": false
+      },
+      "set_build_permissions": {
+        "included": false
+      },
+      "shared_env_variables": {
+        "included": false
+      },
+      "sites": {
+        "included": 500,
+        "used": 0
+      },
+      "sso_secure_site": {
+        "included": false
+      },
+      "support_priority": {
+        "included": 1,
+        "used": 0
+      },
+      "subscribe_to_add_ons": {
+        "included": true
+      },
+      "track_public_repo_committers": {
+        "included": false
+      },
+      "traffic_rules": {
+        "included": false
+      },
+      "trusted_committers": {
+        "included": true
+      },
+      "unlimited_audit_log_retention": {
+        "included": false
+      },
+      "logs_api": {
+        "included": true
+      },
+      "dev_server_fair_use_per_day_minutes": {
+        "included": 120,
+        "used": 0
+      },
+      "dev_server_fair_use_per_month_minutes": {
+        "included": 3720,
+        "used": 0
+      },
+      "hard_credit_limit": {
+        "max": 450
+      }
+    },
+    "site_access": "all",
+    "selected_access_site_ids": [],
+    "billing_name": "albmunmu",
+    "billing_email": "albmunmu@gmail.com",
+    "billing_details": null,
+    "vat": null,
+    "billing_period": null,
+    "user_capabilities": {
+      "account_firewall": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "account_traffic_rules": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "account_waf": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "account_trusted_proxies": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "account_usage": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "accounts": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "agent_context": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "billing": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "builds": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "connect": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "create": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "deploys": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "domains": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "members": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "reviewers": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "security_kpis": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "shared_environment_variables": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "site_firewall": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "site_traffic_rules": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "site_waf": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "site_trusted_proxies": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      },
+      "sites": {
+        "c": true,
+        "r": true,
+        "u": true,
+        "d": true
+      }
+    },
+    "created_at": "2025-09-19T13:14:02.734Z",
+    "updated_at": "2025-09-19T13:14:02.772Z",
+    "has_site_password": false,
+    "site_sso_login": false,
+    "site_sso_login_context": "all",
+    "site_jwt_secret": null,
+    "saml_config": null,
+    "saml_session_expiration": 604800,
+    "deploy_notifications_per_repo": true,
+    "payments_gateway_name": null,
+    "lifecycle_state": "active",
+    "lifecycle_state_reason": null,
+    "weeks_past_due": null,
+    "days_until_disabled": null,
+    "current_billing_period_start": "2025-09-19T00:00:00.000-07:00",
+    "next_billing_period_start": "2025-10-19T00:00:00.000-07:00",
+    "current_usage_period_start": "2025-09-19T00:00:00.000-07:00",
+    "next_usage_period_start": "2025-10-19T00:00:00.000-07:00",
+    "support_level": "0",
+    "support_priority": 1,
+    "extra_concurrent_builds": 0,
+    "extra_dev_servers": 0,
+    "members_count": 1,
+    "site_password_context": "all",
+    "enforce_mfa": "not_enforced",
+    "support_administration_enabled": true,
+    "deploy_diagnostics_setting": "not_set",
+    "ai_usage_enabled_setting": "enabled",
+    "usages_exceeded": [],
+    "sites_with_usage_exceeded": [],
+    "exclude_from_site_suspension": false,
+    "has_stripe_payment_method": false,
+    "orb_customer_id": "68cd571a07e11805def0c1dc",
+    "blocked_by_orb_migration": false,
+    "orb_subscription_start": null,
+    "scheduled_downgrade_date": null,
+    "member_monthly_dollar_price": 0,
+    "subscription_processing": false,
+    "auto_topup_enabled": false,
+    "id": "68cd571a07e11805def0c1da",
+    "payment_method_id": "",
+    "member_roles": [
+      {
+        "fixed_seat": true,
+        "billable": true,
+        "counts": {
+          "accepted": 1,
+          "pending": 0,
+          "total": 1
+        },
+        "role": "Owner"
+      },
+      {
+        "fixed_seat": true,
+        "billable": false,
+        "counts": {
+          "accepted": 0,
+          "pending": 0,
+          "total": 0
+        },
+        "role": "Reviewer"
+      },
+      {
+        "fixed_seat": false,
+        "billable": false,
+        "counts": {
+          "active": 0,
+          "inactive": 0,
+          "total": 0
+        },
+        "role": "Git Contributor"
+      }
+    ],
+    "roles_allowed": [
+      "Owner",
+      "Reviewer"
+    ],
+    "type_name": "Free",
+    "type_id": "687677b231c3132ff87ee9df",
+    "type_slug": "credit-free",
+    "monthly_seats_addon_dollar_price": null,
+    "owner_ids": [
+      "68cd571a07e11805def0c1d7"
+    ],
+    "saml_enabled": false,
+    "org_saml_enabled": false,
+    "org_mfa_enabled": false,
+    "default": true,
+    "cancellable": true,
+    "has_builds": false,
+    "enforce_saml": "not_enforced",
+    "team_logo_url": null,
+    "can_start_pro_trial": false,
+    "on_pro_trial": false,
+    "can_start_enterprise_trial": false,
+    "on_enterprise_trial": false,
+    "security_contacts": [],
+    "credit_alert_percentage": null,
+    "payment_provider_id": null,
+    "gitlab_self_hosted_config": null,
+    "github_enterprise_config": null,
+    "bitbucket_self_hosted_config": null
+  }
+]

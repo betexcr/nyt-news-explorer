@@ -14,7 +14,7 @@ import { config } from '@/config/environment.js'
  */
 async function cachingPlugin(fastify: FastifyInstance) {
   // Register Redis for distributed caching
-  await fastify.register(redis, {
+  await fastify.register(redis as any, {
     host: config.redis.host,
     port: config.redis.port,
     password: config.redis.password,
@@ -38,7 +38,7 @@ async function cachingPlugin(fastify: FastifyInstance) {
   const generateCacheKey = (request: FastifyRequest): string => {
     const url = request.url
     const method = request.method
-    const userId = request.user?.id || 'anonymous'
+    const userId = (request.user as any)?.id || 'anonymous'
     const acceptHeader = request.headers.accept || ''
     
     return `cache:${method}:${url}:${userId}:${createHash('md5').update(acceptHeader).digest('hex')}`

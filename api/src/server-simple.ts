@@ -88,7 +88,7 @@ async function start() {
           server.log.info('Server closed successfully')
           process.exit(0)
         } catch (error) {
-          server.log.error('Error during shutdown', { error: error instanceof Error ? error.message : 'Unknown error' })
+          server.log.error(error, 'Error during shutdown')
           process.exit(1)
         }
       })

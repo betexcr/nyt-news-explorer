@@ -36,10 +36,6 @@ interface TokenPair {
 }
 
 declare module 'fastify' {
-  interface FastifyRequest {
-    user?: User
-  }
-  
   interface FastifyInstance {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
     authorize: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>
@@ -49,7 +45,7 @@ declare module 'fastify' {
 
 async function authPlugin(fastify: FastifyInstance) {
   // Register JWT support with secure configuration
-  await fastify.register(jwt, {
+  await fastify.register(jwt as any, {
     secret: config.security.jwt.secret,
     sign: {
       issuer: config.security.jwt.issuer,
@@ -66,7 +62,7 @@ async function authPlugin(fastify: FastifyInstance) {
   })
 
   // Register OAuth 2.0 provider
-  await fastify.register(oauth2, {
+  await fastify.register(oauth2 as any, {
     name: 'googleOAuth2',
     credentials: {
       client: {
@@ -81,7 +77,7 @@ async function authPlugin(fastify: FastifyInstance) {
     generateStateFunction: () => {
       return crypto.randomBytes(32).toString('hex')
     },
-    checkStateFunction: (state, callback) => {
+    checkStateFunction: (state: string, callback: (err?: Error) => void) => {
       // Validate state parameter (implement your own logic)
       callback()
     },
@@ -156,7 +152,7 @@ async function authPlugin(fastify: FastifyInstance) {
         clockTolerance: 30,
       })
 
-      request.user = payload as User
+      request.user = payload as unknown as User
       
     } catch (error) {
       reply.code(401).send({
@@ -221,7 +217,7 @@ async function authPlugin(fastify: FastifyInstance) {
     verifyInternalToken,
     verifyExternalToken,
     verifyApiKey,
-  ]))
+  ]) as any)
 
   // Role-based authorization
   fastify.decorate('authorize', (roles: string[]) => {
@@ -236,7 +232,7 @@ async function authPlugin(fastify: FastifyInstance) {
         })
       }
 
-      const userRoles = request.user.roles || []
+      const userRoles = (request.user as User).roles || []
       const hasRequiredRole = roles.some(role => userRoles.includes(role))
       
       if (!hasRequiredRole) {

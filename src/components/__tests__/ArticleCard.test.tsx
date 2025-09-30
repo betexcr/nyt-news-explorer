@@ -19,7 +19,7 @@ function makeArticle(overrides: Partial<NytArticle> = {}): NytArticle {
     web_url: "https://www.nytimes.com/2024/05/01/world/example.html",
     snippet: "snippet",
     lead_paragraph: "lead",
-    multimedia: [{ url: "images/2024/05/01/thumb.jpg" }],
+    multimedia: { url: "images/2024/05/01/thumb.jpg" },
     headline: { main: "Headline" },
     pub_date: "2024-05-01T12:00:00Z",
     section_name: "World",

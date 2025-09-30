@@ -160,7 +160,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
       request.log.info({ 
         pattern: clearPattern, 
         cleared,
-        adminUser: request.user?.id 
+        adminUser: (request.user as any)?.id 
       }, 'Cache cleared by admin')
       
       reply.send({
@@ -253,7 +253,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
         circuitBreaker: name,
         action,
         newStatus: status?.state,
-        adminUser: request.user?.id,
+        adminUser: (request.user as any)?.id,
       }, 'Circuit breaker modified by admin')
       
       reply.send({
@@ -365,7 +365,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
         endpoints: warmupEndpoints,
         successful,
         failed,
-        adminUser: request.user?.id,
+        adminUser: (request.user as any)?.id,
       }, 'Cache warmup initiated by admin')
       
       reply.send({

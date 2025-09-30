@@ -12,7 +12,7 @@ import { config } from '@/config/environment.js'
  */
 async function rateLimitingPlugin(fastify: FastifyInstance) {
   // Global rate limiter
-  await fastify.register(rateLimit, {
+  await fastify.register(rateLimit as any, {
     max: config.rateLimiting.max,
     timeWindow: config.rateLimiting.windowMs,
     cache: 10000, // Keep 10k rate limit entries in memory
@@ -22,21 +22,21 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
     skipSuccessfulRequests: config.rateLimiting.skipSuccessHeaders,
     
     // Custom key generator (consider user ID if available)
-    keyGenerator: (request) => {
-      const userId = request.user?.id
+    keyGenerator: (request: any) => {
+      const userId = (request.user as any)?.id
       const ip = request.ip
       return userId ? `user:${userId}` : `ip:${ip}`
     },
     
     // Custom error response (RFC 9457 Problem Details)
-    errorResponseBuilder: (request, context) => {
+    errorResponseBuilder: (request: any, context: any) => {
       const retryAfter = Math.ceil(context.ttl / 1000)
       
       return {
         type: 'https://api.nyt-news-explorer.com/problems/rate-limit-exceeded',
         title: 'Rate Limit Exceeded',
         status: 429,
-        detail: `Too many requests. You have exceeded the rate limit of ${context.max} requests per ${Math.ceil(context.timeWindow / 1000)} seconds.`,
+        detail: `Too many requests. You have exceeded the rate limit of ${context.max} requests per ${Math.ceil((context as any).timeWindow / 1000)} seconds.`,
         instance: request.url,
         retryAfter,
         limit: context.max,
@@ -55,7 +55,7 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
     },
     
     // Add hook for custom headers
-    onExceeding: (request, key) => {
+    onExceeding: (request: any, key: any) => {
       request.log.warn({
         key,
         ip: request.ip,
@@ -64,7 +64,7 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
       }, 'Rate limit approaching')
     },
     
-    onExceeded: (request, key) => {
+    onExceeded: (request: any, key: any) => {
       request.log.error({
         key,
         ip: request.ip,
@@ -80,15 +80,15 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
     auth: {
       max: 10,
       timeWindow: 900000, // 15 minutes
-      keyGenerator: (request) => `auth:${request.ip}`,
+      keyGenerator: (request: any) => `auth:${request.ip}`,
     },
     
     // Search endpoints (moderate)
     search: {
       max: 60,
       timeWindow: 300000, // 5 minutes
-      keyGenerator: (request) => {
-        const userId = request.user?.id
+      keyGenerator: (request: any) => {
+        const userId = (request.user as any)?.id
         return userId ? `search:user:${userId}` : `search:ip:${request.ip}`
       },
     },
@@ -97,18 +97,18 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
     admin: {
       max: 20,
       timeWindow: 3600000, // 1 hour
-      keyGenerator: (request) => `admin:${request.user?.id || request.ip}`,
+      keyGenerator: (request: any) => `admin:${(request.user as any)?.id || request.ip}`,
     },
   }
 
   // Register specific rate limiters
   for (const [name, options] of Object.entries(rateLimitConfigs)) {
     await fastify.register(async (fastify) => {
-      await fastify.register(rateLimit, {
+      await fastify.register(rateLimit as any, {
         ...options,
         nameSpace: `rate-limit:${name}`,
         redis: fastify.redis,
-        errorResponseBuilder: (request, context) => ({
+        errorResponseBuilder: (request: any, context: any) => ({
           type: `https://api.nyt-news-explorer.com/problems/rate-limit-${name}`,
           title: `${name.charAt(0).toUpperCase() + name.slice(1)} Rate Limit Exceeded`,
           status: 429,

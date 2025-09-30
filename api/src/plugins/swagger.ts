@@ -14,7 +14,7 @@ import { config } from '@/config/environment.js'
  */
 async function swaggerPlugin(fastify: FastifyInstance) {
   // Register Swagger documentation generator
-  await fastify.register(swagger, {
+  await fastify.register(swagger as any, {
     openapi: {
       openapi: '3.0.0',
       info: {

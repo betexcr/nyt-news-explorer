@@ -10,7 +10,7 @@ import { FastifyInstance } from 'fastify'
  * - Dynamic compression based on content type and size
  */
 async function compressionPlugin(fastify: FastifyInstance) {
-  await fastify.register(compress, {
+  await fastify.register(compress as any, {
     // Compression algorithms in order of preference
     encodings: ['br', 'gzip', 'deflate'],
     
@@ -52,7 +52,7 @@ async function compressionPlugin(fastify: FastifyInstance) {
     
     // Request/response filtering
     requestEncodings: ['br', 'gzip', 'deflate'],
-    onUnsupportedEncoding: (encoding, request, reply) => {
+    onUnsupportedEncoding: (encoding: any, request: any, reply: any) => {
       reply.code(406).send({
         type: 'https://api.nyt-news-explorer.com/problems/unsupported-encoding',
         title: 'Unsupported Content Encoding',

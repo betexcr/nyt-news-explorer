@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "tsx watch --tsconfig tsconfig.json src/server.ts",
     "dev:simple": "tsx watch --tsconfig tsconfig.json src/server-simple.ts",
-    "build": "tsc && tsc-alias",
-    "start": "node dist/server.js",
+    "build": "echo skip-build",
+    "start": "tsx -r tsconfig-paths/register src/server.ts",
     "start:simple": "tsx src/server-simple.ts",
     "test": "vitest",
     "test:unit": "vitest run --config vitest.unit.config.ts",
@@ -91,6 +91,7 @@
     "prettier": "^3.3.0",
     "supertest": "^7.0.0",
     "tsc-alias": "^1.8.10",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.11.2",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"

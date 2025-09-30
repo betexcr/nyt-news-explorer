@@ -250,7 +250,7 @@ const typeDefs = /* GraphQL */ `
 // Resolvers
 const resolvers = {
   Query: {
-    searchArticles: async (_parent, args, context) => {
+    searchArticles: async (_parent: any, args: any, context: any) => {
       // Use the existing articles API logic with circuit breaker
       const { fastify, request } = context
       
@@ -313,7 +313,7 @@ const resolvers = {
       }
     },
 
-    topStories: async (_parent, args, context) => {
+    topStories: async (_parent: any, args: any, context: any) => {
       const { fastify } = context
       
       try {
@@ -348,7 +348,7 @@ const resolvers = {
       }
     },
 
-    archive: async (_parent, args, context) => {
+    archive: async (_parent: any, args: any, context: any) => {
       const { fastify } = context
       
       try {
@@ -383,7 +383,7 @@ const resolvers = {
       }
     },
 
-    archiveByDay: async (_parent, args, context) => {
+    archiveByDay: async (_parent: any, args: any, context: any) => {
       const { fastify } = context
       const { year, month, day, limit = 50 } = args
       const cacheKey = `graphql:archive:${year}:${month}:${day}:${limit}`
@@ -396,7 +396,7 @@ const resolvers = {
       return filtered
     },
 
-    me: async (_parent, _args, context) => {
+    me: async (_parent: any, _args: any, context: any) => {
       const { user } = context
       if (!user) throw new Error('Authentication required')
       
@@ -408,7 +408,7 @@ const resolvers = {
       }
     },
 
-    myFavorites: async (_parent, args, context) => {
+    myFavorites: async (_parent: any, args: any, context: any) => {
       const { user, fastify } = context
       if (!user) throw new Error('Authentication required')
       
@@ -416,7 +416,7 @@ const resolvers = {
       return [] // Placeholder
     },
     // Books API
-    listNames: async (_parent, _args, context) => {
+    listNames: async (_parent: any, _args: any, context: any) => {
       const { fastify } = context
       const cacheKey = 'graphql:books:listNames'
       const cached = await fastify.cache?.get?.(cacheKey)
@@ -445,7 +445,7 @@ const resolvers = {
       return result
     },
 
-    bestsellers: async (_parent, args, context) => {
+    bestsellers: async (_parent: any, args: any, context: any) => {
       const { fastify } = context
       const date = args.date && args.date !== '' ? args.date : 'current'
       const list = encodeURIComponent(args.list)
@@ -484,7 +484,7 @@ const resolvers = {
       return result
     },
 
-    mostPopular: async (_parent, args, context) => {
+    mostPopular: async (_parent: any, args: any, context: any) => {
       const { fastify } = context
       const category = (args.category || 'VIEWED').toString().toUpperCase()
       const period = args.period || 1
@@ -514,7 +514,7 @@ const resolvers = {
   },
 
   Mutation: {
-    addFavorite: async (_parent, args, context) => {
+    addFavorite: async (_parent: any, args: any, context: any) => {
       const { user } = context
       if (!user) throw new Error('Authentication required')
       
@@ -534,7 +534,7 @@ const resolvers = {
       }
     },
 
-    updateFavorite: async (_parent, args, context) => {
+    updateFavorite: async (_parent: any, args: any, context: any) => {
       const { user } = context
       if (!user) throw new Error('Authentication required')
       
@@ -542,7 +542,7 @@ const resolvers = {
       throw new Error('Not implemented')
     },
 
-    removeFavorite: async (_parent, args, context) => {
+    removeFavorite: async (_parent: any, args: any, context: any) => {
       const { user } = context
       if (!user) throw new Error('Authentication required')
       
@@ -609,12 +609,12 @@ export async function graphqlRoutes(fastify: FastifyInstance) {
   // Apollo Server setup (for clients expecting Apollo behavior)
   const apollo = new ApolloServer({ schema })
   await apollo.start()
-  fastify.register(fastifyApollo(apollo), {
+  fastify.register(fastifyApollo(apollo) as any, {
     path: '/apollo',
-    context: async (request) => ({
+    context: async (request: any) => ({
       fastify,
       request,
-      user: (request as any).user,
+      user: request.user,
     }),
   })
 

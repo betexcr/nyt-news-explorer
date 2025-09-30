@@ -54,7 +54,7 @@ describe('VirtualizedArticleList', () => {
     section_name: 'Test Section 2',
     byline: { original: 'By Test Author 2' },
     pub_date: '2023-01-02T00:00:00Z',
-    multimedia: undefined,
+    multimedia: {},
     keywords: [
       { name: 'subject', value: 'Test Subject 2', rank: 1 },
     ],

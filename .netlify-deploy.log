@@ -1,0 +1,119 @@
+​
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+​
+❯ Version
+  @netlify/build 35.1.6
+​
+❯ Flags
+  accountId: 68cd571a07e11805def0c1da
+​
+❯ Current directory
+  /Users/albertomunoz/Documents/Code/nyt-news-explorer
+​
+❯ Config file
+  /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify.toml
+​
+❯ Context
+  production
+​
+❯ Installing plugins
+   - @netlify/plugin-lighthouse@6.0.1
+​
+❯ Loading plugins
+   - @netlify/plugin-lighthouse@6.0.1 from netlify.toml
+​
+build.command from netlify.toml                               
+────────────────────────────────────────────────────────────────
+​
+$ bun run build
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src/components/ViewTransitionsProvider.tsx
+  Line 30:53:  React Hook useMemo has a missing dependency: 'start'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  471.01 kB  build/static/js/main.e922d47d.js
+  32.08 kB   build/static/css/main.bf911378.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+​
+(build.command completed in 21.8s)
+​
+Functions bundling                                            
+────────────────────────────────────────────────────────────────
+​
+Packaging Functions from netlify/edge-functions directory:
+ - api-cache.ts
+ - image-optimizer.ts
+ - performance-monitor.ts
+​
+​
+(Functions bundling completed in 706ms)
+​
+Edge Functions bundling                                       
+────────────────────────────────────────────────────────────────
+​
+Packaging Edge Functions from netlify/edge-functions directory:
+ - api-cache
+ - image-optimizer
+ - performance-monitor
+​
+(Edge Functions bundling completed in 3.3s)
+
+Deploying to Netlify
+────────────────────────────────────────────────────────────────
+
+Deploy path:        /Users/albertomunoz/Documents/Code/nyt-news-explorer/build
+Functions path:     /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify/edge-functions
+Configuration path: /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify.toml
+
+Generating Lighthouse report. This may take a minute…
+Running Lighthouse on /
+​
+Summary                                                       
+────────────────────────────────────────────────────────────────
+​
+❯ Plugin @netlify/plugin-lighthouse ran successfully
+  Summary for path '/': undefined
+​
+Netlify Build Complete                                        
+────────────────────────────────────────────────────────────────
+​
+(Netlify Build completed in 1m 38.9s)
+
+🚀 Deploy complete
+────────────────────────────────────────────────────────────────
+
+╭───────────────────────── ⬥  Draft deploy is live ⬥  ─────────────────────────╮
+│                                                                              │
+│   Deployed draft to https://68cd5bcea0b32214bdb802f4--elaborate-cheesecake   │
+│                             -8e7cf6.netlify.app                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Build logs:         https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/deploys/68cd5bcea0b32214bdb802f4
+Function logs:      https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/logs/functions?scope=deploy:68cd5bcea0b32214bdb802f4
+Edge function Logs: https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/logs/edge-functions?scope=deployid:68cd5bcea0b32214bdb802f4
+
+If everything looks good on your draft URL, deploy it to your main project URL with the --prod flag:
+netlify deploy --prod
+

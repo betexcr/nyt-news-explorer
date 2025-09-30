@@ -503,7 +503,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       
       // Log logout
       request.log.info({
-        userId: request.user?.id,
+        userId: (request.user as any)?.id,
         userAgent: request.headers['user-agent'],
       }, 'User logged out')
       

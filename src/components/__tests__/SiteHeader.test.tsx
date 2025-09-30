@@ -45,6 +45,9 @@ describe('SiteHeader', () => {
     removeFavorite: jest.fn(),
     clearFavorites: jest.fn(),
     reset: mockReset,
+    clearCache: jest.fn(),
+    exportCache: jest.fn(),
+    importCache: jest.fn(),
   };
 
   beforeEach(() => {

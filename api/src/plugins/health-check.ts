@@ -13,7 +13,7 @@ import { config } from '@/config/environment.js'
  */
 async function healthCheckPlugin(fastify: FastifyInstance) {
   // Register under-pressure for resource monitoring
-  await fastify.register(underPressure, {
+  await fastify.register(underPressure as any, {
     maxEventLoopDelay: 1000, // 1 second
     maxHeapUsedBytes: 536870912, // 512MB
     maxRssBytes: 1073741824, // 1GB
@@ -28,7 +28,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
     exposeStatusRoute: '/status',
     
     // Customize response format to Problem Details
-    customError: async (request, reply, error) => {
+    customError: async (request: any, reply: any, error: any) => {
       reply.code(503).send({
         type: 'https://api.nyt-news-explorer.com/problems/service-under-pressure',
         title: 'Service Under Pressure',
@@ -61,7 +61,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
         return {
           status: 'down',
           responseTime: Date.now() - start,
-          error: error.message,
+          error: (error as Error).message,
         }
       }
     },
@@ -87,7 +87,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
         return {
           status: 'down',
           responseTime: Date.now() - start,
-          error: error.message,
+          error: (error as Error).message,
         }
       }
     },
@@ -106,7 +106,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
         return {
           status: 'down',
           responseTime: Date.now() - start,
-          error: error.message,
+          error: (error as Error).message,
         }
       }
     },
@@ -155,7 +155,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
         return [name, {
           status: 'down',
           responseTime: 0,
-          error: error.message,
+          error: (error as Error).message,
         }]
       }
     })
@@ -250,7 +250,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
         type: 'https://api.nyt-news-explorer.com/problems/readiness-check-failed',
         title: 'Readiness Check Failed',
         status: 503,
-        detail: error.message,
+        detail: (error as Error).message,
         instance: request.url,
       })
     }
@@ -302,7 +302,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
     },
   }, async (request, reply) => {
     // Check if service has fully started (all plugins loaded, etc.)
-    const started = fastify.pluginTimeout > 0 // Service has finished loading plugins
+    const started = (fastify as any).pluginTimeout > 0 // Service has finished loading plugins
     
     if (started) {
       reply.send({
