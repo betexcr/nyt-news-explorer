@@ -1,0 +1,40 @@
+# Exclude API TypeScript source files from Vercel build
+api/src/
+api/tests/
+api/dist/
+api/node_modules/
+api/*.ts
+api/*.js
+!api/index.js
+
+# Exclude api-simple directory completely
+api-simple/
+
+# Exclude other TypeScript files that aren't needed
+*.ts
+!src/**/*.ts
+!scripts/gen-types.ts
+
+# Exclude development files
+*.log
+*.tmp
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Exclude test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+
+# Exclude build artifacts
+build/
+dist/
+.next/
+.cache/
+
+# Exclude documentation
+README.md
+DEPLOYMENT_GUIDE.md
