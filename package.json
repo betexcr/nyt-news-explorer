@@ -27,9 +27,9 @@
   "scripts": {
     "gen:types": "bun run scripts/gen-types.ts",
     "start": "bun run tsx scripts/start.ts",
-    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
-    "build:cdn": "cross-env GENERATE_SOURCEMAP=false PUBLIC_URL=https://nyt.brainvaultdev.com react-scripts build",
-    "build:analyze": "cross-env GENERATE_SOURCEMAP=false ANALYZE=true react-scripts build",
+    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build && node scripts/copy-sw.js",
+    "build:cdn": "cross-env GENERATE_SOURCEMAP=false PUBLIC_URL=https://nyt.brainvaultdev.com react-scripts build && node scripts/copy-sw.js",
+    "build:analyze": "cross-env GENERATE_SOURCEMAP=false ANALYZE=true react-scripts build && node scripts/copy-sw.js",
     "eject": "react-scripts eject",
     "test": "bun run test:cov",
     "test:cov": "react-scripts test --coverage --watchAll=false",
