@@ -100,6 +100,8 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           className="thumb view-transition-article-image"
           articleId={articleId}
           fallbackSrc="/logo.png"
+          priority="low"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <h3 
           className="title view-transition-article-title"

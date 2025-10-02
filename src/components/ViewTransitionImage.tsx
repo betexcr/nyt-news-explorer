@@ -104,13 +104,18 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       onError={handleError}
       onClick={handleClick}
       fetchPriority={priority}
-      sizes={sizes}
+      sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
       srcSet={srcSet}
+      loading={priority === 'high' ? 'eager' : 'lazy'}
+      decoding="async"
       style={{
         viewTransitionName: getViewTransitionName(),
         opacity: isLoaded ? 1 : 0.3,
         transition: 'opacity var(--vt-duration) var(--vt-ease)',
         cursor: lightboxEnabled ? 'zoom-in' : 'default',
+        // Mobile performance optimizations
+        willChange: 'opacity',
+        transform: 'translateZ(0)', // Force hardware acceleration
       }}
     />
   );

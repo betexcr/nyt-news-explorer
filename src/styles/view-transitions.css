@@ -265,6 +265,37 @@ a, button, .button, .action-card, .article-card {
   opacity: 0.7;
 }
 
+/* Mobile image loading optimizations */
+@media (max-width: 768px) {
+  .view-transition-image {
+    /* Reduce layout shifts during loading */
+    min-height: 120px;
+    background-color: var(--muted);
+  }
+  
+  .view-transition-image.loaded {
+    min-height: auto;
+  }
+  
+  /* Improve touch interactions */
+  .view-transition-image.lightbox-enabled {
+    touch-action: manipulation;
+  }
+}
+
+/* Prevent image layout shifts on mobile */
+@media (max-width: 480px) {
+  .view-transition-image {
+    min-height: 100px;
+  }
+  
+  .view-transition-article-image {
+    /* Ensure consistent sizing on small screens */
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+}
+
 /* Smooth scrolling for view transitions */
 html {
   scroll-behavior: smooth;

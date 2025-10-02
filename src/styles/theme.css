@@ -154,6 +154,29 @@ img.thumb {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: #ddd;
+  /* Mobile optimizations */
+  transition: opacity 0.3s ease;
+}
+
+/* Mobile-specific image optimizations */
+@media (max-width: 768px) {
+  img.thumb {
+    height: 140px; /* Smaller height for mobile */
+    border-radius: 8px; /* Slightly smaller radius */
+    /* Prevent layout shifts */
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+}
+
+@media (max-width: 480px) {
+  img.thumb {
+    height: 120px; /* Even smaller for small mobile screens */
+    border-radius: 6px;
+    /* Ensure consistent aspect ratio on small screens */
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
 }
 
 .home-hero {
