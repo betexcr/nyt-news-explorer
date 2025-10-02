@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useEffect, useRef } from "react";
+import React, { createContext, useContext, useMemo, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 type Ctx = {
@@ -22,10 +22,10 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
     "startViewTransition" in document &&
     !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const start = (cb: () => void) => {
+  const start = useCallback((cb: () => void) => {
     if (!enabled) return cb();
     (document as any).startViewTransition(() => cb());
-  };
+  }, [enabled]);
 
   const value = useMemo(() => ({ start, enabled }), [start, enabled]);
 
