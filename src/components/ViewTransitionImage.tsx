@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getCachedImageUrl } from '../utils/simpleImageCache';
 
 interface ViewTransitionImageProps {
   src: string;
@@ -39,9 +40,21 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    setImageSrc(src);
-    setIsLoaded(false);
-    setHasError(false);
+    const loadCachedImage = async () => {
+      try {
+        const cachedUrl = await getCachedImageUrl(src);
+        setImageSrc(cachedUrl);
+        setIsLoaded(false);
+        setHasError(false);
+      } catch (error) {
+        console.warn(`Failed to load cached image ${src}:`, error);
+        setImageSrc(src);
+        setIsLoaded(false);
+        setHasError(false);
+      }
+    };
+
+    loadCachedImage();
   }, [src]);
 
   const handleLoad = () => {

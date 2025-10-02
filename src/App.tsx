@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { SiteHeader } from "./components/SiteHeader";
 import HomePage from "./pages/HomePage";
@@ -18,6 +18,19 @@ import "./styles/view-transitions.css";
 
 
 function App() {
+  useEffect(() => {
+    // Register service worker for static asset caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered successfully:', registration);
+        })
+        .catch((error) => {
+          console.warn('Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
   return (
     <Router>
       <ViewTransitionsProvider>

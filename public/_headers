@@ -52,23 +52,23 @@
 
 # Image files with optimized caching
 *.jpg
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
 *.jpeg
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
 *.png
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
 *.webp
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
 *.avif
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
 *.svg

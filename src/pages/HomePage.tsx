@@ -7,6 +7,7 @@ import { formatDate } from "../utils/format";
 import ViewTransitionLink from "../components/ViewTransitionLink";
 import ViewTransitionImage from "../components/ViewTransitionImage";
 import ViewTransitionWrapper from "../components/ViewTransitionWrapper";
+import { preloadHomeImages, preloadArticleImages } from "../utils/simpleImageCache";
 // Spinner not used on Home; hero renders immediately
 import "../styles/home.css";
 
@@ -26,6 +27,9 @@ const HomePage: React.FC = () => {
     hasFetchedRef.current = true;
     const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
 
+    // Preload critical home images
+    preloadHomeImages();
+
     const fetchHomeData = async () => {
       // Clear any previous error
       setError(null);
@@ -40,6 +44,16 @@ const HomePage: React.FC = () => {
           ]);
           setTrendingArticles(popular.slice(0, 3));
           setTopStories(stories.slice(0, 3));
+
+          // Preload article images for better performance
+          const allImages = [
+            ...popular.slice(0, 3).map(article => getImageUrl(article)),
+            ...stories.slice(0, 3).map(story => getImageUrl(story))
+          ].filter(url => url && url !== '/logo.png');
+          
+          if (allImages.length > 0) {
+            preloadArticleImages(allImages);
+          }
         }
       } catch (err: any) {
         setError(err.message || 'Failed to fetch home data');
