@@ -20,7 +20,9 @@
   "env": {
     "REDIS_URL": "rediss://default:AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ@hardy-jackass-16664.upstash.io:6379",
     "CORS_ORIGIN": "https://nyt.brainvaultdev.com",
-    "NYT_API_KEY": "ykBBKwfsn0sIyA4A2RUaw0wnp4eWDVK7"
+    "NYT_API_KEY": "ykBBKwfsn0sIyA4A2RUaw0wnp4eWDVK7",
+    "BUILD_ID": "vercel-caching-v1",
+    "ADMIN_API_KEY": "nyt-admin-secure-key-2024"
   },
   "headers": [
     {
@@ -28,15 +30,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
@@ -45,15 +39,25 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
         {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(jpg|jpeg|png|webp|avif|gif|svg))",
+      "headers": [
         {
-          "key": "Expires",
-          "value": "0"
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
         }
       ]
     }
