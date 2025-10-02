@@ -35,6 +35,38 @@
       "dest": "/favicon.ico"
     },
     {
+      "src": "/logo.png",
+      "dest": "/logo.png"
+    },
+    {
+      "src": "/logo.webp",
+      "dest": "/logo.webp"
+    },
+    {
+      "src": "/logo192.png",
+      "dest": "/logo192.png"
+    },
+    {
+      "src": "/logo@2x.png",
+      "dest": "/logo@2x.png"
+    },
+    {
+      "src": "/logo@2x.webp",
+      "dest": "/logo@2x.webp"
+    },
+    {
+      "src": "/home-hero-*.jpg",
+      "dest": "/home-hero-1200.jpg"
+    },
+    {
+      "src": "/home-hero-*.webp",
+      "dest": "/home-hero-1200.webp"
+    },
+    {
+      "src": "/home-hero-*.avif",
+      "dest": "/home-hero-1200.avif"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
