@@ -42,6 +42,16 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
     setImageSrc(src);
     setIsLoaded(false);
     setHasError(false);
+    
+    // Check if image is already cached and loaded
+    const img = new Image();
+    img.onload = () => {
+      setIsLoaded(true);
+    };
+    img.onerror = () => {
+      setHasError(true);
+    };
+    img.src = src;
   }, [src]);
 
   const handleLoad = () => {
@@ -91,7 +101,7 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       srcSet={srcSet}
       style={{
         viewTransitionName: getViewTransitionName(),
-        opacity: isLoaded ? 1 : 0,
+        opacity: isLoaded ? 1 : 0.3,
         transition: 'opacity var(--vt-duration) var(--vt-ease)',
         cursor: lightboxEnabled ? 'zoom-in' : 'default',
       }}
