@@ -16,7 +16,7 @@ const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
 // Use production API in production, NYT API directly in development
 const isDevelopment = process.env.NODE_ENV === 'development';
-const PRODUCTION_API_URL = 'https://nyt-news-explorer.vercel.app/api/v1';
+const PRODUCTION_API_URL = `${window.location.origin}/api/v1`;
 const BASE_URL = isDevelopment ? "https://api.nytimes.com/svc" : PRODUCTION_API_URL;
 
 // API endpoints - using local API in production, NYT API in development
