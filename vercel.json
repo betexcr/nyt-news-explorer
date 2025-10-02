@@ -1,82 +1,19 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
     },
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    },
-    {
-      "src": "public/sw.js",
-      "use": "@vercel/static"
+      "source": "/health",
+      "destination": "/api/index.js"
     }
   ],
-  "routes": [
+  "redirects": [
     {
-      "src": "/api/(.*)",
-      "dest": "api/index.js"
-    },
-    {
-      "src": "/health",
-      "dest": "api/index.js"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/sw.js",
-      "dest": "/sw.js"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/logo.png",
-      "dest": "/logo.png"
-    },
-    {
-      "src": "/logo.webp",
-      "dest": "/logo.webp"
-    },
-    {
-      "src": "/logo192.png",
-      "dest": "/logo192.png"
-    },
-    {
-      "src": "/logo@2x.png",
-      "dest": "/logo@2x.png"
-    },
-    {
-      "src": "/logo@2x.webp",
-      "dest": "/logo@2x.webp"
-    },
-    {
-      "src": "/home-hero-*.jpg",
-      "dest": "/home-hero-1200.jpg"
-    },
-    {
-      "src": "/home-hero-*.webp",
-      "dest": "/home-hero-1200.webp"
-    },
-    {
-      "src": "/home-hero-*.avif",
-      "dest": "/home-hero-1200.avif"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "env": {
@@ -84,14 +21,26 @@
     "CORS_ORIGIN": "https://nyt.brainvaultdev.com",
     "NYT_API_KEY": "ykBBKwfsn0sIyA4A2RUaw0wnp4eWDVK7"
   },
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
-      "source": "/(.*\\.(js|css))",
+      "source": "/(.*\\.js)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.css)",
       "headers": [
         {
           "key": "Cache-Control",
