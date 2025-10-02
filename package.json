@@ -27,6 +27,7 @@
   "scripts": {
     "gen:types": "bun run scripts/gen-types.ts",
     "start": "bun run tsx scripts/start.ts",
+    "dev": "bun run start",
     "build": "cross-env GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true react-scripts build && node scripts/copy-sw.js",
     "build:force": "cross-env GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true NODE_ENV=production react-scripts build && node scripts/copy-sw.js",
     "build:cdn": "cross-env GENERATE_SOURCEMAP=false PUBLIC_URL=https://nyt.brainvaultdev.com react-scripts build && node scripts/copy-sw.js",
@@ -34,7 +35,10 @@
     "eject": "react-scripts eject",
     "test": "bun run test:cov",
     "test:cov": "react-scripts test --coverage --watchAll=false",
-    "test:cov:strict": "react-scripts test --coverage --watchAll=false --runInBand --coverageReporters=text --coverageReporters=json-summary ",
+    "test:cov:strict": "react-scripts test --coverage --watchAll=false --runInBand --coverageReporters=text --coverageReporters=json-summary",
+    "k6:smoke": "k6 run scripts/k6-cache-smoke.js",
+    "typecheck": "tsc --noEmit",
+    "purge:tag": "bun tsx scripts/purgeTag.ts",
     "deploy": "bash scripts/deploy.sh",
     "deploy:netlify": "bash scripts/deploy-netlify.sh --prod",
     "deploy:preview": "bash scripts/deploy-netlify.sh",
@@ -55,6 +59,7 @@
     ]
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.59.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.9",
@@ -64,6 +69,7 @@
     "@types/swagger-ui-react": "^5.18.0",
     "axios": "^1.11.0",
     "cross-env": "^10.0.0",
+    "ioredis": "^5.4.1",
     "js-yaml": "^4.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -73,6 +79,7 @@
     "react-window": "^1.8.11",
     "swagger-ui-react": "^5.27.1",
     "typescript": "^4.9.5",
+    "workbox-webpack-plugin": "^7.1.0",
     "zod": "^3.22.4",
     "zustand": "^5.0.6"
   },

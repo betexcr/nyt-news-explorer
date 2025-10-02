@@ -1,9 +1,14 @@
 /**
- * Service Worker for NYT News Explorer
- * Handles static asset caching for better performance
+ * Service Worker for NYT News Explorer - Enhanced Caching Strategy
+ * Implements Workbox-style caching with proper cache headers and SWR
  */
 
-const STATIC_CACHE_NAME = 'nyt-static-v1';
+const CACHE_NAMES = {
+  HTML: 'nyt-html-v1',
+  API: 'nyt-api-v1',
+  ASSETS: 'nyt-assets-v1',
+  IMAGES: 'nyt-images-v1',
+};
 
 // Static assets to cache (only your domain assets)
 const STATIC_ASSETS = [
@@ -18,23 +23,32 @@ const STATIC_ASSETS = [
   '/manifest.json',
 ];
 
+// Cache TTL configurations (in seconds)
+const CACHE_TTL = {
+  HTML: 3600, // 1 hour
+  API: 300,   // 5 minutes
+  ASSETS: 31536000, // 1 year (for hashed assets)
+  IMAGES: 86400, // 1 day
+};
+
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then((cache) => {
-        console.log('Caching static assets...');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('Static assets cached successfully');
-        return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('Failed to cache static assets:', error);
-      })
+    Promise.all([
+      caches.open(CACHE_NAMES.ASSETS).then(cache => cache.addAll(STATIC_ASSETS)),
+      caches.open(CACHE_NAMES.HTML),
+      caches.open(CACHE_NAMES.API),
+      caches.open(CACHE_NAMES.IMAGES),
+    ])
+    .then(() => {
+      console.log('All caches initialized successfully');
+      return self.skipWaiting();
+    })
+    .catch((error) => {
+      console.error('Failed to initialize caches:', error);
+    })
   );
 });
 
@@ -45,9 +59,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
+        const validCacheNames = Object.values(CACHE_NAMES);
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME) {
+            if (!validCacheNames.includes(cacheName)) {
               console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -71,26 +86,52 @@ self.addEventListener('fetch', (event) => {
     return; // Let browser handle external requests (NYT images, etc.)
   }
 
-  // Handle static assets with cache-first strategy
-  if (STATIC_ASSETS.includes(url.pathname)) {
-    event.respondWith(handleStaticRequest(request));
-    return;
+  // Route requests based on type
+  if (request.method === 'GET') {
+    if (url.pathname.startsWith('/api/')) {
+      // API requests: StaleWhileRevalidate
+      event.respondWith(handleStaleWhileRevalidate(request, CACHE_NAMES.API));
+    } else if (isAssetRequest(url.pathname)) {
+      // Static assets: CacheFirst with 1-year expiration for hashed URLs
+      event.respondWith(handleCacheFirst(request, CACHE_NAMES.ASSETS));
+    } else if (isImageRequest(url.pathname)) {
+      // Images: CacheFirst with 1-day expiration
+      event.respondWith(handleCacheFirst(request, CACHE_NAMES.IMAGES));
+    } else {
+      // HTML pages: NetworkFirst with 3s timeout
+      event.respondWith(handleNetworkFirst(request, CACHE_NAMES.HTML, 3000));
+    }
   }
-
-  // For other requests, use network-first strategy
-  event.respondWith(handleNetworkFirst(request));
 });
 
 
 /**
- * Handle static asset requests with cache-first strategy
+ * Check if request is for a static asset (JS, CSS, fonts, etc.)
  */
-async function handleStaticRequest(request) {
-  const cache = await caches.open(STATIC_CACHE_NAME);
+function isAssetRequest(pathname) {
+  const assetExtensions = ['.js', '.css', '.woff', '.woff2', '.ttf', '.eot'];
+  return assetExtensions.some(ext => pathname.endsWith(ext)) || 
+         pathname.includes('/static/') ||
+         STATIC_ASSETS.includes(pathname);
+}
+
+/**
+ * Check if request is for an image
+ */
+function isImageRequest(pathname) {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif', '.svg'];
+  return imageExtensions.some(ext => pathname.endsWith(ext));
+}
+
+/**
+ * CacheFirst strategy - check cache first, fallback to network
+ */
+async function handleCacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
 
   if (cachedResponse) {
-    console.log('Serving cached static asset:', request.url);
+    console.log('SW Cache HIT:', request.url);
     return cachedResponse;
   }
 
@@ -100,35 +141,82 @@ async function handleStaticRequest(request) {
     if (response.ok) {
       const responseClone = response.clone();
       cache.put(request, responseClone);
-      console.log('Cached static asset:', request.url);
+      console.log('SW Cached:', request.url);
     }
     
     return response;
   } catch (error) {
-    console.error('Failed to fetch static asset:', request.url, error);
+    console.error('SW Fetch failed:', request.url, error);
     throw error;
   }
 }
 
 /**
- * Handle other requests with network-first strategy
+ * NetworkFirst strategy with timeout - try network first, fallback to cache
  */
-async function handleNetworkFirst(request) {
+async function handleNetworkFirst(request, cacheName, timeout = 3000) {
+  const cache = await caches.open(cacheName);
+  
   try {
-    const response = await fetch(request);
+    const response = await Promise.race([
+      fetch(request),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), timeout)
+      )
+    ]);
+    
+    if (response.ok) {
+      const responseClone = response.clone();
+      cache.put(request, responseClone);
+      console.log('SW Network HIT, cached:', request.url);
+    }
+    
     return response;
   } catch (error) {
-    console.error('Network request failed:', request.url, error);
+    console.log('SW Network failed, checking cache:', request.url);
     
-    // Try to serve from cache as fallback
-    const cache = await caches.open(CACHE_NAME);
     const cachedResponse = await cache.match(request);
-    
     if (cachedResponse) {
-      console.log('Serving cached fallback:', request.url);
+      console.log('SW Cache fallback:', request.url);
       return cachedResponse;
     }
     
+    throw error;
+  }
+}
+
+/**
+ * StaleWhileRevalidate strategy - serve cache immediately, update in background
+ */
+async function handleStaleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  // Always try to fetch fresh data in background
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) {
+      const responseClone = response.clone();
+      cache.put(request, responseClone);
+      console.log('SW Background update:', request.url);
+    }
+    return response;
+  }).catch(error => {
+    console.log('SW Background fetch failed:', request.url, error);
+  });
+
+  // Return cached response immediately if available
+  if (cachedResponse) {
+    console.log('SW Stale served:', request.url);
+    // Don't wait for background update
+    fetchPromise.catch(() => {}); // Ignore background errors
+    return cachedResponse;
+  }
+
+  // No cache, wait for network
+  try {
+    return await fetchPromise;
+  } catch (error) {
+    console.error('SW No cache, network failed:', request.url, error);
     throw error;
   }
 }
