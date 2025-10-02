@@ -49,7 +49,13 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       setIsLoaded(true);
     };
     img.onerror = () => {
-      setHasError(true);
+      // If external image fails, try fallback
+      if (fallbackSrc && src !== fallbackSrc) {
+        setImageSrc(fallbackSrc);
+        setIsLoaded(true);
+      } else {
+        setHasError(true);
+      }
     };
     img.src = src;
   }, [src]);
@@ -62,7 +68,8 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
   const handleError = () => {
     if (imageSrc !== fallbackSrc) {
       setImageSrc(fallbackSrc);
-      setHasError(true);
+      setHasError(false); // Don't mark as error when using fallback
+      setIsLoaded(true); // Mark as loaded when fallback is used
     }
     onError?.();
   };
