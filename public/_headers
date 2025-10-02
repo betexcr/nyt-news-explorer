@@ -12,16 +12,20 @@
   Cache-Control: public, max-age=31536000, immutable
   Vary: Accept-Encoding
 
-# JavaScript files - shorter cache for updates
+# JavaScript files - no cache for immediate updates
 *.js
   Content-Type: application/javascript
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
   Vary: Accept-Encoding
 
-# CSS files - shorter cache for updates
+# CSS files - no cache for immediate updates
 *.css
   Content-Type: text/css
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
   Vary: Accept-Encoding
 
 # JSON files
