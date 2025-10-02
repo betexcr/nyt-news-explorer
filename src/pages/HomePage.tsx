@@ -72,7 +72,6 @@ const HomePage: React.FC = () => {
     // Top Stories
     if ('multimedia' in article && article.multimedia && article.multimedia.length > 0) {
       const media = article.multimedia[0] as any;
-      if (media?.legacy?.xlarge) return media.legacy.xlarge;
       if (media?.url) return media.url;
     }
 
