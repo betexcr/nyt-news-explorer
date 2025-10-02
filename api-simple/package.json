@@ -1,0 +1,19 @@
+{
+  "name": "nyt-api-simple",
+  "version": "1.0.0",
+  "description": "Simple NYT API with Redis caching",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "@fastify/cors": "^8.4.0",
+    "@fastify/redis": "^6.1.1",
+    "pino-pretty": "^10.2.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -14,20 +14,25 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use NYT API directly for now (backend API will be implemented in another branch)
+// Use local API in production, NYT API directly in development
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = "https://api.nytimes.com/svc";
+const LOCAL_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
+const BASE_URL = isDevelopment ? "https://api.nytimes.com/svc" : LOCAL_API_URL;
 
-// API endpoints - all using direct NYT API
+// API endpoints - using local API in production, NYT API in development
 const ENDPOINTS = {
   // Article Search API
-  ARTICLE_SEARCH: `${BASE_URL}/search/v2/articlesearch.json`,
+  ARTICLE_SEARCH: isDevelopment 
+    ? `${BASE_URL}/search/v2/articlesearch.json`
+    : `${BASE_URL}/articles/search`,
   
-  // Most Popular API
+  // Most Popular API (not yet implemented in local API)
   MOST_POPULAR: `${BASE_URL}/mostpopular/v2`,
   
   // Top Stories API
-  TOP_STORIES: `${BASE_URL}/topstories/v2`,
+  TOP_STORIES: isDevelopment 
+    ? `${BASE_URL}/topstories/v2`
+    : `${BASE_URL}/articles/top-stories`,
   
   // Movie Reviews API
   MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
@@ -36,7 +41,9 @@ const ENDPOINTS = {
   BOOKS: `${BASE_URL}/books/v3`,
   
   // Archive API
-  ARCHIVE: `${BASE_URL}/archive/v1`,
+  ARCHIVE: isDevelopment 
+    ? `${BASE_URL}/archive/v1`
+    : `${BASE_URL}/articles/archive`,
   
   // Semantic API
   SEMANTIC: `${BASE_URL}/semantic/v2`,
@@ -44,9 +51,13 @@ const ENDPOINTS = {
 
 // Base parameters for all API calls
 function baseParams(): Record<string, string> {
-  return { 
-    "api-key": API_KEY,
-  };
+  // Local API doesn't need api-key in params, it's handled server-side
+  if (isDevelopment) {
+    return { 
+      "api-key": API_KEY,
+    };
+  }
+  return {};
 }
 
 // Error handling utility
@@ -132,7 +143,9 @@ export async function getMostPopular(
   period: '1' | '7' | '30' = '7',
   signal?: AbortSignal
 ): Promise<MostPopularArticle[]> {
-  const url = `${ENDPOINTS.MOST_POPULAR}/viewed/${period}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.MOST_POPULAR}/viewed/${period}.json`
+    : `${BASE_URL}/articles/most-popular/${period}`;
   const response = await makeApiRequest<MostPopularResponse>(url, {}, signal);
   return response.results;
 }
@@ -142,7 +155,9 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
-  const url = `${ENDPOINTS.TOP_STORIES}/${section}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.TOP_STORIES}/${section}.json`
+    : `${ENDPOINTS.TOP_STORIES}/${section}`;
   const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
 }
@@ -181,6 +196,29 @@ export async function searchArticlesByDay(
   const data = await makeApiRequest<any>(url, params, signal, { timeoutMs: 15000 });
   const docs = Array.isArray(data?.response?.docs) ? data.response.docs : [];
   return docs as unknown as ArchiveArticle[];
+}
+
+// New Article Search API function for general search (uses local API in production)
+export async function searchArticles(
+  query: string,
+  page: number = 0,
+  sort: 'newest' | 'oldest' | 'relevance' = 'relevance',
+  beginDate?: string,
+  endDate?: string,
+  signal?: AbortSignal
+): Promise<any> {
+  const url = ENDPOINTS.ARTICLE_SEARCH;
+  const params: Record<string, any> = {
+    q: query,
+    page: page.toString(),
+    sort,
+  };
+  
+  if (beginDate) params.begin_date = beginDate;
+  if (endDate) params.end_date = endDate;
+  
+  const data = await makeApiRequest<any>(url, params, signal, { timeoutMs: 15000 });
+  return data;
 }
 
 // Movie Reviews API
@@ -235,8 +273,10 @@ export async function getArchive(
   month: number,
   signal?: AbortSignal
 ): Promise<ArchiveArticle[]> {
-  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  const params = { 'api-key': API_KEY };
+  const url = isDevelopment 
+    ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
+    : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
+  const params = isDevelopment ? { 'api-key': API_KEY } : {};
   const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });
   return response.response.docs;
 }

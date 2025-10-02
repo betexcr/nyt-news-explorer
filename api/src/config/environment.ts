@@ -51,6 +51,7 @@ const configSchema = z.object({
 
   // Redis Configuration
   redis: z.object({
+    url: z.string().optional(),
     host: z.string().default('localhost'),
     port: z.coerce.number().int().min(1).max(65535).default(6379),
     password: z.string().optional(),
@@ -81,7 +82,7 @@ const configSchema = z.object({
 
   // CORS Configuration
   cors: z.object({
-    origin: z.string().transform(val => val.split(',')).default('http://localhost:3000'),
+    origin: z.string().transform(val => val.split(',')).default('http://localhost:3000,https://nyt.brainvaultdev.com,https://app.nyt-news-explorer.com'),
     credentials: z.coerce.boolean().default(true),
   }),
 })
@@ -126,6 +127,7 @@ function parseConfig() {
         skipSuccessHeaders: process.env.RATE_LIMIT_SKIP_SUCCESS_HEADERS,
       },
       redis: {
+        url: process.env.REDIS_URL,
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,
