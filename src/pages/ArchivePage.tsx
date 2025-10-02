@@ -91,13 +91,15 @@ const ArchivePage: React.FC = () => {
     if (!query) return;
     const controller = new AbortController();
     let timeoutId: any;
-    const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
+    // In production, we use the local API which has the NYT API key server-side
+    // In development, we need REACT_APP_NYT_API_KEY
+    const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
     const run = async () => {
       setLoading(true);
       setError(null);
       setTimeoutHit(false);
       try {
-        if (!USE_KEY) {
+        if (!USE_API) {
           setArticles(mockArchiveArticles);
           return;
         }

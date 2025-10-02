@@ -28,8 +28,8 @@ const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
 // Use local API in production, NYT API directly in development
 const isDevelopment = process.env.NODE_ENV === 'development';
-const LOCAL_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
-const BASE_URL = isDevelopment ? "/svc/search/v2/articlesearch.json" : `${LOCAL_API_URL}/articles/search`;
+const LOCAL_API_URL = process.env.REACT_APP_API_URL || window.location.origin;
+const BASE_URL = isDevelopment ? "/svc/search/v2/articlesearch.json" : `${LOCAL_API_URL}/api/v1/articles/search`;
 // const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Fallback CORS proxy for development if proxy doesn't work

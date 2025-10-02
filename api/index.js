@@ -424,6 +424,59 @@ fastify.get('/api/v1/books/list/:date/:list', async (request, reply) => {
   }
 });
 
+// Archive API - Get articles by year/month
+fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
+  const startTime = Date.now();
+  const { year, month } = request.params;
+  const cacheKey = createCacheKey(['api', 'v1', 'articles', 'archive', year, month]);
+  
+  try {
+    // Check cache first
+    const cached = await fastify.cache.get(cacheKey);
+    if (cached) {
+      const etag = createETag(cached);
+      const ifNoneMatch = request.headers['if-none-match'];
+      
+      if (ifNoneMatch === etag) {
+        logCacheOperation('/api/v1/articles/archive', cacheKey, 'HIT-304', startTime);
+        return reply.code(304).send();
+      }
+      
+      logCacheOperation('/api/v1/articles/archive', cacheKey, 'HIT', startTime);
+      return reply
+        .header('etag', etag)
+        .header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=7200')
+        .header('x-cache', 'HIT')
+        .send(cached);
+    }
+    
+    // Fetch from NYT API
+    const nytResponse = await axios.get(`https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`, {
+      params: { 'api-key': process.env.NYT_API_KEY },
+      timeout: 15000,
+    });
+    
+    const articles = nytResponse.data?.response?.docs || [];
+    const etag = createETag(articles);
+    
+    // Cache the response
+    await fastify.cache.set(cacheKey, articles, CACHE_TTL.ARCHIVE);
+    await fastify.cache.tagAttach('tag:archive', cacheKey);
+    
+    logCacheOperation('/api/v1/articles/archive', cacheKey, 'MISS', startTime);
+    
+    return reply
+      .header('etag', etag)
+      .header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=7200')
+      .header('Vary', 'Accept-Encoding')
+      .header('x-cache', 'MISS')
+      .send(articles);
+  } catch (error) {
+    logCacheOperation('/api/v1/articles/archive', cacheKey, 'ERROR', startTime);
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
 // Health check
 fastify.get('/health', async (request, reply) => {
   return { status: 'ok', timestamp: new Date().toISOString() };
