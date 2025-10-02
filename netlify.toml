@@ -117,7 +117,56 @@
     Cache-Control = "public, max-age=300, s-maxage=300"
     Vary = "Accept-Encoding"
 
-# Redirects for SPA
+# Exclude service worker and static assets from SPA redirect
+[[redirects]]
+  from = "/sw.js"
+  to = "/sw.js"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.js"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.css"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.png"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.jpg"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.webp"
+  to = "/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*.avif"
+  to = "/:splat"
+  status = 200
+  force = true
+
+# Redirects for SPA (catch-all for HTML routes)
 [[redirects]]
   from = "/*"
   to = "/index.html"
