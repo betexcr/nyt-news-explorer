@@ -14,10 +14,10 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use local API in production, NYT API directly in development
+// Use production API in production, NYT API directly in development
 const isDevelopment = process.env.NODE_ENV === 'development';
-const LOCAL_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
-const BASE_URL = isDevelopment ? "https://api.nytimes.com/svc" : LOCAL_API_URL;
+const PRODUCTION_API_URL = 'https://nyt-news-explorer.vercel.app/api/v1';
+const BASE_URL = isDevelopment ? "https://api.nytimes.com/svc" : PRODUCTION_API_URL;
 
 // API endpoints - using local API in production, NYT API in development
 const ENDPOINTS = {
