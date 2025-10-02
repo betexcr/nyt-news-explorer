@@ -17,7 +17,7 @@ const TrendingPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
   const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
-  const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+    const USE_MOCK = false; // Always use real API in production
 
   useEffect(() => {
     const controller = new AbortController();

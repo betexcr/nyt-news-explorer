@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+    const USE_MOCK = false; // Always use real API in production
 
     // Preload critical home images
     preloadHomeImages();
