@@ -31,6 +31,10 @@
       "dest": "/manifest.json"
     },
     {
+      "src": "/sw.js",
+      "dest": "/sw.js"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/favicon.ico"
     },
