@@ -35,7 +35,9 @@ function getImageUrl(article: Article): string {
     }
   }
   
-  return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
+  // For articles without multimedia, show a more appropriate fallback
+  // Use a generic news image that's more visually appealing than the T logo
+  return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=300&fit=crop&crop=center";
 }
 
 interface Props {
