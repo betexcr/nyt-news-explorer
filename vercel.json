@@ -11,6 +11,10 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "public/sw.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
