@@ -1,5 +1,5 @@
 // Import mocks first before any other imports
-import './testMocks';
+import './__tests__/mocks/testMocks';
 
 import "@testing-library/jest-dom";
 
