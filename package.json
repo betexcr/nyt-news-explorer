@@ -40,12 +40,6 @@
     "cdn:optimize": "node scripts/optimize-assets.js",
     "cdn:test": "node scripts/test-cdn.js"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "proxy": "https://api.nytimes.com",
   "browserslist": {
     "production": [
