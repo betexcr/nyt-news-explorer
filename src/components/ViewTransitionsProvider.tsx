@@ -27,7 +27,7 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
     (document as any).startViewTransition(() => cb());
   };
 
-  const value = useMemo(() => ({ start, enabled }), [enabled]);
+  const value = useMemo(() => ({ start, enabled }), [start, enabled]);
 
   useEffect(() => {
     // Handle automatic route transitions

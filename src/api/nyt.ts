@@ -26,10 +26,11 @@ export class NytRateLimitError extends NytApiError {
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Always use NYT API directly
+// Use local API in production, NYT API directly in development
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = "/svc/search/v2/articlesearch.json";
-const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+const LOCAL_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
+const BASE_URL = isDevelopment ? "/svc/search/v2/articlesearch.json" : `${LOCAL_API_URL}/articles/search`;
+// const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Fallback CORS proxy for development if proxy doesn't work
 const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.com/svc/search/v2/articlesearch.json";
@@ -37,8 +38,8 @@ const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.
 // Function to get the appropriate API URL with fallback
 function getApiUrl(): string {
   // In development, CRA proxy forwards /svc to https://api.nytimes.com
-  // In production, we must call NYT directly
-  return isDevelopment ? BASE_URL : ABSOLUTE_URL;
+  // In production, use local API which handles NYT API calls server-side
+  return isDevelopment ? BASE_URL : BASE_URL;
 }
 
 // Function to make API request with fallback
@@ -94,10 +95,16 @@ function esc(str: string) {
 }
 
 function baseParams(): Record<string, string> {
-  return { 
-    "api-key": API_KEY,
+  // Local API doesn't need api-key in params, it's handled server-side
+  const params: Record<string, string> = {
     "fl": "web_url,headline,abstract,byline,multimedia,pub_date,section_name,subsection_name",
   };
+  
+  if (isDevelopment) {
+    params["api-key"] = API_KEY;
+  }
+  
+  return params;
 }
 
 // Mapping from our section names to NYT API desk values
