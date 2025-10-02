@@ -9,18 +9,32 @@ import ViewTransitionImage from "./ViewTransitionImage";
 function getImageUrl(article: Article): string {
   const mm = article.multimedia;
   
-  if (mm) {
-    // Try default first, then thumbnail as fallback
-    if (mm.default && mm.default.url) {
-      const url = mm.default.url; // URLs are already complete
-      return url;
-    }
+  if (mm && Array.isArray(mm) && mm.length > 0) {
+    // NYT API returns an array of multimedia objects
+    // Try to find the best image format
+    const superJumbo = mm.find(m => m.format === 'Super Jumbo');
+    const threeByTwo = mm.find(m => m.format === 'threeByTwoSmallAt2X');
+    const thumbLarge = mm.find(m => m.format === 'Large Thumbnail');
     
+    // Return the best available image
+    if (superJumbo?.url) return superJumbo.url;
+    if (threeByTwo?.url) return threeByTwo.url;
+    if (thumbLarge?.url) return thumbLarge.url;
+    
+    // Fallback to first available image
+    if (mm[0]?.url) return mm[0].url;
+  }
+  
+  // Legacy support for old format (if it exists)
+  if (mm && typeof mm === 'object' && !Array.isArray(mm)) {
+    if (mm.default && mm.default.url) {
+      return mm.default.url;
+    }
     if (mm.thumbnail && mm.thumbnail.url) {
-      const url = mm.thumbnail.url; // URLs are already complete
-      return url;
+      return mm.thumbnail.url;
     }
   }
+  
   return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
 
