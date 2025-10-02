@@ -38,7 +38,9 @@ const ENDPOINTS = {
   MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
   
   // Books API
-  BOOKS: `${BASE_URL}/books/v3`,
+  BOOKS: isDevelopment 
+    ? `${BASE_URL}/books/v3`
+    : `${BASE_URL}/books`,
   
   // Archive API
   ARCHIVE: isDevelopment 
@@ -236,12 +238,15 @@ export async function getBestSellers(
   list: string = 'hardcover-fiction',
   signal?: AbortSignal
 ): Promise<Book[]> {
-  const url = `${ENDPOINTS.BOOKS}/lists/current/${list}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.BOOKS}/lists/current/${list}.json`
+    : `${ENDPOINTS.BOOKS}/best-sellers/${list}`;
   const data = await makeApiRequest<any>(url, {}, signal);
   // Handle both our local type and the real NYT response shape
   const results = data?.results;
   if (Array.isArray(results)) return results as Book[];
   if (results && Array.isArray(results.books)) return results.books as Book[];
+  if (Array.isArray(data)) return data as Book[]; // For our local API
   return [] as Book[];
 }
 
@@ -260,10 +265,13 @@ export async function getBooksListByDate(
   date: string, // 'current' or 'YYYY-MM-DD'
   signal?: AbortSignal
 ): Promise<Book[]> {
-  const url = `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`
+    : `${ENDPOINTS.BOOKS}/list/${encodeURIComponent(date)}/${encodeURIComponent(list)}`;
   const data = await makeApiRequest<any>(url, {}, signal);
   const results = data?.results;
   if (results && Array.isArray(results.books)) return results.books as Book[];
+  if (Array.isArray(data)) return data as Book[]; // For our local API
   return [] as Book[];
 }
 

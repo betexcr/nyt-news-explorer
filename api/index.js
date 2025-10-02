@@ -318,6 +318,112 @@ fastify.post('/api/admin/purge', async (request, reply) => {
   }
 });
 
+// Books API - Best Sellers
+fastify.get('/api/v1/books/best-sellers/:list', async (request, reply) => {
+  const startTime = Date.now();
+  const { list } = request.params;
+  const cacheKey = createCacheKey(['books', 'best-sellers', list]);
+  
+  try {
+    // Check cache first
+    const cached = await fastify.cache.get(cacheKey);
+    if (cached) {
+      const etag = createETag(cached);
+      const ifNoneMatch = request.headers['if-none-match'];
+      
+      if (ifNoneMatch === etag) {
+        logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'HIT-304', startTime);
+        return reply.code(304).send();
+      }
+      
+      logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'HIT', startTime);
+      return reply
+        .header('etag', etag)
+        .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+        .header('x-cache', 'HIT')
+        .send(cached);
+    }
+    
+    // Fetch from NYT API
+    const nytResponse = await axios.get(`https://api.nytimes.com/svc/books/v3/lists/current/${list}.json`, {
+      params: { 'api-key': process.env.NYT_API_KEY },
+      timeout: 10000,
+    });
+    
+    const books = nytResponse.data?.results?.books || [];
+    const etag = createETag(books);
+    
+    // Cache the response
+    await fastify.cache.set(cacheKey, books, CACHE_TTL.TOP_STORIES);
+    await fastify.cache.tagAttach('tag:books', cacheKey);
+    
+    logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'MISS', startTime);
+    
+    return reply
+      .header('etag', etag)
+      .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+      .header('Vary', 'Accept-Encoding')
+      .header('x-cache', 'MISS')
+      .send(books);
+  } catch (error) {
+    logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'ERROR', startTime);
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
+// Books API - Dated List
+fastify.get('/api/v1/books/list/:date/:list', async (request, reply) => {
+  const startTime = Date.now();
+  const { date, list } = request.params;
+  const cacheKey = createCacheKey(['books', 'list', date, list]);
+  
+  try {
+    // Check cache first
+    const cached = await fastify.cache.get(cacheKey);
+    if (cached) {
+      const etag = createETag(cached);
+      const ifNoneMatch = request.headers['if-none-match'];
+      
+      if (ifNoneMatch === etag) {
+        logCacheOperation('/api/v1/books/list', cacheKey, 'HIT-304', startTime);
+        return reply.code(304).send();
+      }
+      
+      logCacheOperation('/api/v1/books/list', cacheKey, 'HIT', startTime);
+      return reply
+        .header('etag', etag)
+        .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+        .header('x-cache', 'HIT')
+        .send(cached);
+    }
+    
+    // Fetch from NYT API
+    const nytResponse = await axios.get(`https://api.nytimes.com/svc/books/v3/lists/${date}/${list}.json`, {
+      params: { 'api-key': process.env.NYT_API_KEY },
+      timeout: 10000,
+    });
+    
+    const books = nytResponse.data?.results?.books || [];
+    const etag = createETag(books);
+    
+    // Cache the response
+    await fastify.cache.set(cacheKey, books, CACHE_TTL.TOP_STORIES);
+    await fastify.cache.tagAttach('tag:books', cacheKey);
+    
+    logCacheOperation('/api/v1/books/list', cacheKey, 'MISS', startTime);
+    
+    return reply
+      .header('etag', etag)
+      .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+      .header('Vary', 'Accept-Encoding')
+      .header('x-cache', 'MISS')
+      .send(books);
+  } catch (error) {
+    logCacheOperation('/api/v1/books/list', cacheKey, 'ERROR', startTime);
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
 // Health check
 fastify.get('/health', async (request, reply) => {
   return { status: 'ok', timestamp: new Date().toISOString() };
