@@ -260,6 +260,26 @@ export function usePrefetch() {
 export function useCacheManager() {
   const queryClient = useQueryClient();
 
+  const prefetchQuery = useCallback(async (
+    type: string,
+    params: Record<string, any>,
+    queryFn: () => Promise<any>
+  ) => {
+    const queryKey = [type, params];
+    const cacheStrategy = getCacheStrategy(type as any);
+
+    try {
+      await queryClient.prefetchQuery({
+        queryKey,
+        queryFn,
+        ...cacheStrategy,
+      });
+      console.log(`[CACHE MANAGER] Prefetched ${type} with params:`, params);
+    } catch (error) {
+      console.warn(`[CACHE MANAGER] Failed to prefetch ${type}:`, error);
+    }
+  }, [queryClient]);
+
   const invalidateAll = useCallback(() => {
     cacheSync.invalidateCache();
     queryClient.invalidateQueries();
@@ -298,5 +318,6 @@ export function useCacheManager() {
     invalidateByType,
     getStats,
     cleanup,
+    prefetchQuery,
   };
 }

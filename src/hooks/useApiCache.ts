@@ -1,4 +1,4 @@
-import { useAdvancedCache } from './useAdvancedCache';
+import { useAdvancedCache, useCacheManager } from './useAdvancedCache';
 import { 
   getTopStories, 
   getMostPopular, 
@@ -30,7 +30,7 @@ export function useMostPopular(period: 1 | 7 | 30 = 7, enabled: boolean = true) 
   return useAdvancedCache<MostPopularArticle[]>({
     type: 'topStories', // Use same strategy as top stories
     params: { period },
-    queryFn: () => getMostPopular(period),
+    queryFn: () => getMostPopular(period.toString() as '1' | '7' | '30'),
     enabled,
     prefetch: true,
     backgroundRefresh: true,
@@ -125,7 +125,7 @@ export function useSearch(
  * Prefetch hooks for related content
  */
 export function usePrefetchTopStories() {
-  const { prefetchQuery } = useAdvancedCache({} as any); // Just to get prefetch function
+  const { prefetchQuery } = useCacheManager(); // Just to get prefetch function
   
   const prefetchSection = async (section: string) => {
     await prefetchQuery('topStories', { section }, () => getTopStories(section));
@@ -144,7 +144,7 @@ export function usePrefetchTopStories() {
 }
 
 export function usePrefetchBooks() {
-  const { prefetchQuery } = useAdvancedCache({} as any); // Just to get prefetch function
+  const { prefetchQuery } = useCacheManager(); // Just to get prefetch function
   
   const prefetchList = async (list: string) => {
     await prefetchQuery('books', { list }, () => getBestSellers(list));
@@ -171,7 +171,7 @@ export function usePrefetchBooks() {
  * Cache management hooks
  */
 export function useApiCacheManager() {
-  const { invalidateAll, invalidateByType, getStats, cleanup } = useAdvancedCache({} as any);
+  const { invalidateAll, invalidateByType, getStats, cleanup } = useCacheManager();
   
   const invalidateTopStories = () => invalidateByType('topStories');
   const invalidateBooks = () => invalidateByType('books');
