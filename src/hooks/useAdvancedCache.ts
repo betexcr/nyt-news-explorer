@@ -130,7 +130,7 @@ export function useAdvancedCache<T = any>({
     }, Math.min(cacheStrategy.staleTime || 60 * 1000, 5 * 60 * 1000)); // Max 5 minutes
 
     return () => clearInterval(interval);
-  }, [backgroundRefresh, enabled, type, params, query.data, cacheStrategy.staleTime, queryClient, queryKey]);
+  }, [backgroundRefresh, enabled, type, params, cacheStrategy.staleTime, queryClient, queryKey]); // Removed query.data to prevent infinite loop
 
   // Prefetch effect
   useEffect(() => {
