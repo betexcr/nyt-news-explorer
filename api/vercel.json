@@ -14,6 +14,7 @@
   ],
   "env": {
     "REDIS_URL": "rediss://default:AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ@hardy-jackass-16664.upstash.io:6379",
+    "REDIS_TOKEN": "AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ",
     "CORS_ORIGIN": "https://nyt.brainvaultdev.com"
   }
 }

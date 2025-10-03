@@ -1,11 +1,10 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 import crypto from 'crypto';
 
-// Redis client configuration
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  enableReadyCheck: false,
-  maxRetriesPerRequest: null,
-  lazyConnect: true,
+// Redis client configuration for Upstash
+const redis = new Redis({
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  token: process.env.REDIS_TOKEN || '',
 });
 
 // Build ID for cache invalidation across deployments
@@ -69,12 +68,8 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
     const value = await redis.get(key);
     if (!value) return null;
     
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      // Return raw string if JSON parsing fails
-      return value as unknown as T;
-    }
+    // Upstash Redis returns parsed JSON automatically
+    return value as T;
   } catch (error) {
     console.error('Redis GET error:', error);
     return null;
@@ -90,8 +85,8 @@ export async function cacheSet(
   ttlSec: number
 ): Promise<boolean> {
   try {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
-    await redis.setex(key, ttlSec, serialized);
+    // Upstash Redis handles JSON serialization automatically
+    await redis.setex(key, ttlSec, value);
     return true;
   } catch (error) {
     console.error('Redis SET error:', error);
@@ -105,7 +100,7 @@ export async function cacheSet(
 export async function cacheDel(key: string): Promise<boolean> {
   try {
     const result = await redis.del(key);
-    return result > 0;
+    return result === 1;
   } catch (error) {
     console.error('Redis DEL error:', error);
     return false;
@@ -118,7 +113,7 @@ export async function cacheDel(key: string): Promise<boolean> {
 export async function tagAttach(tag: string, ...keys: string[]): Promise<boolean> {
   try {
     const tagKey = `tag:${tag}`;
-    await redis.sadd(tagKey, ...keys);
+    await redis.sadd(tagKey, keys);
     return true;
   } catch (error) {
     console.error('Redis TAG ATTACH error:', error);
@@ -159,11 +154,8 @@ export async function getCacheStats(): Promise<{
   memory: string;
 }> {
   try {
-    const info = await redis.info('memory');
-    const keyspace = await redis.info('keyspace');
-    
-    const memoryMatch = info.match(/used_memory_human:(.+)/);
-    const memory = memoryMatch ? memoryMatch[1].trim() : 'unknown';
+    // Upstash Redis doesn't support INFO command in the same way
+    // We'll use a simpler approach for key counting
     
     // Count keys with our BUILD_ID prefix
     const pattern = `BUILD_${getBuildId()}:*`;
@@ -173,7 +165,7 @@ export async function getCacheStats(): Promise<{
       hits: 0, // Would need to track this separately
       misses: 0, // Would need to track this separately
       keys: keys.length,
-      memory,
+      memory: 'upstash', // Upstash manages memory automatically
     };
   } catch (error) {
     console.error('Redis STATS error:', error);
@@ -188,13 +180,11 @@ export async function getCacheStats(): Promise<{
 
 /**
  * Close Redis connection
+ * Note: Upstash Redis is stateless, no connection to close
  */
 export async function closeRedis(): Promise<void> {
-  try {
-    await redis.quit();
-  } catch (error) {
-    console.error('Redis CLOSE error:', error);
-  }
+  // Upstash Redis is stateless and doesn't require connection cleanup
+  console.log('Upstash Redis: No connection to close (stateless)');
 }
 
 export { redis, getBuildId };

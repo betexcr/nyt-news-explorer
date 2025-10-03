@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
-import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import ViewToggle from '../components/ViewToggle';
@@ -17,7 +16,6 @@ const TrendingPage: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
   const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
-    const USE_MOCK = true; // Use mock data when API key is not available
 
   useEffect(() => {
     const controller = new AbortController();
@@ -25,12 +23,8 @@ const TrendingPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        if (USE_MOCK) {
-          setArticles(mockTrendingArticles);
-        } else {
-          const data = await getMostPopular(selectedPeriod, controller.signal);
-          setArticles(data);
-        }
+        const data = await getMostPopular(selectedPeriod, controller.signal);
+        setArticles(data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch trending articles');
       } finally {
@@ -38,7 +32,7 @@ const TrendingPage: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [selectedPeriod, USE_MOCK, refreshTick]);
+  }, [selectedPeriod, refreshTick]);
 
   const getPeriodLabel = (period: string) => {
     switch (period) {

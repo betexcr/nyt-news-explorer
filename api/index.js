@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import redis from '@fastify/redis';
+import { Redis } from '@upstash/redis';
 import { createHash } from 'crypto';
 import axios from 'axios';
 
@@ -50,37 +50,34 @@ fastify.register(cors, {
   credentials: true,
 });
 
-// Register Redis
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const isTls = redisUrl.startsWith('rediss://');
-fastify.register(redis, {
-  url: redisUrl,
-  tls: isTls ? { rejectUnauthorized: false } : undefined,
-  lazyConnect: true,
+// Initialize Upstash Redis
+const redis = new Redis({
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  token: process.env.REDIS_TOKEN || '',
 });
 
 // Enhanced cache methods with tag support
 fastify.decorate('cache', {
   get: async (key) => {
-    const cached = await fastify.redis.get(key);
-    return cached ? JSON.parse(cached) : null;
+    const cached = await redis.get(key);
+    return cached || null;
   },
   set: async (key, value, ttl = 60) => {
-    await fastify.redis.setex(key, ttl, JSON.stringify(value));
+    await redis.setex(key, ttl, value);
     return true;
   },
   // Tag-based invalidation
   tagAttach: async (tag, ...keys) => {
     const tagKey = `tag:${tag}`;
-    await fastify.redis.sadd(tagKey, ...keys);
+    await redis.sadd(tagKey, keys);
     return true;
   },
   purgeByTag: async (tag) => {
     const tagKey = `tag:${tag}`;
-    const keys = await fastify.redis.smembers(tagKey);
+    const keys = await redis.smembers(tagKey);
     if (keys.length === 0) return 0;
-    const deleted = await fastify.redis.del(...keys);
-    await fastify.redis.del(tagKey);
+    const deleted = await redis.del(...keys);
+    await redis.del(tagKey);
     return deleted;
   },
 });

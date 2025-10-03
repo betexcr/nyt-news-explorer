@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
-import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
 import ViewToggle from '../components/ViewToggle';
@@ -17,7 +16,6 @@ const TopStoriesPage: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState<string>('home');
   const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
-    const USE_MOCK = true; // Use mock data when API key is not available
 
   useEffect(() => {
     const controller = new AbortController();
@@ -25,12 +23,8 @@ const TopStoriesPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        if (USE_MOCK) {
-          setStories(mockTopStories);
-        } else {
-          const data = await getTopStories(selectedSection, controller.signal);
-          setStories(data);
-        }
+        const data = await getTopStories(selectedSection, controller.signal);
+        setStories(data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch top stories');
       } finally {
@@ -38,7 +32,7 @@ const TopStoriesPage: React.FC = () => {
       }
     })();
     return () => controller.abort();
-  }, [selectedSection, USE_MOCK, refreshTick]);
+  }, [selectedSection, refreshTick]);
 
   const getSectionLabel = (section: string) => {
     const labels: Record<string, string> = {
