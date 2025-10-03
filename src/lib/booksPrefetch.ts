@@ -296,7 +296,17 @@ class BooksPrefetchManager {
    */
   getCachedBooks(category: string): any[] | null {
     const queryKey = ['books', { list: category }];
-    return queryClient.getQueryData(queryKey) || null;
+    const cachedData = queryClient.getQueryData(queryKey);
+    
+    // Debug logging
+    console.log(`[BOOKS PREFETCH] Getting cached books for category: ${category}`);
+    console.log(`[BOOKS PREFETCH] Query key:`, queryKey);
+    console.log(`[BOOKS PREFETCH] Cached data exists:`, !!cachedData);
+    if (cachedData) {
+      console.log(`[BOOKS PREFETCH] Cached data length:`, Array.isArray(cachedData) ? cachedData.length : 'not array');
+    }
+    
+    return Array.isArray(cachedData) ? cachedData : null;
   }
 
   /**
@@ -312,6 +322,34 @@ class BooksPrefetchManager {
   async triggerPrefetch(): Promise<void> {
     console.log('[BOOKS PREFETCH] Manual trigger requested');
     await this.runPrefetch();
+  }
+
+  /**
+   * Clear all books cache entries to force fresh data
+   */
+  clearBooksCache(): void {
+    console.log('[BOOKS PREFETCH] Clearing all books cache entries');
+    
+    // Clear TanStack Query cache for books
+    queryClient.removeQueries({ queryKey: ['books'] });
+    
+    // Clear localStorage cache entries for books
+    try {
+      const keys = Object.keys(localStorage);
+      const booksCacheKeys = keys.filter(key => 
+        key.startsWith('nyt-cache-books:') ||
+        key.startsWith('nyt-etag-books:') ||
+        key.includes('books-prefetch')
+      );
+      
+      booksCacheKeys.forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      console.log(`[BOOKS PREFETCH] Cleared ${booksCacheKeys.length} cache entries`);
+    } catch (error) {
+      console.warn('[BOOKS PREFETCH] Failed to clear cache:', error);
+    }
   }
 
   /**

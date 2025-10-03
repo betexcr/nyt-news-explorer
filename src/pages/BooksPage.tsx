@@ -42,6 +42,13 @@ const BooksPage: React.FC = () => {
   const prefetchedBooks = isCurrent ? booksPrefetch.getCachedBooks(listName) : null;
   const isPrefetched = isCurrent && booksPrefetch.isCategoryCached(listName);
   
+  // Debug logging
+  console.log(`[BOOKS PAGE] Current list: ${listName}`);
+  console.log(`[BOOKS PAGE] Is current: ${isCurrent}`);
+  console.log(`[BOOKS PAGE] Prefetched books:`, prefetchedBooks?.length || 0);
+  console.log(`[BOOKS PAGE] Active query data:`, activeQuery.data?.length || 0);
+  console.log(`[BOOKS PAGE] Is prefetched: ${isPrefetched}`);
+  
   const books = USE_API ? (prefetchedBooks || activeQuery.data || []) : mockBooks;
   const loading = USE_API && !isPrefetched ? activeQuery.isLoading : false;
   const error = USE_API ? activeQuery.error : null;
@@ -95,6 +102,18 @@ const BooksPage: React.FC = () => {
           aria-label="Reload list"
         >
           Reload
+        </button>
+        <button
+          type="button"
+          className="retry-button"
+          onClick={() => {
+            booksPrefetch.clearBooksCache();
+            // Force refresh by updating state
+            setListName(prev => prev + '');
+          }}
+          aria-label="Clear cache and reload"
+        >
+          Clear Cache
         </button>
       </div>
 
