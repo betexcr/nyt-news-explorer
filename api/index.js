@@ -424,45 +424,21 @@ fastify.get('/api/v1/books/list/:date/:list', async (request, reply) => {
   }
 });
 
-// Archive API - Get articles by year/month with pagination and filtering
+// Archive API - Get articles by year/month (no caching to avoid Redis size limits)
 fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
   const startTime = Date.now();
   const { year, month } = request.params;
   const { page = 0, limit = 50, dayStart, dayEnd } = request.query;
-  const cacheKey = createCacheKey(['api', 'v1', 'articles', 'archive', year, month, page, limit, dayStart, dayEnd]);
   
   try {
-    // Check cache first
-    const cached = await fastify.cache.get(cacheKey);
-    if (cached) {
-      const etag = createETag(cached);
-      const ifNoneMatch = request.headers['if-none-match'];
-      
-      if (ifNoneMatch === etag) {
-        logCacheOperation('/api/v1/articles/archive', cacheKey, 'HIT-304', startTime);
-        return reply.code(304).send();
-      }
-      
-      logCacheOperation('/api/v1/articles/archive', cacheKey, 'HIT', startTime);
-      return reply
-        .header('etag', etag)
-        .header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=7200')
-        .header('x-cache', 'HIT')
-        .send(cached);
-    }
+    console.log(`[ARCHIVE] Fetching ${year}/${month}, page=${page}, limit=${limit}`);
     
-    // For Archive API, we'll use a different approach to avoid Redis size limits
-    // Instead of caching the full dataset, we'll fetch and return data directly
-    // This trades some performance for reliability
-    
-    logCacheOperation('/api/v1/articles/archive', cacheKey, 'MISS', startTime);
-    
-    // Fetch from NYT API with error handling
+    // Fetch from NYT API directly (no caching due to size limits)
     let nytResponse;
     try {
       nytResponse = await axios.get(`https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`, {
         params: { 'api-key': process.env.NYT_API_KEY },
-        timeout: 20000,
+        timeout: 30000,
       });
     } catch (nytError) {
       console.error('NYT Archive API Error:', nytError.message);
@@ -473,6 +449,7 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
     }
     
     let articles = nytResponse.data?.response?.docs || [];
+    console.log(`[ARCHIVE] Retrieved ${articles.length} articles from NYT`);
     
     // Filter by day range if specified
     if (dayStart && dayEnd) {
@@ -483,6 +460,7 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
         const articleDay = articleDate.getDate();
         return articleDay >= startDay && articleDay <= endDay;
       });
+      console.log(`[ARCHIVE] Filtered to ${articles.length} articles for days ${startDay}-${endDay}`);
     }
     
     // Sort by publication date (newest first)
@@ -511,22 +489,15 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
       }
     };
     
-    const etag = createETag(response);
-    
-    // Only cache small responses to avoid Redis size limits
-    if (JSON.stringify(response).length < 1000000) { // 1MB limit
-      await fastify.cache.set(cacheKey, response, CACHE_TTL.ARCHIVE);
-      await fastify.cache.tagAttach('tag:archive', cacheKey);
-    }
+    console.log(`[ARCHIVE] Returning ${paginatedArticles.length} articles (page ${page})`);
     
     return reply
-      .header('etag', etag)
-      .header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=7200')
-      .header('Vary', 'Accept-Encoding')
-      .header('x-cache', 'MISS')
+      .header('Cache-Control', 'no-cache, no-store, must-revalidate')
+      .header('Pragma', 'no-cache')
+      .header('Expires', '0')
       .send(response);
   } catch (error) {
-    logCacheOperation('/api/v1/articles/archive', cacheKey, 'ERROR', startTime);
+    console.error('[ARCHIVE] Error:', error.message);
     return reply.code(500).send({ error: error.message });
   }
 });
