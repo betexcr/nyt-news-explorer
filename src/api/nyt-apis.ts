@@ -338,26 +338,19 @@ export const TOP_STORIES_SECTIONS = [
 // Available periods for Most Popular
 export const MOST_POPULAR_PERIODS = ['1', '7', '30'] as const;
 
-// Available lists for Books
+// Available lists for Books (verified working categories)
 export const BOOKS_LISTS = [
   'hardcover-fiction',
   'hardcover-nonfiction',
   'trade-fiction-paperback',
   'mass-market-paperback',
   'paperback-nonfiction',
-  'e-book-fiction',
-  'e-book-nonfiction',
   'combined-print-and-e-book-fiction',
   'combined-print-and-e-book-nonfiction',
   'advice-how-to-and-miscellaneous',
-  'childrens-middle-grade-hardcover',
-  'childrens-picture-books',
   'young-adult-hardcover',
   'series-books',
-  'audio-fiction',
-  'audio-nonfiction',
   'business-books',
-  'celebrities',
   'crime-and-punishment',
   'culture',
   'education',

@@ -31,21 +31,17 @@ const PREFETCH_CONFIG: PrefetchConfig = {
   batchSize: 5, // Process 5 categories at a time
 };
 
-// Popular book categories to prefetch
+// Popular book categories to prefetch (verified working categories)
 const POPULAR_BOOK_CATEGORIES = [
   'hardcover-fiction',
   'hardcover-nonfiction', 
   'trade-fiction-paperback',
   'paperback-nonfiction',
   'advice-how-to-and-miscellaneous',
-  'childrens-middle-grade-hardcover',
-  'picture-books',
   'series-books',
   'young-adult-hardcover',
   'combined-print-and-e-book-fiction',
   'combined-print-and-e-book-nonfiction',
-  'e-book-fiction',
-  'e-book-nonfiction',
   'mass-market-paperback',
   'graphic-books-and-manga',
   'business-books',
@@ -54,13 +50,9 @@ const POPULAR_BOOK_CATEGORIES = [
   'travel',
   'food-and-fitness',
   'relationships',
-  'religion-spirituality-and-faith',
-  'family',
   'education',
   'games-and-activities',
   'crime-and-punishment',
-  'expeditions',
-  'animals',
   'health',
   'humor',
 ];
