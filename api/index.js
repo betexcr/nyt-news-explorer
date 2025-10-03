@@ -507,6 +507,124 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
   }
 });
 
+// Manual Cache Warming endpoint
+fastify.post('/api/admin/warm-cache', async (request, reply) => {
+  try {
+    // Simple auth check
+    const authHeader = request.headers.authorization;
+    const expectedToken = process.env.ADMIN_API_KEY;
+    
+    if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
+      return reply.code(401).send({ error: 'Unauthorized' });
+    }
+    
+    const { targets } = request.body;
+    
+    console.log('🔥 Manual cache warming requested:', targets);
+    
+    // Define warming targets
+    const warmingTargets = {
+      topStories: targets?.includes('topStories') ? ['home', 'technology', 'business', 'sports'] : [],
+      mostPopular: targets?.includes('mostPopular') ? [1, 7, 30] : [],
+      books: targets?.includes('books') ? ['hardcover-fiction', 'hardcover-nonfiction', 'trade-fiction-paperback'] : [],
+      archive: targets?.includes('archive') ? [{ year: 2024, month: 1 }] : [],
+      search: targets?.includes('search') ? ['technology', 'politics', 'business'] : [],
+    };
+    
+    const results = {
+      timestamp: new Date().toISOString(),
+      targets: warmingTargets,
+      results: {}
+    };
+    
+    // Warm Top Stories
+    if (warmingTargets.topStories.length > 0) {
+      results.results.topStories = {};
+      for (const section of warmingTargets.topStories) {
+        try {
+          const cacheKey = createCacheKey(['api', 'v1', 'articles', 'top-stories', section]);
+          const url = `https://api.nytimes.com/svc/topstories/v2/${section}.json?api-key=${process.env.NYT_API_KEY}`;
+          const response = await axios.get(url, { timeout: 10000 });
+          
+          const etag = createETag(response.data);
+          await fastify.cache.set(cacheKey, response.data, CACHE_TTL.TOP_STORIES);
+          await fastify.cache.tagAttach('tag:top-stories', cacheKey);
+          
+          results.results.topStories[section] = { success: true, cached: true };
+          console.log(`✅ Warmed Top Stories: ${section}`);
+        } catch (error) {
+          results.results.topStories[section] = { success: false, error: error.message };
+          console.error(`❌ Failed to warm Top Stories: ${section}`, error.message);
+        }
+      }
+    }
+    
+    // Warm Most Popular
+    if (warmingTargets.mostPopular.length > 0) {
+      results.results.mostPopular = {};
+      for (const period of warmingTargets.mostPopular) {
+        try {
+          const cacheKey = createCacheKey(['api', 'v1', 'articles', 'most-popular', period]);
+          const url = `https://api.nytimes.com/svc/mostpopular/v2/viewed/${period}.json?api-key=${process.env.NYT_API_KEY}`;
+          const response = await axios.get(url, { timeout: 10000 });
+          
+          const etag = createETag(response.data);
+          await fastify.cache.set(cacheKey, response.data, CACHE_TTL.MOST_POPULAR);
+          await fastify.cache.tagAttach('tag:most-popular', cacheKey);
+          
+          results.results.mostPopular[period] = { success: true, cached: true };
+          console.log(`✅ Warmed Most Popular: ${period} days`);
+        } catch (error) {
+          results.results.mostPopular[period] = { success: false, error: error.message };
+          console.error(`❌ Failed to warm Most Popular: ${period}`, error.message);
+        }
+      }
+    }
+    
+    // Warm Books
+    if (warmingTargets.books.length > 0) {
+      results.results.books = {};
+      const today = new Date().toISOString().split('T')[0];
+      
+      for (const list of warmingTargets.books) {
+        try {
+          const cacheKey = createCacheKey(['books', 'best-sellers', list, today]);
+          const url = `https://api.nytimes.com/svc/books/v3/lists/current/${list}.json?api-key=${process.env.NYT_API_KEY}`;
+          const response = await axios.get(url, { timeout: 10000 });
+          
+          const books = response.data?.results?.books || [];
+          const etag = createETag(books);
+          await fastify.cache.set(cacheKey, books, CACHE_TTL.BOOKS_DAILY);
+          await fastify.cache.tagAttach('tag:books', cacheKey);
+          await fastify.cache.tagAttach(`tag:books:${today}`, cacheKey);
+          
+          results.results.books[list] = { success: true, cached: true, books: books.length };
+          console.log(`✅ Warmed Books: ${list} (${books.length} books)`);
+        } catch (error) {
+          results.results.books[list] = { success: false, error: error.message };
+          console.error(`❌ Failed to warm Books: ${list}`, error.message);
+        }
+      }
+    }
+    
+    console.log('🔥 Manual cache warming completed');
+    
+    return {
+      success: true,
+      message: 'Cache warming completed',
+      ...results
+    };
+    
+  } catch (error) {
+    console.error('❌ Manual cache warming failed:', error);
+    return reply.code(500).send({ 
+      success: false, 
+      error: error.message,
+      message: 'Cache warming failed' 
+    });
+  }
+});
+
 // Health check
 fastify.get('/health', async (request, reply) => {
   return { status: 'ok', timestamp: new Date().toISOString() };

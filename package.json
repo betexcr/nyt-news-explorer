@@ -43,7 +43,10 @@
     "deploy:netlify": "bash scripts/deploy-netlify.sh --prod",
     "deploy:preview": "bash scripts/deploy-netlify.sh",
     "cdn:optimize": "node scripts/optimize-assets.js",
-    "cdn:test": "node scripts/test-cdn.js"
+    "cdn:test": "node scripts/test-cdn.js",
+    "cache:warm": "node scripts/daily-cache-warmer.js",
+    "cache:warm:local": "BASE_URL=http://localhost:3000 node scripts/daily-cache-warmer.js",
+    "cache:warm:manual": "curl -X POST https://nyt-news-explorer-nqtb4ofq3-albmunmus-projects.vercel.app/api/admin/warm-cache -H 'Authorization: Bearer nyt-admin-secure-key-2024' -H 'Content-Type: application/json' -d '{\"targets\": [\"topStories\", \"mostPopular\", \"books\"]}'"
   },
   "proxy": "https://api.nytimes.com",
   "browserslist": {

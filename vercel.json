@@ -52,5 +52,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-cache-warm",
+      "schedule": "0 6 * * *"
+    }
   ]
 }

@@ -201,6 +201,15 @@
   background: rgba(33, 150, 243, 0.3);
 }
 
+.cache-control-btn.warm-cache {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.cache-control-btn.warm-cache:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
 .cache-control-btn.invalidate-all {
   background: rgba(244, 67, 54, 0.2);
   border-color: rgba(244, 67, 54, 0.4);

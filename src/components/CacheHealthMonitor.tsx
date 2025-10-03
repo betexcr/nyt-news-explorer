@@ -67,6 +67,34 @@ export const CacheHealthMonitor: React.FC = () => {
     }
   };
 
+  const handleWarmCache = async () => {
+    try {
+      const response = await fetch('/api/admin/warm-cache', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.REACT_APP_ADMIN_API_KEY || 'nyt-admin-secure-key-2024'}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targets: ['topStories', 'mostPopular', 'books']
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Cache warming completed:', result);
+        // Refresh stats
+        setStats(getStats());
+        setOfflineStats(offlineCache.getOfflineStats());
+        setBooksStats(booksPrefetch.getStats());
+      } else {
+        console.error('Cache warming failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Failed to trigger cache warming:', error);
+    }
+  };
+
   if (!stats) {
     return (
       <div className="cache-health-monitor">
@@ -240,6 +268,14 @@ export const CacheHealthMonitor: React.FC = () => {
                 title="Trigger books prefetch now"
               >
                 Prefetch Books
+              </button>
+              
+              <button 
+                className="cache-control-btn warm-cache"
+                onClick={handleWarmCache}
+                title="Warm all caches manually"
+              >
+                Warm All Caches
               </button>
               
               <button 
