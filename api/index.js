@@ -7,14 +7,14 @@ import axios from 'axios';
 // Build ID for cache invalidation across deployments
 const BUILD_ID = process.env.BUILD_ID || 'vercel-deploy';
 
-// Cache TTL configurations
+// Cache TTL configurations - Optimized for cost reduction
 const CACHE_TTL = {
-  SEARCH: 120, // 2 minutes for search results
-  TOP_STORIES: 300, // 5 minutes for top stories
-  MOST_POPULAR: 300, // 5 minutes for most popular
-  ARCHIVE: 3600, // 1 hour for archive data
-  DETAIL: 300, // 5 minutes for article details
-  REFERENCE: 3600, // 1 hour for reference data
+  SEARCH: 600, // 10 minutes for search results (was 2 min)
+  TOP_STORIES: 900, // 15 minutes for top stories (was 5 min)
+  MOST_POPULAR: 900, // 15 minutes for most popular (was 5 min)
+  ARCHIVE: 7200, // 2 hours for archive data (was 1 hour)
+  DETAIL: 1800, // 30 minutes for article details (was 5 min)
+  REFERENCE: 14400, // 4 hours for reference data (was 1 hour)
 };
 
 // Enhanced cache key generation with BUILD_ID
