@@ -109,8 +109,8 @@ const ArchivePage: React.FC = () => {
         }, 12000);
 
         const docs = await getArchive(query.year, query.month, controller.signal, {
-          dayStart: query.dayStart,
-          dayEnd: query.dayEnd,
+          dayStart: query.dayStart ?? undefined,
+          dayEnd: query.dayEnd ?? undefined,
           limit: 100 // Get more results for better UX
         });
         setArticles(docs);
