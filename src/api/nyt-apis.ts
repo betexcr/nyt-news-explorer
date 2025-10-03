@@ -279,14 +279,30 @@ export async function getBooksListByDate(
 export async function getArchive(
   year: number,
   month: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: { page?: number; limit?: number; dayStart?: number; dayEnd?: number }
 ): Promise<ArchiveArticle[]> {
+  const { page = 0, limit = 50, dayStart, dayEnd } = options || {};
   const url = isDevelopment 
     ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
     : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
-  const params = isDevelopment ? { 'api-key': API_KEY } : {};
-  const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });
-  return response.response.docs;
+  
+  const params = isDevelopment 
+    ? { 'api-key': API_KEY }
+    : { page, limit, ...(dayStart && { dayStart }), ...(dayEnd && { dayEnd }) };
+    
+  const response = await makeApiRequest<any>(url, params, signal, { timeoutMs: 20000 });
+  
+  // Handle both old and new response formats
+  if (response.articles) {
+    // New format with pagination
+    return response.articles as ArchiveArticle[];
+  } else if (response.response?.docs) {
+    // Old NYT API format
+    return response.response.docs as ArchiveArticle[];
+  }
+  
+  return [];
 }
 
 // Available sections for Top Stories

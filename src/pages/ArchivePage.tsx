@@ -108,23 +108,12 @@ const ArchivePage: React.FC = () => {
           setTimeoutHit(true);
         }, 12000);
 
-        const docs = await getArchive(query.year, query.month, controller.signal);
-        // Optional client-side day filtering or range filtering
-        const filtered = (() => {
-          const s = query.dayStart;
-          const e = query.dayEnd;
-          if (s != null && e != null) {
-            return docs.filter(d => {
-              const dn = new Date(d.pub_date).getUTCDate();
-              return dn >= s && dn <= e;
-            });
-          }
-          if (s != null) {
-            return docs.filter(d => new Date(d.pub_date).getUTCDate() === s);
-          }
-          return docs;
-        })();
-        setArticles(filtered.slice(0, 60));
+        const docs = await getArchive(query.year, query.month, controller.signal, {
+          dayStart: query.dayStart,
+          dayEnd: query.dayEnd,
+          limit: 100 // Get more results for better UX
+        });
+        setArticles(docs);
       } catch (err: any) {
         if (err.code === 'ABORTED') return;
         if ((err as NytApiError).status === 403) {

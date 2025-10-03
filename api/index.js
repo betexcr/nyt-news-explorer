@@ -424,11 +424,12 @@ fastify.get('/api/v1/books/list/:date/:list', async (request, reply) => {
   }
 });
 
-// Archive API - Get articles by year/month
+// Archive API - Get articles by year/month with pagination and filtering
 fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
   const startTime = Date.now();
   const { year, month } = request.params;
-  const cacheKey = createCacheKey(['api', 'v1', 'articles', 'archive', year, month]);
+  const { page = 0, limit = 50, dayStart, dayEnd } = request.query;
+  const cacheKey = createCacheKey(['api', 'v1', 'articles', 'archive', year, month, page, limit, dayStart, dayEnd]);
   
   try {
     // Check cache first
@@ -453,14 +454,52 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
     // Fetch from NYT API
     const nytResponse = await axios.get(`https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`, {
       params: { 'api-key': process.env.NYT_API_KEY },
-      timeout: 15000,
+      timeout: 20000,
     });
     
-    const articles = nytResponse.data?.response?.docs || [];
-    const etag = createETag(articles);
+    let articles = nytResponse.data?.response?.docs || [];
     
-    // Cache the response
-    await fastify.cache.set(cacheKey, articles, CACHE_TTL.ARCHIVE);
+    // Filter by day range if specified
+    if (dayStart && dayEnd) {
+      const startDay = parseInt(dayStart);
+      const endDay = parseInt(dayEnd);
+      articles = articles.filter(article => {
+        const articleDate = new Date(article.pub_date);
+        const articleDay = articleDate.getDate();
+        return articleDay >= startDay && articleDay <= endDay;
+      });
+    }
+    
+    // Sort by publication date (newest first)
+    articles.sort((a, b) => new Date(b.pub_date) - new Date(a.pub_date));
+    
+    // Apply pagination
+    const startIndex = page * limit;
+    const endIndex = startIndex + limit;
+    const paginatedArticles = articles.slice(startIndex, endIndex);
+    
+    // Create response with metadata
+    const response = {
+      articles: paginatedArticles,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: articles.length,
+        totalPages: Math.ceil(articles.length / limit),
+        hasMore: endIndex < articles.length
+      },
+      filters: {
+        year: parseInt(year),
+        month: parseInt(month),
+        dayStart: dayStart ? parseInt(dayStart) : null,
+        dayEnd: dayEnd ? parseInt(dayEnd) : null
+      }
+    };
+    
+    const etag = createETag(response);
+    
+    // Cache the response (now much smaller due to pagination)
+    await fastify.cache.set(cacheKey, response, CACHE_TTL.ARCHIVE);
     await fastify.cache.tagAttach('tag:archive', cacheKey);
     
     logCacheOperation('/api/v1/articles/archive', cacheKey, 'MISS', startTime);
@@ -470,7 +509,7 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
       .header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=7200')
       .header('Vary', 'Accept-Encoding')
       .header('x-cache', 'MISS')
-      .send(articles);
+      .send(response);
   } catch (error) {
     logCacheOperation('/api/v1/articles/archive', cacheKey, 'ERROR', startTime);
     return reply.code(500).send({ error: error.message });
