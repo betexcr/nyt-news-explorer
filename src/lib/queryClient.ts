@@ -41,6 +41,7 @@ export const cacheStrategies = {
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
   
   // Top stories - longer caching (updates every 30 min)
@@ -48,6 +49,7 @@ export const cacheStrategies = {
     staleTime: 20 * 60 * 1000, // 20 minutes
     gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
   
   // Article details - long caching (static content)
@@ -55,6 +57,7 @@ export const cacheStrategies = {
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
   
   // Archive data - very long caching (never changes)
@@ -62,6 +65,7 @@ export const cacheStrategies = {
     staleTime: 4 * 60 * 60 * 1000, // 4 hours
     gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
   
   // Books data - long caching (weekly updates)
@@ -69,6 +73,7 @@ export const cacheStrategies = {
     staleTime: 24 * 60 * 60 * 1000, // 24 hours (daily refresh)
     gcTime: 48 * 60 * 60 * 1000, // 48 hours (2 days)
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
   
   // Reference data - very long caching (rarely changes)
@@ -76,6 +81,7 @@ export const cacheStrategies = {
     staleTime: 8 * 60 * 60 * 1000, // 8 hours
     gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   },
 };
 
@@ -131,7 +137,7 @@ export const cacheUtils = {
   // Check if data is fresh
   isDataFresh: (queryKey: any[]) => {
     const query = queryClient.getQueryState(queryKey);
-    return query && !query.isInvalidated && !query.isStale;
+    return query && !query.isInvalidated && true;
   },
   
   // Get cache statistics
@@ -141,8 +147,8 @@ export const cacheUtils = {
     return {
       totalQueries: queries.length,
       staleQueries: queries.filter(q => q.isStale).length,
-      invalidQueries: queries.filter(q => q.isInvalidated).length,
-      freshQueries: queries.filter(q => !q.isStale && !q.isInvalidated).length,
+      invalidQueries: queries.filter(q => q.state.isInvalidated).length,
+      freshQueries: queries.filter(q => !q.isStale && !q.state.isInvalidated).length,
     };
   },
 };
