@@ -192,6 +192,15 @@
   background: rgba(255, 152, 0, 0.3);
 }
 
+.cache-control-btn.prefetch-books {
+  background: rgba(33, 150, 243, 0.2);
+  border-color: rgba(33, 150, 243, 0.4);
+}
+
+.cache-control-btn.prefetch-books:hover {
+  background: rgba(33, 150, 243, 0.3);
+}
+
 .cache-control-btn.invalidate-all {
   background: rgba(244, 67, 54, 0.2);
   border-color: rgba(244, 67, 54, 0.4);

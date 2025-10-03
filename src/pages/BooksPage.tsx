@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useBestSellers, useBooksListByDate } from '../hooks/useApiCache';
 import { BOOKS_LISTS } from '../api/nyt-apis';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
+import { booksPrefetch } from '../lib/booksPrefetch';
 import '../styles/books.css';
 
 const DEFAULT_LIST = 'hardcover-fiction';
@@ -10,8 +11,20 @@ const DEFAULT_LIST = 'hardcover-fiction';
 const BooksPage: React.FC = () => {
   const [listName, setListName] = useState<string>(DEFAULT_LIST);
   const [date, setDate] = useState<string>('current'); // YYYY-MM-DD or 'current'
+  const [prefetchStats, setPrefetchStats] = useState<any>(null);
 
   const listOptions = useMemo(() => BOOKS_LISTS, []);
+
+  // Update prefetch stats periodically
+  useEffect(() => {
+    const updateStats = () => {
+      setPrefetchStats(booksPrefetch.getStats());
+    };
+
+    updateStats();
+    const interval = setInterval(updateStats, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Use advanced caching hooks
   const isCurrent = date === 'current';
@@ -24,18 +37,33 @@ const BooksPage: React.FC = () => {
   
   // Fallback to mock data if API is not available
   const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
-  const books = USE_API ? (activeQuery.data || []) : mockBooks;
-  const loading = USE_API ? activeQuery.isLoading : false;
+  
+  // Check if we have prefetched data for instant loading
+  const prefetchedBooks = isCurrent ? booksPrefetch.getCachedBooks(listName) : null;
+  const isPrefetched = isCurrent && booksPrefetch.isCategoryCached(listName);
+  
+  const books = USE_API ? (prefetchedBooks || activeQuery.data || []) : mockBooks;
+  const loading = USE_API && !isPrefetched ? activeQuery.isLoading : false;
   const error = USE_API ? activeQuery.error : null;
 
   return (
     <div className="books-page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Books</h1>
-          <p className="page-subtitle">NYT Best Sellers lists</p>
-        </div>
-      </header>
+              <header className="page-header">
+                <div>
+                  <h1 className="page-title">Books</h1>
+                  <p className="page-subtitle">NYT Best Sellers lists</p>
+                  {isCurrent && prefetchStats && (
+                    <div className="prefetch-status">
+                      <span className={`prefetch-indicator ${isPrefetched ? 'cached' : 'loading'}`}>
+                        {isPrefetched ? '⚡ Instant' : '⏳ Loading...'}
+                      </span>
+                      <span className="prefetch-stats">
+                        {prefetchStats.successful}/{prefetchStats.totalCategories} categories cached
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </header>
 
       <div className="books-controls" role="toolbar" aria-label="Books controls">
         <label className="list-select">
@@ -77,7 +105,7 @@ const BooksPage: React.FC = () => {
           {books.length === 0 ? (
             <div className="empty-state">No books found.</div>
           ) : (
-            books.slice(0, 24).map((b) => (
+                    books.slice(0, 24).map((b: Book) => (
               <article key={b.book_uri} className="book-card">
                 <div className="book-media">
                   {b.book_image ? (

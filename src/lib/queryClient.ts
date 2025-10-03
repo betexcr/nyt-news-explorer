@@ -66,8 +66,8 @@ export const cacheStrategies = {
   
   // Books data - long caching (weekly updates)
   books: {
-    staleTime: 60 * 60 * 1000, // 1 hour
-    gcTime: 12 * 60 * 60 * 1000, // 12 hours
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours (daily refresh)
+    gcTime: 48 * 60 * 60 * 1000, // 48 hours (2 days)
     refetchOnWindowFocus: false,
   },
   

@@ -15,6 +15,8 @@ const CACHE_TTL = {
   ARCHIVE: 14400, // 4 hours for archive data (was 2 hours)
   DETAIL: 3600, // 1 hour for article details (was 30 min)
   REFERENCE: 28800, // 8 hours for reference data (was 4 hours)
+  BOOKS_DAILY: 86400, // 24 hours for daily books cache
+  BOOKS_DATED: 86400, // 24 hours for dated books cache
 };
 
 // Enhanced cache key generation with BUILD_ID
@@ -318,11 +320,13 @@ fastify.post('/api/admin/purge', async (request, reply) => {
   }
 });
 
-// Books API - Best Sellers
+// Books API - Best Sellers (with daily caching)
 fastify.get('/api/v1/books/best-sellers/:list', async (request, reply) => {
   const startTime = Date.now();
   const { list } = request.params;
-  const cacheKey = createCacheKey(['books', 'best-sellers', list]);
+  // Include date in cache key for daily invalidation
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const cacheKey = createCacheKey(['books', 'best-sellers', list, today]);
   
   try {
     // Check cache first
@@ -339,7 +343,7 @@ fastify.get('/api/v1/books/best-sellers/:list', async (request, reply) => {
       logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'HIT', startTime);
       return reply
         .header('etag', etag)
-        .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+        .header('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400')
         .header('x-cache', 'HIT')
         .send(cached);
     }
@@ -353,15 +357,16 @@ fastify.get('/api/v1/books/best-sellers/:list', async (request, reply) => {
     const books = nytResponse.data?.results?.books || [];
     const etag = createETag(books);
     
-    // Cache the response
-    await fastify.cache.set(cacheKey, books, CACHE_TTL.TOP_STORIES);
+    // Cache the response with daily TTL
+    await fastify.cache.set(cacheKey, books, CACHE_TTL.BOOKS_DAILY);
     await fastify.cache.tagAttach('tag:books', cacheKey);
+    await fastify.cache.tagAttach(`tag:books:${today}`, cacheKey);
     
     logCacheOperation('/api/v1/books/best-sellers', cacheKey, 'MISS', startTime);
     
     return reply
       .header('etag', etag)
-      .header('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=1800')
+      .header('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400')
       .header('Vary', 'Accept-Encoding')
       .header('x-cache', 'MISS')
       .send(books);

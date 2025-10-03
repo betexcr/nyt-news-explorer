@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCacheManager } from '../hooks/useAdvancedCache';
 import { offlineCache } from '../lib/offlineCache';
+import { booksPrefetch } from '../lib/booksPrefetch';
 import './CacheHealthMonitor.css';
 
 /**
@@ -10,6 +11,7 @@ import './CacheHealthMonitor.css';
 export const CacheHealthMonitor: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [offlineStats, setOfflineStats] = useState<any>(null);
+  const [booksStats, setBooksStats] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   
@@ -20,6 +22,7 @@ export const CacheHealthMonitor: React.FC = () => {
     const updateStats = () => {
       setStats(getStats());
       setOfflineStats(offlineCache.getOfflineStats());
+      setBooksStats(booksPrefetch.getStats());
     };
 
     updateStats();
@@ -35,6 +38,7 @@ export const CacheHealthMonitor: React.FC = () => {
       invalidateAll();
       setStats(getStats());
       setOfflineStats(offlineCache.getOfflineStats());
+      setBooksStats(booksPrefetch.getStats());
     }
   };
 
@@ -43,6 +47,7 @@ export const CacheHealthMonitor: React.FC = () => {
       invalidateByType(type);
       setStats(getStats());
       setOfflineStats(offlineCache.getOfflineStats());
+      setBooksStats(booksPrefetch.getStats());
     }
   };
 
@@ -50,6 +55,16 @@ export const CacheHealthMonitor: React.FC = () => {
     cleanup();
     setStats(getStats());
     setOfflineStats(offlineCache.getOfflineStats());
+    setBooksStats(booksPrefetch.getStats());
+  };
+
+  const handleTriggerBooksPrefetch = async () => {
+    try {
+      await booksPrefetch.triggerPrefetch();
+      setBooksStats(booksPrefetch.getStats());
+    } catch (error) {
+      console.error('Failed to trigger books prefetch:', error);
+    }
   };
 
   if (!stats) {
@@ -155,6 +170,36 @@ export const CacheHealthMonitor: React.FC = () => {
           </div>
 
           <div className="cache-health-section">
+            <h4>Books Prefetch</h4>
+            <div className="cache-health-stats">
+              <div className="cache-stat">
+                <span className="cache-stat-label">Total Categories:</span>
+                <span className="cache-stat-value">{booksStats?.totalCategories || 0}</span>
+              </div>
+              <div className="cache-stat">
+                <span className="cache-stat-label">Successfully Cached:</span>
+                <span className="cache-stat-value fresh">{booksStats?.successful || 0}</span>
+              </div>
+              <div className="cache-stat">
+                <span className="cache-stat-label">Failed:</span>
+                <span className="cache-stat-value invalid">{booksStats?.failed || 0}</span>
+              </div>
+              <div className="cache-stat">
+                <span className="cache-stat-label">Last Run:</span>
+                <span className="cache-stat-value">
+                  {booksStats?.lastRun ? new Date(booksStats.lastRun).toLocaleTimeString() : 'Never'}
+                </span>
+              </div>
+              <div className="cache-stat">
+                <span className="cache-stat-label">Next Run:</span>
+                <span className="cache-stat-value">
+                  {booksStats?.nextRun ? new Date(booksStats.nextRun).toLocaleString() : 'Not scheduled'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="cache-health-section">
             <h4>Cache Management</h4>
             <div className="cache-health-controls">
               <button 
@@ -187,6 +232,14 @@ export const CacheHealthMonitor: React.FC = () => {
                 title="Clear books cache"
               >
                 Clear Books
+              </button>
+              
+              <button 
+                className="cache-control-btn prefetch-books"
+                onClick={handleTriggerBooksPrefetch}
+                title="Trigger books prefetch now"
+              >
+                Prefetch Books
               </button>
               
               <button 

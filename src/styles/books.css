@@ -1,6 +1,48 @@
 .books-page .page-header {
   margin: 1rem 0 0.5rem;
 }
+
+/* Prefetch status indicator */
+.prefetch-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.prefetch-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.prefetch-indicator.cached {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.prefetch-indicator.loading {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #FF9800;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.prefetch-stats {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 11px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prefetch-stats {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
 .books-controls {
   display: flex;
   gap: 1rem;
