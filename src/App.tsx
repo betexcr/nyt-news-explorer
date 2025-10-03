@@ -11,6 +11,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import ApiDocsPage from "./pages/ApiDocsPage";
 import BooksPage from "./pages/BooksPage";
 import CacheHealthPage from "./pages/CacheHealthPage";
+import CacheHealthMonitor from "./components/CacheHealthMonitor";
 import { ViewTransitionsProvider } from "./components/ViewTransitionsProvider";
 import { QueryProvider } from "./providers/QueryProvider";
 import "./index.css";
@@ -57,11 +58,12 @@ function App() {
                 <Route path="/cache-health" element={<CacheHealthPage />} />
               </Routes>
             </div>
-          </main>
-        </ViewTransitionsProvider>
-      </Router>
-    </QueryProvider>
-  );
-}
+                  </main>
+                </ViewTransitionsProvider>
+              </Router>
+              <CacheHealthMonitor />
+            </QueryProvider>
+          );
+        }
 
 export default App;

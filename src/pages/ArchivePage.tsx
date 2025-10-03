@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getArchive, NytApiError } from '../api/nyt-apis';
+import { useArchive } from '../hooks/useApiCache';
+import { NytApiError } from '../api/nyt-apis';
 import type { ArchiveArticle } from '../types/nyt.other';
 import Spinner from '../components/Spinner';
 import { mockArchiveArticles } from '../api/mock-data';
@@ -86,50 +87,55 @@ const ArchivePage: React.FC = () => {
     }
   }, [year, month, dayStart, dayEnd, query]);
 
-  // Fetch archive data only when user presses Search (query is set)
-  useEffect(() => {
-    if (!query) return;
-    const controller = new AbortController();
-    let timeoutId: any;
-    // In production, we use the local API which has the NYT API key server-side
-    // In development, we need REACT_APP_NYT_API_KEY
-    const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
-    const run = async () => {
-      setLoading(true);
-      setError(null);
-      setTimeoutHit(false);
-      try {
-        if (!USE_API) {
-          setArticles(mockArchiveArticles);
-          return;
-        }
-        // Provide a UI fallback if the request takes too long
-        timeoutId = setTimeout(() => {
-          setTimeoutHit(true);
-        }, 12000);
+  // Use advanced caching hook for archive data
+  const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
+  
+  const archiveQuery = useArchive(
+    query?.year || START_YEAR,
+    query?.month || START_MONTH,
+    {
+      dayStart: query?.dayStart,
+      dayEnd: query?.dayEnd,
+      limit: 100,
+      enabled: !!query && USE_API,
+    }
+  );
 
-        const docs = await getArchive(query.year, query.month, controller.signal, {
-          dayStart: query.dayStart ?? undefined,
-          dayEnd: query.dayEnd ?? undefined,
-          limit: 100 // Get more results for better UX
-        });
-        setArticles(docs);
-      } catch (err: any) {
-        if (err.code === 'ABORTED') return;
-        if ((err as NytApiError).status === 403) {
-          setError('Archive API denied (403). Showing sample data.');
-          setArticles(mockArchiveArticles);
-        } else {
-          setError(err.message || 'Failed to fetch archive');
-        }
-      } finally {
-        setLoading(false);
-        if (timeoutId) clearTimeout(timeoutId);
+  // Set loading and error states based on query
+  useEffect(() => {
+    if (!USE_API) {
+      setLoading(false);
+      setError(null);
+      setArticles(mockArchiveArticles);
+      return;
+    }
+
+    setLoading(archiveQuery.isLoading);
+    
+    if (archiveQuery.error) {
+      const err = archiveQuery.error as NytApiError;
+      if (err.status === 403) {
+        setError('Archive API denied (403). Showing sample data.');
+        setArticles(mockArchiveArticles);
+      } else {
+        setError(err?.message || 'Failed to load archive');
       }
-    };
-    run();
-    return () => { if (timeoutId) clearTimeout(timeoutId); controller.abort(); };
-  }, [query]);
+    } else {
+      setError(null);
+      setArticles(archiveQuery.data || []);
+    }
+  }, [archiveQuery.isLoading, archiveQuery.error, archiveQuery.data, USE_API]);
+
+  // Set timeout for long requests
+  useEffect(() => {
+    if (!USE_API || !query) return;
+    
+    const timeoutId = setTimeout(() => {
+      setTimeoutHit(true);
+    }, 12000);
+
+    return () => clearTimeout(timeoutId);
+  }, [query, USE_API]);
 
   // Month/year navigation via calendar header
   const canPrev = useMemo(() => !(year === START_YEAR && month === START_MONTH), [year, month]);

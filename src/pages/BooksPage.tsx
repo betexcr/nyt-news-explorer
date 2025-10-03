@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-apis';
+import React, { useMemo, useState } from 'react';
+import { useBestSellers, useBooksListByDate } from '../hooks/useApiCache';
+import { BOOKS_LISTS } from '../api/nyt-apis';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
 import '../styles/books.css';
@@ -8,39 +9,24 @@ const DEFAULT_LIST = 'hardcover-fiction';
 
 const BooksPage: React.FC = () => {
   const [listName, setListName] = useState<string>(DEFAULT_LIST);
-  const [books, setBooks] = useState<Book[]>([]);
   const [date, setDate] = useState<string>('current'); // YYYY-MM-DD or 'current'
-  const [loading, setLoading] = useState<boolean>(false);
-  const [, setError] = useState<string | null>(null);
 
   const listOptions = useMemo(() => BOOKS_LISTS, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    // In production, we use the local API which has the NYT API key server-side
-    // In development, we need REACT_APP_NYT_API_KEY
-    const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!USE_API) {
-          if (!cancelled) setBooks(mockBooks);
-          return;
-        }
-        const results = date === 'current'
-          ? await getBestSellers(listName)
-          : await getBooksListByDate(listName, date);
-        if (!cancelled) setBooks(results);
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || 'Failed to load books');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [listName, date]);
+  // Use advanced caching hooks
+  const isCurrent = date === 'current';
+  
+  const currentBooksQuery = useBestSellers(listName, isCurrent);
+  const datedBooksQuery = useBooksListByDate(listName, date, !isCurrent);
+
+  // Get the appropriate query based on date selection
+  const activeQuery = isCurrent ? currentBooksQuery : datedBooksQuery;
+  
+  // Fallback to mock data if API is not available
+  const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
+  const books = USE_API ? (activeQuery.data || []) : mockBooks;
+  const loading = USE_API ? activeQuery.isLoading : false;
+  const error = USE_API ? activeQuery.error : null;
 
   return (
     <div className="books-page">
