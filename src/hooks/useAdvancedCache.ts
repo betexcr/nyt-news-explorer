@@ -277,9 +277,12 @@ export function useCacheManager() {
       ...cacheSync.getCacheStats(),
       tanstackStats: queryClient.getQueryCache().getAll().reduce((acc, query) => {
         acc.total++;
-        if (query.isStale) acc.stale++;
-        if (query.isInvalidated) acc.invalidated++;
-        if (!query.isStale && !query.isInvalidated) acc.fresh++;
+        // In TanStack Query v5, we check if data is stale by comparing dataUpdatedAt with current time
+        const staleTime = (query.options as any).staleTime || 0;
+        const isStale = query.state.dataUpdatedAt < Date.now() - staleTime;
+        if (isStale) acc.stale++;
+        if (query.state.isInvalidated) acc.invalidated++;
+        if (!isStale && !query.state.isInvalidated) acc.fresh++;
         return acc;
       }, { total: 0, stale: 0, invalidated: 0, fresh: 0 }),
     };
