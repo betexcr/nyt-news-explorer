@@ -73,6 +73,21 @@ const BooksPage: React.FC = () => {
     }
   }, [error, listName, reportApiError]);
 
+  // Handle invalid category selection
+  const handleListChange = (newListName: string) => {
+    // Validate that the selected list is in our valid categories
+    if (BOOKS_LISTS.includes(newListName as any)) {
+      setListName(newListName);
+    } else {
+      console.warn(`[BOOKS PAGE] Invalid category selected: ${newListName}, falling back to default`);
+      setListName(DEFAULT_LIST);
+      reportApiError(
+        new Error(`Invalid book category: ${newListName}`), 
+        'books/validation'
+      );
+    }
+  };
+
   // Force refresh when list name changes to ensure fresh data
   useEffect(() => {
     if (isCurrent) {
@@ -103,11 +118,11 @@ const BooksPage: React.FC = () => {
       <div className="books-controls" role="toolbar" aria-label="Books controls">
         <label className="list-select">
           List
-          <select
-            aria-label="Select best sellers list"
-            value={listName}
-            onChange={(e) => setListName(e.target.value)}
-          >
+            <select
+              aria-label="Select best sellers list"
+              value={listName}
+              onChange={(e) => handleListChange(e.target.value)}
+            >
             {listOptions.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}

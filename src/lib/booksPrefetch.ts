@@ -51,7 +51,6 @@ const POPULAR_BOOK_CATEGORIES = [
   'food-and-fitness',
   'relationships',
   'education',
-  'games-and-activities',
   'crime-and-punishment',
   'health',
   'humor',

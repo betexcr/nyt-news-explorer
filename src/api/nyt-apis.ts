@@ -355,7 +355,6 @@ export const BOOKS_LISTS = [
   'culture',
   'education',
   'food-and-fitness',
-  'games-and-activities',
   'graphic-books-and-manga',
   'hardcover-advice',
   'health',
