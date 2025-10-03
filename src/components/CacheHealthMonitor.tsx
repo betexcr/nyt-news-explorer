@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCacheManager } from '../hooks/useAdvancedCache';
 import { offlineCache } from '../lib/offlineCache';
 import { booksPrefetch } from '../lib/booksPrefetch';
+import { clearAllCache } from '../utils/cache';
 import './CacheHealthMonitor.css';
 
 /**
@@ -34,11 +35,18 @@ export const CacheHealthMonitor: React.FC = () => {
   }, [getStats, autoRefresh]);
 
   const handleInvalidateAll = async () => {
-    if (window.confirm('Are you sure you want to clear all cache data?')) {
-      invalidateAll();
-      setStats(getStats());
-      setOfflineStats(offlineCache.getOfflineStats());
-      setBooksStats(booksPrefetch.getStats());
+    if (window.confirm('Are you sure you want to clear all cache data? This will reload the page.')) {
+      try {
+        // Use comprehensive cache clearing
+        await clearAllCache();
+      } catch (error) {
+        console.error('Failed to clear cache:', error);
+        // Fallback to basic clearing
+        invalidateAll();
+        setStats(getStats());
+        setOfflineStats(offlineCache.getOfflineStats());
+        setBooksStats(booksPrefetch.getStats());
+      }
     }
   };
 

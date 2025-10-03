@@ -208,7 +208,11 @@ export class OfflineCacheManager {
   async preloadCriticalData(): Promise<void> {
     console.log('[OFFLINE CACHE] Preloading critical data for offline use');
 
-    const criticalQueries = [
+    const criticalQueries: Array<{
+      type: string;
+      params: any;
+      queryFn: () => Promise<any>;
+    }> = [
       // Add critical queries that should be available offline
       // This would be populated based on your app's needs
     ];

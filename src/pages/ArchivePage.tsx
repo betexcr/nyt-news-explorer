@@ -94,8 +94,8 @@ const ArchivePage: React.FC = () => {
     query?.year || START_YEAR,
     query?.month || START_MONTH,
     {
-      dayStart: query?.dayStart,
-      dayEnd: query?.dayEnd,
+      dayStart: query?.dayStart ?? undefined,
+      dayEnd: query?.dayEnd ?? undefined,
       limit: 100,
       enabled: !!query && USE_API,
     }
