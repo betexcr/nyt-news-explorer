@@ -1,0 +1,311 @@
+/* Error Catcher Styles */
+.error-catcher-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.error-toggle-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.error-toggle-btn:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+}
+
+.error-count {
+  background: #fff;
+  color: #ff6b6b;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+.error-catcher {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 400px;
+  max-height: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.error-catcher-header {
+  background: #f8f9fa;
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-catcher-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.error-catcher-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.error-clear-btn,
+.error-close-btn {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.error-clear-btn:hover {
+  background: #ffebee;
+}
+
+.error-close-btn:hover {
+  background: #f5f5f5;
+}
+
+.error-clear-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-catcher-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.error-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.error-list {
+  padding: 8px;
+}
+
+.error-item {
+  background: #fafafa;
+  border-left: 4px solid #ff6b6b;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.error-item:hover {
+  background: #f5f5f5;
+}
+
+.error-item.expanded {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-item-header {
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.error-item-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.error-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  word-break: break-word;
+}
+
+.error-source {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.error-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.error-time {
+  font-size: 11px;
+  color: #666;
+  font-family: monospace;
+}
+
+.error-remove-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.error-remove-btn:hover {
+  background: #ffebee;
+  color: #ff6b6b;
+}
+
+.error-item-details {
+  padding: 0 12px 12px 12px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.error-detail-section {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.error-detail-section strong {
+  color: #555;
+  margin-right: 8px;
+}
+
+.error-stack {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 11px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  color: #666;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.error-detail-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.error-copy-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.error-copy-btn:hover {
+  background: #bbdefb;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .error-catcher {
+    width: calc(100vw - 40px);
+    max-width: 400px;
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    margin: 0 auto;
+  }
+  
+  .error-catcher-toggle {
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+/* Animation for new errors */
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.error-item {
+  animation: errorSlideIn 0.3s ease-out;
+}
+
+/* Scrollbar styling */
+.error-catcher-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.error-catcher-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.error-catcher-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.error-catcher-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

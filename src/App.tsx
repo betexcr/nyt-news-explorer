@@ -12,12 +12,15 @@ import ApiDocsPage from "./pages/ApiDocsPage";
 import BooksPage from "./pages/BooksPage";
 import CacheHealthPage from "./pages/CacheHealthPage";
 import CacheHealthMonitor from "./components/CacheHealthMonitor";
+import ErrorCatcher from "./components/ErrorCatcher";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ViewTransitionsProvider } from "./components/ViewTransitionsProvider";
 import { QueryProvider } from "./providers/QueryProvider";
 import "./index.css";
 import "./styles/header.css";
 import "./styles/api-docs.css";
 import "./styles/view-transitions.css";
+import "./styles/error-catcher.css";
 
 
 function App() {
@@ -38,32 +41,35 @@ function App() {
     <QueryProvider>
       <Router>
         <ViewTransitionsProvider>
-          <SiteHeader />
-          <main style={{ paddingTop: "70px" }}>
-            <div 
-              className="container view-transition-page-root"
-              style={{ viewTransitionName: "page-root" }}
-            >
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/trending" element={<TrendingPage />} />
-                <Route path="/top-stories" element={<TopStoriesPage />} />
-                <Route path="/archive" element={<ArchivePage />} />
-                <Route path="/books" element={<BooksPage />} />
-                <Route path="/detail" element={<DetailPage />} />
-                <Route path="/favorites" element={<FavoritesPage />} />
-                <Route path="/api-docs" element={<ApiDocsPage />} />
-                <Route path="/cache-health" element={<CacheHealthPage />} />
-              </Routes>
-            </div>
-                  </main>
-                </ViewTransitionsProvider>
-              </Router>
-              <CacheHealthMonitor />
-            </QueryProvider>
-          );
-        }
+          <ErrorBoundary>
+            <SiteHeader />
+            <main style={{ paddingTop: "70px" }}>
+              <div 
+                className="container view-transition-page-root"
+                style={{ viewTransitionName: "page-root" }}
+              >
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/trending" element={<TrendingPage />} />
+                  <Route path="/top-stories" element={<TopStoriesPage />} />
+                  <Route path="/archive" element={<ArchivePage />} />
+                  <Route path="/books" element={<BooksPage />} />
+                  <Route path="/detail" element={<DetailPage />} />
+                  <Route path="/favorites" element={<FavoritesPage />} />
+                  <Route path="/api-docs" element={<ApiDocsPage />} />
+                  <Route path="/cache-health" element={<CacheHealthPage />} />
+                </Routes>
+              </div>
+            </main>
+          </ErrorBoundary>
+        </ViewTransitionsProvider>
+      </Router>
+      <CacheHealthMonitor />
+      <ErrorCatcher />
+    </QueryProvider>
+  );
+}
 
 export default App;

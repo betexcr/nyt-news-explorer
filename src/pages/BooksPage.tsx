@@ -4,6 +4,7 @@ import { BOOKS_LISTS } from '../api/nyt-apis';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
 import { booksPrefetch } from '../lib/booksPrefetch';
+import { useErrorReporter } from '../utils/errorReporter';
 import '../styles/books.css';
 
 const DEFAULT_LIST = 'hardcover-fiction';
@@ -12,6 +13,7 @@ const BooksPage: React.FC = () => {
   const [listName, setListName] = useState<string>(DEFAULT_LIST);
   const [date, setDate] = useState<string>('current'); // YYYY-MM-DD or 'current'
   const [prefetchStats, setPrefetchStats] = useState<any>(null);
+  const { reportApiError } = useErrorReporter();
 
   const listOptions = useMemo(() => BOOKS_LISTS, []);
 
@@ -52,6 +54,13 @@ const BooksPage: React.FC = () => {
   const books = USE_API ? (prefetchedBooks || activeQuery.data || []) : mockBooks;
   const loading = USE_API && !isPrefetched ? activeQuery.isLoading : false;
   const error = USE_API ? activeQuery.error : null;
+
+  // Report API errors to error catcher
+  useEffect(() => {
+    if (error) {
+      reportApiError(error, `books/${listName}`);
+    }
+  }, [error, listName, reportApiError]);
 
   return (
     <div className="books-page">
