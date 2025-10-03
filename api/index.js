@@ -451,11 +451,26 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
         .send(cached);
     }
     
-    // Fetch from NYT API
-    const nytResponse = await axios.get(`https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`, {
-      params: { 'api-key': process.env.NYT_API_KEY },
-      timeout: 20000,
-    });
+    // For Archive API, we'll use a different approach to avoid Redis size limits
+    // Instead of caching the full dataset, we'll fetch and return data directly
+    // This trades some performance for reliability
+    
+    logCacheOperation('/api/v1/articles/archive', cacheKey, 'MISS', startTime);
+    
+    // Fetch from NYT API with error handling
+    let nytResponse;
+    try {
+      nytResponse = await axios.get(`https://api.nytimes.com/svc/archive/v1/${year}/${month}.json`, {
+        params: { 'api-key': process.env.NYT_API_KEY },
+        timeout: 20000,
+      });
+    } catch (nytError) {
+      console.error('NYT Archive API Error:', nytError.message);
+      return reply.code(500).send({ 
+        error: 'Failed to fetch archive data from NYT API',
+        details: nytError.message 
+      });
+    }
     
     let articles = nytResponse.data?.response?.docs || [];
     
@@ -498,11 +513,11 @@ fastify.get('/api/v1/articles/archive/:year/:month', async (request, reply) => {
     
     const etag = createETag(response);
     
-    // Cache the response (now much smaller due to pagination)
-    await fastify.cache.set(cacheKey, response, CACHE_TTL.ARCHIVE);
-    await fastify.cache.tagAttach('tag:archive', cacheKey);
-    
-    logCacheOperation('/api/v1/articles/archive', cacheKey, 'MISS', startTime);
+    // Only cache small responses to avoid Redis size limits
+    if (JSON.stringify(response).length < 1000000) { // 1MB limit
+      await fastify.cache.set(cacheKey, response, CACHE_TTL.ARCHIVE);
+      await fastify.cache.tagAttach('tag:archive', cacheKey);
+    }
     
     return reply
       .header('etag', etag)
