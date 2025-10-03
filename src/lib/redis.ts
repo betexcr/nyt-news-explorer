@@ -3,8 +3,8 @@ import crypto from 'crypto';
 
 // Redis client configuration for Upstash
 const redis = new Redis({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-  token: process.env.REDIS_TOKEN || '',
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || 'redis://localhost:6379',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN || '',
 });
 
 // Build ID for cache invalidation across deployments
