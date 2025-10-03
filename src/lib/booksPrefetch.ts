@@ -266,8 +266,13 @@ class BooksPrefetchManager {
     const cachedData = queryClient.getQueryData(queryKey);
     
     if (cachedData) {
-      // Check if data is from today
-      const cacheKey = `books:list=${category}`;
+      // Check if data is from today using the same cache key generation as cacheSync
+      const params = { list: category };
+      const sortedParams = Object.keys(params)
+        .sort()
+        .map(key => `${key}:${params[key as keyof typeof params]}`)
+        .join('|');
+      const cacheKey = `books:${btoa(sortedParams).replace(/[^a-zA-Z0-9]/g, '')}`;
       const cacheEntry = localStorage.getItem(`nyt-cache-${cacheKey}`);
       
       if (cacheEntry) {
