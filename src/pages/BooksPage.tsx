@@ -79,7 +79,7 @@ const BooksPage: React.FC = () => {
       // Invalidate the query to force fresh data when switching categories
       currentBooksQuery.refetch();
     }
-  }, [listName, isCurrent, currentBooksQuery]);
+  }, [listName, isCurrent]); // Removed currentBooksQuery from dependencies to prevent infinite loop
 
   return (
     <div className="books-page">
