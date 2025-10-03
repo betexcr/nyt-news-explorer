@@ -50,9 +50,20 @@ const BooksPage: React.FC = () => {
   console.log(`[BOOKS PAGE] Prefetched books:`, prefetchedBooks?.length || 0);
   console.log(`[BOOKS PAGE] Active query data:`, activeQuery.data?.length || 0);
   console.log(`[BOOKS PAGE] Is prefetched: ${isPrefetched}`);
+  console.log(`[BOOKS PAGE] Active query loading:`, activeQuery.isLoading);
+  console.log(`[BOOKS PAGE] Active query error:`, activeQuery.error);
   
-  const books = USE_API ? (prefetchedBooks || activeQuery.data || []) : mockBooks;
-  const loading = USE_API && !isPrefetched ? activeQuery.isLoading : false;
+  // Prioritize active query data over prefetched data to ensure fresh results
+  // Only use prefetched data if active query is loading and we have prefetched data
+  const books = USE_API ? (
+    (activeQuery.data && activeQuery.data.length > 0) ? activeQuery.data :
+    (activeQuery.isLoading && prefetchedBooks) ? prefetchedBooks :
+    activeQuery.data || prefetchedBooks || []
+  ) : mockBooks;
+  
+  const loading = USE_API ? (
+    activeQuery.isLoading && !prefetchedBooks
+  ) : false;
   const error = USE_API ? activeQuery.error : null;
 
   // Report API errors to error catcher
@@ -61,6 +72,14 @@ const BooksPage: React.FC = () => {
       reportApiError(error, `books/${listName}`);
     }
   }, [error, listName, reportApiError]);
+
+  // Force refresh when list name changes to ensure fresh data
+  useEffect(() => {
+    if (isCurrent) {
+      // Invalidate the query to force fresh data when switching categories
+      currentBooksQuery.refetch();
+    }
+  }, [listName, isCurrent, currentBooksQuery]);
 
   return (
     <div className="books-page">
