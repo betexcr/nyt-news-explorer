@@ -32,7 +32,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const useErrorStore = create<ErrorStore>()(
   devtools(
-    (set, get) => ({
+    (set, _get) => ({
       errors: [],
       isVisible: false,
       maxErrors: 50,

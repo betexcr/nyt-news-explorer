@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { cacheGet, cacheSet, ckey, stableHash, tagAttach } from '../lib/redis';
-import { makeETag, extractETag, etagMatches } from '../lib/etag';
-import { logCacheOperation, createCacheHeaders } from '../middleware/cacheLog';
+import { makeETag, etagMatches } from '../lib/etag';
+import { logCacheOperation } from '../middleware/cacheLog';
 
 // Cache TTL configurations
 const CACHE_TTL = {

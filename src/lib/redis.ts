@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import crypto from 'crypto';
+import _crypto from 'crypto';
 
 // Redis client configuration for Upstash
 const redis = new Redis({

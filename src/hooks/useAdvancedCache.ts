@@ -17,7 +17,7 @@ interface UseAdvancedCacheOptions {
  * Advanced caching hook with Redis ETag synchronization
  * Provides intelligent cache management, prefetching, and background updates
  */
-export function useAdvancedCache<T = any>({
+export function useAdvancedCache<_T = any>({
   type,
   params,
   queryFn,
@@ -38,11 +38,11 @@ export function useAdvancedCache<T = any>({
 
   // Enhanced query function with ETag support
   const enhancedQueryFn = useCallback(async () => {
-    const startTime = Date.now();
+    const _startTime = Date.now();
     
     try {
       // Check if we should fetch from cache first
-      const { shouldFetch, cachedData, etag } = await cacheSync.shouldFetch(type, params, {
+      const { shouldFetch, cachedData, etag: _etag } = await cacheSync.shouldFetch(type, params, {
         maxAge,
         etag: undefined, // We'll get this from the response
       });

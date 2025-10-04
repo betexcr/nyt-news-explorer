@@ -1,3 +1,12 @@
+// Mock Redis client before importing
+jest.mock('@upstash/redis', () => ({
+  Redis: jest.fn().mockImplementation(() => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+  })),
+}));
+
 import { stableHash, ckey } from '../redis';
 
 describe('Redis Utilities', () => {

@@ -1,4 +1,4 @@
-import { cacheSync } from './cacheSync';
+import { _cacheSync } from './cacheSync';
 import { queryClient } from './queryClient';
 
 /**

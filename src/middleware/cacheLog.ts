@@ -1,4 +1,4 @@
-import { ckey } from '../lib/redis';
+import { _ckey } from '../lib/redis';
 
 export type CacheStatus = 'HIT' | 'MISS' | 'STALE' | 'REVAL';
 
@@ -31,7 +31,7 @@ export function logCacheOperation(
   userId?: string
 ): void {
   const duration = Date.now() - startTime;
-  const entry: CacheLogEntry = {
+  const _entry: CacheLogEntry = {
     route,
     key,
     status,

@@ -30,7 +30,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute(
       'src',
       'https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg'
@@ -44,7 +44,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute(
       'src',
       'https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg'
@@ -58,7 +58,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute(
       'src',
       'https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg'
@@ -77,7 +77,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute(
       'src',
       'https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg'
@@ -96,7 +96,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
   });
 
@@ -118,7 +118,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
   });
 
@@ -136,7 +136,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute(
       'src',
       'https://example.com/thumb.jpg'
@@ -158,7 +158,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute('src', 'https://example.com/default.jpg');
   });
 
@@ -178,7 +178,7 @@ describe('ArticleCard extra tests', () => {
       </MemoryRouter>
     );
 
-    const img = screen.getByAltText('');
+    const img = screen.getByAltText('Headline One');
     expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
   });
 

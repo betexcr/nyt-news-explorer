@@ -53,14 +53,12 @@ async function compressionPlugin(fastify: FastifyInstance) {
     // Request/response filtering
     requestEncodings: ['br', 'gzip', 'deflate'],
     onUnsupportedEncoding: (encoding: any, request: any, reply: any) => {
-      reply.code(406).send({
-        type: 'https://api.nyt-news-explorer.com/problems/unsupported-encoding',
-        title: 'Unsupported Content Encoding',
-        status: 406,
-        detail: `Encoding '${encoding}' is not supported. Supported encodings: br, gzip, deflate`,
-        instance: request.url,
-        correlationId: request.headers['x-correlation-id'],
-      })
+      // Don't send response here to avoid double response
+      request.log.warn({
+        encoding,
+        url: request.url,
+        userAgent: request.headers['user-agent'],
+      }, 'Unsupported encoding requested')
     },
   })
 

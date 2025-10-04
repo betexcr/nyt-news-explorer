@@ -27,7 +27,7 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
     if (!enabled) return cb();
     try {
       (document as any).startViewTransition(() => cb());
-    } catch (error) {
+    } catch {
       // Fallback for browsers that don't support View Transitions
       console.warn('View Transitions not supported, using fallback');
       cb();
@@ -69,7 +69,7 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
       } else {
         isNavigatingRef.current = false;
       }
-    } catch (error) {
+    } catch {
       // Fallback for browsers that don't support View Transitions
       console.warn('View Transitions not supported, using fallback');
       isNavigatingRef.current = false;

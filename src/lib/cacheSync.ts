@@ -1,4 +1,4 @@
-import { queryClient, cacheUtils } from './queryClient';
+import { _queryClient, cacheUtils } from './queryClient';
 
 /**
  * Advanced cache synchronization with Redis ETags
@@ -305,7 +305,7 @@ export class CacheSyncManager {
               this.removeCacheEntry(cleanKey);
             }
           }
-        } catch (error) {
+        } catch {
           // Remove corrupted entries
           const cacheKey = metaKey.replace('-meta', '');
           const cleanKey = cacheKey.replace(this.cachePrefix, '');
