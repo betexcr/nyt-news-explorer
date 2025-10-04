@@ -61,9 +61,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       },
       response: {
         302: {
+          type: 'object',
           description: 'Redirect to authorization server',
         },
-        400: { $ref: '#/components/responses/400' },
       },
     },
   }, async (request, reply) => {
@@ -146,8 +146,8 @@ export async function authRoutes(fastify: FastifyInstance) {
             scope: { type: 'string' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        401: { $ref: '#/components/responses/401' },
+        400: { type: 'object', description: 'Bad Request' },
+        401: { type: 'object', description: 'Unauthorized' },
       },
     },
   }, async (request, reply) => {
@@ -254,9 +254,9 @@ export async function authRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        401: { $ref: '#/components/responses/401' },
-        429: { $ref: '#/components/responses/429' },
+        400: { type: 'object', description: 'Bad Request' },
+        401: { type: 'object', description: 'Unauthorized' },
+        429: { type: 'object', description: 'Too Many Requests' },
       },
     },
   }, async (request, reply) => {
@@ -370,16 +370,10 @@ export async function authRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        400: { $ref: '#/components/responses/400' },
         409: {
+          type: 'object',
           description: 'User already exists',
-          content: {
-            'application/problem+json': {
-              schema: { $ref: '#/components/schemas/ProblemDetails' },
-            },
-          },
         },
-        429: { $ref: '#/components/responses/429' },
       },
     },
   }, async (request, reply) => {
@@ -482,7 +476,7 @@ export async function authRoutes(fastify: FastifyInstance) {
             message: { type: 'string' },
           },
         },
-        401: { $ref: '#/components/responses/401' },
+        401: { type: 'object', description: 'Unauthorized' },
       },
     },
   }, async (request, reply) => {

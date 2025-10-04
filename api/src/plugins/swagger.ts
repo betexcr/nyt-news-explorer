@@ -240,7 +240,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Bad Request',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -248,7 +248,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Unauthorized',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -256,7 +256,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Forbidden',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -264,7 +264,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Not Found',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -290,7 +290,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             },
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -298,7 +298,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Internal Server Error',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },
@@ -306,7 +306,7 @@ All errors follow RFC 9457 Problem Details format for machine-readable, consiste
             description: 'Service Unavailable',
             content: {
               'application/problem+json': {
-                schema: { $ref: '#/components/schemas/ProblemDetails' },
+                schema: { type: 'object', description: 'Problem Details' },
               },
             },
           },

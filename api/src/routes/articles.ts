@@ -129,10 +129,10 @@ export async function articlesRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        304: { description: 'Not Modified (cached response)' },
-        400: { $ref: '#/components/responses/400' },
-        429: { $ref: '#/components/responses/429' },
-        503: { $ref: '#/components/responses/503' },
+        304: { type: 'object', description: 'Not Modified (cached response)' },
+        400: { type: 'object', description: 'Bad Request' },
+        429: { type: 'object', description: 'Too Many Requests' },
+        503: { type: 'object', description: 'Service Unavailable' },
       },
     },
   }, async (request, reply) => {
@@ -270,8 +270,8 @@ export async function articlesRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        429: { $ref: '#/components/responses/429' },
+        400: { type: 'object', description: 'Bad Request' },
+        429: { type: 'object', description: 'Too Many Requests' },
       },
     },
   }, async (request, reply) => {
@@ -381,8 +381,8 @@ export async function articlesRoutes(fastify: FastifyInstance) {
             results: { type: 'array' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        429: { $ref: '#/components/responses/429' },
+        400: { type: 'object', description: 'Bad Request' },
+        429: { type: 'object', description: 'Too Many Requests' },
       },
     },
   }, async (request, reply) => {
@@ -486,8 +486,8 @@ export async function articlesRoutes(fastify: FastifyInstance) {
             results: { type: 'array' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        429: { $ref: '#/components/responses/429' },
+        400: { type: 'object', description: 'Bad Request' },
+        429: { type: 'object', description: 'Too Many Requests' },
       },
     },
   }, async (request, reply) => {
@@ -596,7 +596,7 @@ export async function articlesRoutes(fastify: FastifyInstance) {
             cached: { type: 'boolean' },
           },
         },
-        404: { $ref: '#/components/responses/404' },
+        404: { type: 'object', description: 'Not Found' },
       },
     },
   }, async (request, reply) => {
@@ -627,6 +627,74 @@ export async function articlesRoutes(fastify: FastifyInstance) {
         detail: 'The requested article could not be found',
         instance: request.url,
         correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Books endpoint
+  fastify.get('/books/best-sellers/:list', {
+    schema: {
+      params: {
+        type: 'object',
+        properties: {
+          list: { type: 'string', minLength: 1 },
+        },
+        required: ['list'],
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          date: { type: 'string' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            copyright: { type: 'string' },
+            num_results: { type: 'number' },
+            last_modified: { type: 'string' },
+            results: {
+              type: 'object',
+              properties: {
+                display_name: { type: 'string' },
+                list_name: { type: 'string' },
+                list_name_encoded: { type: 'string' },
+                previous_published_date: { type: 'string' },
+                published_date: { type: 'string' },
+                bestsellers_date: { type: 'string' },
+                normal_list_ends_at: { type: 'number' },
+                updated: { type: 'string' },
+                list_id: { type: 'number' },
+                uri: { type: 'string' },
+                books: { type: 'array' },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, async (request, reply) => {
+    const { list } = request.params as { list: string }
+    const { date } = request.query as { date?: string }
+    
+    try {
+      const dateParam = date && date !== '' ? date : 'current'
+      const url = `https://api.nytimes.com/svc/books/v3/lists/${dateParam}/${list}.json?api-key=${config.externalApis.nytApiKey}`
+      
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`NYT API error: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      return data
+    } catch (error) {
+      fastify.log.error({ error, list }, 'Failed to fetch books')
+      reply.code(503).send({
+        error: 'Service temporarily unavailable',
+        message: 'Failed to fetch books from NYT API'
       })
     }
   })

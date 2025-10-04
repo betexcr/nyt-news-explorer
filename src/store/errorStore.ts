@@ -154,35 +154,35 @@ export const initializeGlobalErrorHandlers = () => {
     originalConsoleWarn.apply(console, args);
   };
 
-  // Network errors (fetch)
-  const originalFetch = window.fetch;
-  window.fetch = async (...args) => {
-    try {
-      const response = await originalFetch(...args);
-      if (!response.ok) {
-        useErrorStore.getState().addError({
-          message: `HTTP ${response.status}: ${response.statusText} - ${args[0]}`,
-          type: 'error',
-          source: 'network',
-        });
-      }
-      return response;
-    } catch (error) {
-      useErrorStore.getState().addError({
-        message: `Network Error: ${error instanceof Error ? error.message : String(error)} - ${args[0]}`,
-        stack: error instanceof Error ? error.stack : undefined,
-        type: 'error',
-        source: 'network',
-      });
-      throw error;
-    }
-  };
+  // Network errors (fetch) - disabled for Opera compatibility
+  // const originalFetch = window.fetch;
+  // window.fetch = async (...args) => {
+  //   try {
+  //     const response = await originalFetch(...args);
+  //     if (!response.ok) {
+  //       useErrorStore.getState().addError({
+  //         message: `HTTP ${response.status}: ${response.statusText} - ${args[0]}`,
+  //         type: 'error',
+  //         source: 'network',
+  //       });
+  //     }
+  //     return response;
+  //   } catch (error) {
+  //     useErrorStore.getState().addError({
+  //       message: `Network Error: ${error instanceof Error ? error.message : String(error)} - ${args[0]}`,
+  //       stack: error instanceof Error ? error.stack : undefined,
+  //       type: 'error',
+  //       source: 'network',
+  //     });
+  //     throw error;
+  //   }
+  // };
 
   console.log('[ERROR CATCHER] Global error handlers initialized');
 };
 
-// Auto-initialize when module loads
-if (typeof window !== 'undefined') {
-  // Initialize immediately
-  initializeGlobalErrorHandlers();
-}
+// Auto-initialize when module loads (disabled for Opera compatibility)
+// if (typeof window !== 'undefined') {
+//   // Initialize immediately
+//   initializeGlobalErrorHandlers();
+// }

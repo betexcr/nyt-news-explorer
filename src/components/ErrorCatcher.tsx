@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
-import { useErrorStore, type ErrorItem } from '../store/errorStore';
+import React, { useState, useEffect } from 'react';
+import { useErrorStore, type ErrorItem, initializeGlobalErrorHandlers } from '../store/errorStore';
 import '../styles/error-catcher.css';
 
 const ErrorCatcher: React.FC = () => {
   const { errors, isVisible, toggleVisibility, clearErrors, removeError } = useErrorStore();
   const [expandedError, setExpandedError] = useState<string | null>(null);
+
+  // Initialize error handlers when component mounts
+  useEffect(() => {
+    try {
+      initializeGlobalErrorHandlers();
+    } catch (error) {
+      console.warn('Failed to initialize error handlers:', error);
+    }
+  }, []);
 
   const getErrorIcon = (type: ErrorItem['type']) => {
     switch (type) {

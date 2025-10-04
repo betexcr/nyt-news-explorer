@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3001;
 
 // Enable CORS for your domain
 app.use(cors({
-  origin: ['https://nyt.brainvaultdev.com', 'http://localhost:3000', 'http://localhost:3002'],
+  origin: ['https://nyt.brainvaultdev.com', 'http://localhost:3000', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:53529'],
   credentials: true
 }));
 

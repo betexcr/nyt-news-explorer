@@ -82,7 +82,7 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        401: { $ref: '#/components/responses/401' },
+        401: { type: 'object', description: 'Unauthorized' },
       },
     },
   }, async (request, reply) => {
@@ -184,8 +184,8 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
             created: { type: 'boolean' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        401: { $ref: '#/components/responses/401' },
+        400: { type: 'object', description: 'Bad Request' },
+        401: { type: 'object', description: 'Unauthorized' },
       },
     },
   }, async (request, reply) => {
@@ -315,14 +315,15 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
             updatedAt: { type: 'string' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        401: { $ref: '#/components/responses/401' },
-        404: { $ref: '#/components/responses/404' },
+        400: { type: 'object', description: 'Bad Request' },
+        401: { type: 'object', description: 'Unauthorized' },
+        404: { type: 'object', description: 'Not Found' },
         412: {
+          type: 'object',
           description: 'Precondition Failed (ETag mismatch)',
           content: {
             'application/problem+json': {
-              schema: { $ref: '#/components/schemas/ProblemDetails' },
+              schema: { type: 'object', description: 'Problem Details' },
             },
           },
         },
@@ -430,9 +431,9 @@ export async function favoritesRoutes(fastify: FastifyInstance) {
         required: ['id'],
       },
       response: {
-        204: { description: 'Favorite deleted successfully' },
-        401: { $ref: '#/components/responses/401' },
-        404: { $ref: '#/components/responses/404' },
+        204: { type: 'object', description: 'Favorite deleted successfully' },
+        401: { type: 'object', description: 'Unauthorized' },
+        404: { type: 'object', description: 'Not Found' },
       },
     },
   }, async (request, reply) => {

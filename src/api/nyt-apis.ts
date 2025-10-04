@@ -35,8 +35,8 @@ const ENDPOINTS = {
   // Movie Reviews API
   MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
   
-  // Books API
-  BOOKS: `${BASE_URL}/books/best-sellers`,
+      // Books API
+      BOOKS: `${BASE_URL}/articles/books/best-sellers`,
   
   // Archive API
   ARCHIVE: `${BASE_URL}/articles/archive`,

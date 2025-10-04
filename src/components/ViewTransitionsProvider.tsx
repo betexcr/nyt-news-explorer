@@ -43,20 +43,32 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
     isNavigatingRef.current = true;
     
     try {
-      // Start view transition for route changes
-      const transition = document.startViewTransition(() => {
-        return new Promise<void>((resolve) => {
-          // Small delay to ensure DOM updates are complete
-          setTimeout(resolve, 50);
+      // Check if startViewTransition exists and is a function
+      if (typeof document !== "undefined" && 
+          "startViewTransition" in document && 
+          typeof (document as any).startViewTransition === "function") {
+        
+        // Start view transition for route changes
+        const transition = (document as any).startViewTransition(() => {
+          return new Promise<void>((resolve) => {
+            // Small delay to ensure DOM updates are complete
+            setTimeout(resolve, 50);
+          });
         });
-      });
 
-      // Handle transition completion
-      transition.finished.then(() => {
+        // Handle transition completion
+        if (transition && transition.finished) {
+          transition.finished.then(() => {
+            isNavigatingRef.current = false;
+          }).catch(() => {
+            isNavigatingRef.current = false;
+          });
+        } else {
+          isNavigatingRef.current = false;
+        }
+      } else {
         isNavigatingRef.current = false;
-      }).catch(() => {
-        isNavigatingRef.current = false;
-      });
+      }
     } catch (error) {
       // Fallback for browsers that don't support View Transitions
       console.warn('View Transitions not supported, using fallback');

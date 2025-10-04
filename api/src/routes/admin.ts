@@ -49,7 +49,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
             },
           },
         },
-        403: { $ref: '#/components/responses/403' },
+        403: { type: 'object', description: 'Forbidden' },
       },
     },
   }, async (request, reply) => {
@@ -140,7 +140,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
             pattern: { type: 'string' },
           },
         },
-        403: { $ref: '#/components/responses/403' },
+        403: { type: 'object', description: 'Forbidden' },
       },
     },
   }, async (request, reply) => {
@@ -207,8 +207,8 @@ export async function adminRoutes(fastify: FastifyInstance) {
             status: { type: 'object' },
           },
         },
-        400: { $ref: '#/components/responses/400' },
-        403: { $ref: '#/components/responses/403' },
+        400: { type: 'object', description: 'Bad Request' },
+        403: { type: 'object', description: 'Forbidden' },
       },
     },
   }, async (request, reply) => {
@@ -294,7 +294,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
             external: { type: 'object' },
           },
         },
-        403: { $ref: '#/components/responses/403' },
+        403: { type: 'object', description: 'Forbidden' },
       },
     },
   }, async (request, reply) => {
@@ -345,7 +345,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
             failed: { type: 'integer' },
           },
         },
-        403: { $ref: '#/components/responses/403' },
+        403: { type: 'object', description: 'Forbidden' },
       },
     },
   }, async (request, reply) => {
