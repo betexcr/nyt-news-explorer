@@ -52,8 +52,10 @@ export const useErrorStore = create<ErrorStore>()(
         // Auto-show error panel when new errors are added
         set({ isVisible: true });
 
-        // Log to console for debugging
-        console.error('[ERROR CATCHER]', newError);
+        // Log to console for debugging (use original console.error to avoid infinite loop)
+        if (typeof window !== 'undefined' && (window as any).__originalConsoleError) {
+          (window as any).__originalConsoleError('[ERROR CATCHER]', newError);
+        }
       },
 
       removeError: (id) => {
@@ -119,6 +121,7 @@ export const initializeGlobalErrorHandlers = () => {
 
   // Console errors (override console.error)
   const originalConsoleError = console.error;
+  (window as any).__originalConsoleError = originalConsoleError; // Store reference to avoid infinite loop
   console.error = (...args) => {
     const message = args.map(arg => 
       typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)

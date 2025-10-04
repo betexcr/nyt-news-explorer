@@ -1,5 +1,4 @@
 import fp from 'fastify-plugin'
-import underPressure from '@fastify/under-pressure'
 import { FastifyInstance } from 'fastify'
 import { config } from '@/config/environment.js'
 
@@ -12,38 +11,9 @@ import { config } from '@/config/environment.js'
  * - Circuit breaker integration
  */
 async function healthCheckPlugin(fastify: FastifyInstance) {
-  // Register under-pressure for resource monitoring
-  await fastify.register(underPressure as any, {
-    maxEventLoopDelay: 1000, // 1 second
-    maxHeapUsedBytes: 536870912, // 512MB
-    maxRssBytes: 1073741824, // 1GB
-    maxEventLoopUtilization: 0.98,
-    message: 'Service under pressure!',
-    retryAfter: 50,
-    healthCheck: async () => {
-      // Custom health check logic
-      return { status: 'ok' }
-    },
-    healthCheckInterval: 5000, // 5 seconds
-    exposeStatusRoute: '/status',
-    
-    // Customize response format to Problem Details
-    customError: async (request: any, reply: any, error: any) => {
-      reply.code(503).send({
-        type: 'https://api.nyt-news-explorer.com/problems/service-under-pressure',
-        title: 'Service Under Pressure',
-        status: 503,
-        detail: 'The service is experiencing high load. Please try again later.',
-        instance: request.url,
-        retryAfter: 50,
-        correlationId: request.headers['x-correlation-id'],
-        metrics: {
-          eventLoopDelay: error.eventLoopDelay,
-          heapUsed: error.heapUsed,
-          rss: error.rss,
-        },
-      })
-    },
+  // Simple status endpoint
+  fastify.get('/status', async (request, reply) => {
+    reply.send({ status: 'ok' })
   })
 
   // Individual health check functions
@@ -113,16 +83,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   }
 
   // Basic health check endpoint
-  fastify.get('/health', {
-    schema: {
-      tags: ['Health'],
-      summary: 'Basic health check',
-      description: 'Returns basic application health status',
-      response: {
-        200: { $ref: '#/components/schemas/HealthCheck' },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get('/health', async (request, reply) => {
     reply.send({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -133,17 +94,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   })
 
   // Comprehensive health check with dependencies
-  fastify.get('/health/detailed', {
-    schema: {
-      tags: ['Health'],
-      summary: 'Detailed health check',
-      description: 'Returns detailed health status including dependencies',
-      response: {
-        200: { $ref: '#/components/schemas/HealthCheck' },
-        503: { $ref: '#/components/responses/503' },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get('/health/detailed', async (request, reply) => {
     const startTime = Date.now()
     
     // Run all health checks in parallel
@@ -208,23 +159,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   })
 
   // Kubernetes readiness probe
-  fastify.get('/ready', {
-    schema: {
-      tags: ['Health'],
-      summary: 'Readiness probe',
-      description: 'Kubernetes readiness probe - checks if service can accept traffic',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            ready: { type: 'boolean' },
-            timestamp: { type: 'string' },
-          },
-        },
-        503: { $ref: '#/components/responses/503' },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get('/ready', async (request, reply) => {
     try {
       // Check critical dependencies
       const redisCheck = await healthChecks.redis()
@@ -257,23 +192,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   })
 
   // Kubernetes liveness probe
-  fastify.get('/live', {
-    schema: {
-      tags: ['Health'],
-      summary: 'Liveness probe',
-      description: 'Kubernetes liveness probe - checks if service is running',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            alive: { type: 'boolean' },
-            timestamp: { type: 'string' },
-            uptime: { type: 'number' },
-          },
-        },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get('/live', async (request, reply) => {
     // Simple liveness check - if we can respond, we're alive
     reply.send({
       alive: true,
@@ -283,24 +202,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
   })
 
   // Startup probe (Kubernetes 1.16+)
-  fastify.get('/startup', {
-    schema: {
-      tags: ['Health'],
-      summary: 'Startup probe',
-      description: 'Kubernetes startup probe - checks if service has started',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            started: { type: 'boolean' },
-            timestamp: { type: 'string' },
-            initTime: { type: 'number' },
-          },
-        },
-        503: { $ref: '#/components/responses/503' },
-      },
-    },
-  }, async (request, reply) => {
+  fastify.get('/startup', async (request, reply) => {
     // Check if service has fully started (all plugins loaded, etc.)
     const started = (fastify as any).pluginTimeout > 0 // Service has finished loading plugins
     
@@ -324,7 +226,7 @@ async function healthCheckPlugin(fastify: FastifyInstance) {
 
 const plugin = fp(healthCheckPlugin, {
   name: 'health-check',
-  dependencies: ['redis', 'circuit-breaker'],
+  dependencies: ['caching'],
   fastify: '4.x',
 })
 

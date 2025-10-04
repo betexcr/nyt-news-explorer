@@ -142,7 +142,7 @@ async function rateLimitingPlugin(fastify: FastifyInstance) {
 
 const plugin = fp(rateLimitingPlugin, {
   name: 'rate-limiting',
-  dependencies: ['redis'],
+  dependencies: ['caching'],
   fastify: '4.x',
 })
 

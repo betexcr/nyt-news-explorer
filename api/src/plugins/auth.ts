@@ -395,7 +395,7 @@ async function getUserById(userId: string): Promise<User | null> {
 
 const plugin = fp(authPlugin, {
   name: 'auth',
-  dependencies: ['jwt', 'redis'],
+  dependencies: ['caching'],
   fastify: '4.x',
 })
 

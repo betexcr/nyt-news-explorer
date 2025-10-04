@@ -26,10 +26,12 @@ export class NytRateLimitError extends NytApiError {
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use local API in production, NYT API directly in development
+// Use local proxy in development, online API in production
 const isDevelopment = process.env.NODE_ENV === 'development';
-const LOCAL_API_URL = process.env.REACT_APP_API_URL || window.location.origin;
-const BASE_URL = isDevelopment ? "/svc/search/v2/articlesearch.json" : `${LOCAL_API_URL}/api/v1/articles/search`;
+const API_URL = isDevelopment 
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:3001')
+  : (process.env.REACT_APP_API_URL || 'https://nyt.brainvaultdev.com');
+const BASE_URL = `${API_URL}/api/v1/articles/search`;
 // const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
 // Fallback CORS proxy for development if proxy doesn't work
@@ -95,7 +97,7 @@ function esc(str: string) {
 }
 
 function baseParams(): Record<string, string> {
-  // Local API doesn't need api-key in params, it's handled server-side
+  // Online API doesn't need api-key in params, it's handled server-side
   const params: Record<string, string> = {
     "fl": "web_url,headline,abstract,byline,multimedia,pub_date,section_name,subsection_name",
   };

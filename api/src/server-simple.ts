@@ -1,128 +1,113 @@
-import fastify from 'fastify'
-import crypto from 'crypto'
-import { config } from '@/config/environment.js'
-import { registerPlugins } from '@/plugins/index-simple.js'
-import { registerRoutes } from '@/routes/index-simple.js'
+import Fastify from 'fastify'
+import cors from '@fastify/cors'
+import { config } from './config/environment.js'
 
-/**
- * Create simplified Fastify server for testing
- */
-async function createServer() {
-  const server = fastify({
-    logger: {
-      level: config.logger.level,
-      transport: config.isDevelopment
-        ? {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
-            },
-          }
-        : undefined,
-    },
-    trustProxy: true,
-    requestTimeout: 30000,
-    bodyLimit: 1048576, // 1MB
-  })
+const fastify = Fastify({
+  logger: {
+    level: 'info',
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'HH:MM:ss Z',
+        ignore: 'pid,hostname'
+      }
+    }
+  }
+})
 
-  // Add correlation ID middleware
-  server.addHook('preHandler', async (request, reply) => {
-    const correlationId = request.headers['x-correlation-id'] || crypto.randomUUID()
-    request.headers['x-correlation-id'] = correlationId
-    reply.header('x-correlation-id', correlationId)
-  })
+// Register CORS
+await fastify.register(cors, {
+  origin: ['http://localhost:3000', 'http://localhost:3002', 'http://localhost:62913'],
+  credentials: true
+})
 
-  // Register all plugins
-  await registerPlugins(server)
+// Basic health check
+fastify.get('/health', async (request, reply) => {
+  return { status: 'ok', timestamp: new Date().toISOString() }
+})
 
-  // Register all routes
-  await registerRoutes(server)
-
-  // Global error handler
-  server.setErrorHandler(async (error, request, reply) => {
-    const correlationId = request.headers['x-correlation-id'] as string
-    
-    request.log.error({
-      error: {
-        message: error.message,
-        stack: error.stack,
-      },
-      correlationId,
-      url: request.url,
-      method: request.method,
-    }, 'Request error')
-
-    const statusCode = error.statusCode || 500
-    
-    reply.code(statusCode).send({
-      type: 'https://api.nyt-news-explorer.com/problems/server-error',
-      title: statusCode < 500 ? 'Client Error' : 'Server Error',
-      status: statusCode,
-      detail: config.isDevelopment ? error.message : 'An unexpected error occurred',
-      instance: request.url,
-      correlationId,
-      timestamp: new Date().toISOString(),
-    })
-  })
-
-  return server
-}
-
-/**
- * Start the server
- */
-async function start() {
+// Top stories endpoint
+fastify.get('/api/v1/articles/top-stories/:section', async (request, reply) => {
+  const { section } = request.params as { section: string }
+  
   try {
-    const server = await createServer()
+    const url = `https://api.nytimes.com/svc/topstories/v2/${section}.json?api-key=${config.externalApis.nytApiKey}`
+    const response = await fetch(url)
     
-    // Graceful shutdown
-    const signals = ['SIGINT', 'SIGTERM']
-    signals.forEach((signal) => {
-      process.on(signal, async () => {
-        server.log.info(`Received ${signal}, shutting down gracefully`)
-        
-        try {
-          await server.close()
-          server.log.info('Server closed successfully')
-          process.exit(0)
-        } catch (error) {
-          server.log.error(error, 'Error during shutdown')
-          process.exit(1)
-        }
-      })
+    if (!response.ok) {
+      throw new Error(`NYT API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    fastify.log.error({ error, section }, 'Failed to fetch top stories')
+    reply.code(503).send({
+      error: 'Service temporarily unavailable',
+      message: 'Failed to fetch top stories from NYT API'
     })
+  }
+})
 
-    // Start listening
-    await server.listen({ 
+// Most popular endpoint
+fastify.get('/api/v1/articles/most-popular/:period', async (request, reply) => {
+  const { period } = request.params as { period: string }
+  
+  try {
+    const url = `https://api.nytimes.com/svc/mostpopular/v2/viewed/${period}.json?api-key=${config.externalApis.nytApiKey}`
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      throw new Error(`NYT API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    fastify.log.error({ error, period }, 'Failed to fetch most popular')
+    reply.code(503).send({
+      error: 'Service temporarily unavailable',
+      message: 'Failed to fetch most popular from NYT API'
+    })
+  }
+})
+
+// Books endpoint
+fastify.get('/api/v1/books/best-sellers/:list', async (request, reply) => {
+  const { list } = request.params as { list: string }
+  
+  try {
+    const url = `https://api.nytimes.com/svc/books/v3/lists/current/${list}.json?api-key=${config.externalApis.nytApiKey}`
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      throw new Error(`NYT API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    fastify.log.error({ error, list }, 'Failed to fetch books')
+    reply.code(503).send({
+      error: 'Service temporarily unavailable',
+      message: 'Failed to fetch books from NYT API'
+    })
+  }
+})
+
+// Start server
+const start = async () => {
+  try {
+    await fastify.listen({ 
       port: config.server.port, 
       host: config.server.host 
     })
-    
-    server.log.info({
-      port: config.server.port,
-      host: config.server.host,
-      environment: config.nodeEnv,
-      version: '1.0.0',
-    }, 'Server started successfully')
-
-  } catch (error) {
-    console.error('Failed to start server:', error instanceof Error ? error.message : 'Unknown error')
+    fastify.log.info(`Server running on http://${config.server.host}:${config.server.port}`)
+  } catch (err) {
+    fastify.log.error(err)
     process.exit(1)
   }
 }
 
-// Handle uncaught exceptions and unhandled rejections
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error.message)
-  process.exit(1)
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection:', reason instanceof Error ? reason.message : String(reason))
-  process.exit(1)
-})
-
-// Start the server
 start()

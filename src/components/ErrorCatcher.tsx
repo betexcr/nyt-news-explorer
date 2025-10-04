@@ -43,7 +43,68 @@ const ErrorCatcher: React.FC = () => {
 
   const copyErrorToClipboard = (error: ErrorItem) => {
     const errorText = `Error: ${error.message}\nType: ${error.type}\nSource: ${error.source}\nTimestamp: ${error.timestamp}\n${error.stack ? `Stack: ${error.stack}` : ''}`;
-    navigator.clipboard.writeText(errorText);
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(errorText).catch(() => {
+        // Fallback for browsers that don't support clipboard API
+        console.warn('Clipboard API not supported, using fallback');
+        fallbackCopyToClipboard(errorText);
+      });
+    } else {
+      fallbackCopyToClipboard(errorText);
+    }
+  };
+
+  const fallbackCopyToClipboard = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.warn('Fallback copy failed:', err);
+    }
+    document.body.removeChild(textArea);
+  };
+
+  const downloadErrorLog = () => {
+    if (errors.length === 0) return;
+
+    const logContent = [
+      'NYT News Explorer - Error Log',
+      '================================',
+      `Generated: ${new Date().toISOString()}`,
+      `Total Errors: ${errors.length}`,
+      '',
+      ...errors.map((error, index) => {
+        const errorText = [
+          `[${index + 1}] ${error.type.toUpperCase()} - ${error.source}`,
+          `Time: ${error.timestamp.toISOString()}`,
+          `Message: ${error.message}`,
+          ...(error.url ? [`URL: ${error.url}`] : []),
+          ...(error.line ? [`Location: line ${error.line}, col ${error.column}`] : []),
+          ...(error.stack ? [`Stack Trace:\n${error.stack}`] : []),
+          ...(error.componentStack ? [`Component Stack:\n${error.componentStack}`] : []),
+          '---'
+        ];
+        return errorText.join('\n');
+      })
+    ].join('\n');
+
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nyt-error-log-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   if (!isVisible) {
@@ -65,6 +126,14 @@ const ErrorCatcher: React.FC = () => {
       <div className="error-catcher-header">
         <h3>🐛 Error Catcher</h3>
         <div className="error-catcher-controls">
+          <button
+            onClick={downloadErrorLog}
+            className="error-download-btn"
+            disabled={errors.length === 0}
+            title="Download Error Log as TXT"
+          >
+            📥 Download Log
+          </button>
           <button
             onClick={clearErrors}
             className="error-clear-btn"

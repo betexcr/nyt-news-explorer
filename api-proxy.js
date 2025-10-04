@@ -7,19 +7,20 @@ const PORT = process.env.PORT || 3001;
 
 // Enable CORS for your domain
 app.use(cors({
-  origin: ['https://nyt.brainvaultdev.com', 'http://localhost:3000'],
+  origin: ['https://nyt.brainvaultdev.com', 'http://localhost:3000', 'http://localhost:3002'],
   credentials: true
 }));
 
-// Proxy API requests to your local API server
+// Proxy API requests to the online API server
 app.use('/api', createProxyMiddleware({
-  target: 'http://localhost:3000',
+  target: 'https://nyt.brainvaultdev.com',
   changeOrigin: true,
+  secure: true,
   pathRewrite: {
     '^/api': '/api'
   },
   onProxyReq: (proxyReq, req, res) => {
-    console.log(`Proxying ${req.method} ${req.url} to localhost:3000`);
+    console.log(`Proxying ${req.method} ${req.url} to https://nyt.brainvaultdev.com`);
   },
   onProxyRes: (proxyRes, req, res) => {
     console.log(`Response: ${proxyRes.statusCode} for ${req.url}`);
@@ -33,5 +34,5 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API Proxy running on port ${PORT}`);
-  console.log(`Proxying /api/* to http://localhost:3000/api/*`);
+  console.log(`Proxying /api/* to https://nyt.brainvaultdev.com/api/*`);
 });

@@ -14,38 +14,32 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use production API in production, NYT API directly in development
+// Use local proxy in development, online API in production
 const isDevelopment = process.env.NODE_ENV === 'development';
-const PRODUCTION_API_URL = `${window.location.origin}/api/v1`;
-const BASE_URL = isDevelopment ? "https://api.nytimes.com/svc" : PRODUCTION_API_URL;
+const API_URL = isDevelopment 
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:3001')
+  : (process.env.REACT_APP_API_URL || 'https://nyt.brainvaultdev.com');
+const BASE_URL = `${API_URL}/api/v1`;
 
-// API endpoints - using local API in production, NYT API in development
+// API endpoints - using online API server
 const ENDPOINTS = {
   // Article Search API
-  ARTICLE_SEARCH: isDevelopment 
-    ? `${BASE_URL}/search/v2/articlesearch.json`
-    : `${BASE_URL}/articles/search`,
+  ARTICLE_SEARCH: `${BASE_URL}/articles/search`,
   
-  // Most Popular API (not yet implemented in local API)
-  MOST_POPULAR: `${BASE_URL}/mostpopular/v2`,
+  // Most Popular API
+  MOST_POPULAR: `${BASE_URL}/articles/most-popular`,
   
   // Top Stories API
-  TOP_STORIES: isDevelopment 
-    ? `${BASE_URL}/topstories/v2`
-    : `${BASE_URL}/articles/top-stories`,
+  TOP_STORIES: `${BASE_URL}/articles/top-stories`,
   
   // Movie Reviews API
   MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
   
   // Books API
-  BOOKS: isDevelopment 
-    ? `${BASE_URL}/books/v3`
-    : `${BASE_URL}/books`,
+  BOOKS: `${BASE_URL}/books/best-sellers`,
   
   // Archive API
-  ARCHIVE: isDevelopment 
-    ? `${BASE_URL}/archive/v1`
-    : `${BASE_URL}/articles/archive`,
+  ARCHIVE: `${BASE_URL}/articles/archive`,
   
   // Semantic API
   SEMANTIC: `${BASE_URL}/semantic/v2`,
@@ -53,12 +47,7 @@ const ENDPOINTS = {
 
 // Base parameters for all API calls
 function baseParams(): Record<string, string> {
-  // Local API doesn't need api-key in params, it's handled server-side
-  if (isDevelopment) {
-    return { 
-      "api-key": API_KEY,
-    };
-  }
+  // Online API doesn't need api-key in params, it's handled server-side
   return {};
 }
 
@@ -145,9 +134,7 @@ export async function getMostPopular(
   period: '1' | '7' | '30' = '7',
   signal?: AbortSignal
 ): Promise<MostPopularArticle[]> {
-  const url = isDevelopment 
-    ? `${ENDPOINTS.MOST_POPULAR}/viewed/${period}.json`
-    : `${BASE_URL}/articles/most-popular/${period}`;
+  const url = `${ENDPOINTS.MOST_POPULAR}/${period}`;
   const response = await makeApiRequest<MostPopularResponse>(url, {}, signal);
   return response.results;
 }
@@ -157,9 +144,7 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
-  const url = isDevelopment 
-    ? `${ENDPOINTS.TOP_STORIES}/${section}.json`
-    : `${ENDPOINTS.TOP_STORIES}/${section}`;
+  const url = `${ENDPOINTS.TOP_STORIES}/${section}`;
   const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
 }
@@ -238,9 +223,7 @@ export async function getBestSellers(
   list: string = 'hardcover-fiction',
   signal?: AbortSignal
 ): Promise<Book[]> {
-  const url = isDevelopment 
-    ? `${ENDPOINTS.BOOKS}/lists/current/${list}.json`
-    : `${ENDPOINTS.BOOKS}/best-sellers/${list}`;
+  const url = `${ENDPOINTS.BOOKS}/${list}`;
   const data = await makeApiRequest<any>(url, {}, signal);
   // Handle both our local type and the real NYT response shape
   const results = data?.results;
