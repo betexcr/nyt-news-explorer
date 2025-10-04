@@ -74,12 +74,26 @@ async function makeApiRequest<T>(
     const response: AxiosResponse<T> = await axios.get(url, {
       params: { ...baseParams(), ...params },
       signal,
-      timeout: options?.timeoutMs,
+      timeout: options?.timeoutMs || 10000, // Default 10 second timeout
+      headers: {
+        'User-Agent': 'NYT-News-Explorer/1.0',
+        'Accept': 'application/json',
+      },
     });
     return response.data;
   } catch (error: any) {
     if (error.name === 'AbortError') {
       throw new NytApiError('Request was cancelled', 0, 'ABORTED');
+    }
+    
+    // Handle network errors more gracefully
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      throw new NytApiError('Network connection failed', 0, 'ERR_NETWORK');
+    }
+    
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      throw new NytApiError('Request timeout', 408, 'TIMEOUT');
     }
     
     // If it's a CORS error and we're in development, try with the full URL
@@ -90,7 +104,11 @@ async function makeApiRequest<T>(
         const response: AxiosResponse<T> = await axios.get(fullUrl, {
           params: { ...baseParams(), ...params },
           signal,
-          timeout: options?.timeoutMs,
+          timeout: options?.timeoutMs || 10000,
+          headers: {
+            'User-Agent': 'NYT-News-Explorer/1.0',
+            'Accept': 'application/json',
+          },
         });
         return response.data;
       } catch (fallbackError: any) {

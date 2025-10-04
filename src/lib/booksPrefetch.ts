@@ -26,9 +26,9 @@ interface PrefetchStats {
 // Configuration for books prefetching
 const PREFETCH_CONFIG: PrefetchConfig = {
   enabled: true,
-  maxRetries: 3,
-  retryDelay: 1000,
-  batchSize: 5, // Process 5 categories at a time
+  maxRetries: 2, // Reduced from 3 to avoid overwhelming the API
+  retryDelay: 2000, // Increased delay between retries
+  batchSize: 3, // Reduced batch size to be more gentle on the API
 };
 
 // Popular book categories to prefetch (verified working categories)
@@ -60,6 +60,9 @@ class BooksPrefetchManager {
   private static instance: BooksPrefetchManager;
   private isRunning: boolean = false;
   private lastRunDate: string | null = null;
+  private consecutiveFailures: number = 0;
+  private circuitBreakerOpen: boolean = false;
+  private circuitBreakerResetTime: number = 0;
   private stats: PrefetchStats = {
     totalCategories: 0,
     successful: 0,
@@ -155,10 +158,57 @@ class BooksPrefetchManager {
   }
 
   /**
+   * Check if circuit breaker is open
+   */
+  private isCircuitBreakerOpen(): boolean {
+    if (!this.circuitBreakerOpen) {
+      return false;
+    }
+    
+    // Reset circuit breaker after 30 minutes
+    if (Date.now() - this.circuitBreakerResetTime > 30 * 60 * 1000) {
+      this.circuitBreakerOpen = false;
+      this.consecutiveFailures = 0;
+      console.log('[BOOKS PREFETCH] Circuit breaker reset');
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Record a successful operation
+   */
+  private recordSuccess(): void {
+    this.consecutiveFailures = 0;
+    this.circuitBreakerOpen = false;
+  }
+
+  /**
+   * Record a failed operation
+   */
+  private recordFailure(): void {
+    this.consecutiveFailures++;
+    
+    // Open circuit breaker after 5 consecutive failures
+    if (this.consecutiveFailures >= 5) {
+      this.circuitBreakerOpen = true;
+      this.circuitBreakerResetTime = Date.now();
+      console.warn('[BOOKS PREFETCH] Circuit breaker opened due to consecutive failures');
+    }
+  }
+
+  /**
    * Run the prefetch process
    */
   async runPrefetch(): Promise<void> {
     if (!PREFETCH_CONFIG.enabled || this.isRunning || !this.shouldRunToday()) {
+      return;
+    }
+
+    // Check circuit breaker
+    if (this.isCircuitBreakerOpen()) {
+      console.warn('[BOOKS PREFETCH] Circuit breaker is open, skipping prefetch');
       return;
     }
 
@@ -181,12 +231,19 @@ class BooksPrefetchManager {
     for (const batch of batches) {
       await this.processBatch(batch);
       
-      // Small delay between batches to avoid overwhelming the API
-      await this.delay(PREFETCH_CONFIG.retryDelay);
+      // Longer delay between batches to avoid overwhelming the API
+      await this.delay(PREFETCH_CONFIG.retryDelay * 2);
     }
 
     this.isRunning = false;
     this.saveStats();
+    
+    // Record overall success/failure for circuit breaker
+    if (this.stats.failed === 0) {
+      this.recordSuccess();
+    } else if (this.stats.failed > this.stats.successful) {
+      this.recordFailure();
+    }
     
     console.log(`[BOOKS PREFETCH] Completed: ${this.stats.successful}/${this.stats.totalCategories} successful`);
   }
@@ -210,43 +267,68 @@ class BooksPrefetchManager {
       try {
         console.log(`[BOOKS PREFETCH] Fetching ${category} (attempt ${attempts + 1})`);
         
-        // Fetch books for this category
-        const books = await getBestSellers(category);
+        // Create abort signal with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
         
-        // Store in TanStack Query cache
-        const queryKey = ['books', { list: category }];
-        queryClient.setQueryData(queryKey, books);
+        try {
+          // Fetch books for this category
+          const books = await getBestSellers(category, controller.signal);
+          
+          // Store in TanStack Query cache
+          const queryKey = ['books', { list: category }];
+          queryClient.setQueryData(queryKey, books);
+          
+          // Store in localStorage cache with daily TTL
+          await cacheSync.storeResponse(
+            'books',
+            { list: category },
+            {
+              data: books,
+              etag: `daily-${new Date().toDateString()}`,
+              cacheStatus: 'MISS',
+            },
+            24 * 60 * 60 * 1000 // 24 hours TTL
+          );
+          
+          this.stats.successful++;
+          this.stats.cached++;
+          
+          console.log(`[BOOKS PREFETCH] Successfully cached ${category} (${books.length} books)`);
+          return;
+        } finally {
+          clearTimeout(timeoutId);
+        }
         
-        // Store in localStorage cache with daily TTL
-        await cacheSync.storeResponse(
-          'books',
-          { list: category },
-          {
-            data: books,
-            etag: `daily-${new Date().toDateString()}`,
-            cacheStatus: 'MISS',
-          },
-          24 * 60 * 60 * 1000 // 24 hours TTL
-        );
-        
-        this.stats.successful++;
-        this.stats.cached++;
-        
-        console.log(`[BOOKS PREFETCH] Successfully cached ${category} (${books.length} books)`);
-        return;
-        
-      } catch (error) {
+      } catch (error: any) {
         attempts++;
-        console.warn(`[BOOKS PREFETCH] Failed to fetch ${category} (attempt ${attempts}):`, error);
         
-        if (attempts < maxRetries) {
-          await this.delay(PREFETCH_CONFIG.retryDelay * attempts);
+        // Check if it's a network error that we should retry
+        const isNetworkError = error?.code === 'ERR_NETWORK' || 
+                              error?.name === 'NytApiError' ||
+                              error?.message?.includes('Network Error') ||
+                              error?.message?.includes('timeout');
+        
+        if (isNetworkError) {
+          console.warn(`[BOOKS PREFETCH] Network error for ${category} (attempt ${attempts}):`, error.message);
+        } else {
+          console.warn(`[BOOKS PREFETCH] API error for ${category} (attempt ${attempts}):`, error.message);
+        }
+        
+        if (attempts < maxRetries && isNetworkError) {
+          // Exponential backoff for network errors
+          const delay = PREFETCH_CONFIG.retryDelay * Math.pow(2, attempts - 1);
+          console.log(`[BOOKS PREFETCH] Retrying ${category} in ${delay}ms...`);
+          await this.delay(delay);
+        } else if (attempts >= maxRetries || !isNetworkError) {
+          // Don't retry non-network errors or after max attempts
+          break;
         }
       }
     }
     
     this.stats.failed++;
-    console.error(`[BOOKS PREFETCH] Failed to fetch ${category} after ${maxRetries} attempts`);
+    console.error(`[BOOKS PREFETCH] Failed to fetch ${category} after ${attempts} attempts`);
   }
 
   /**
@@ -373,13 +455,19 @@ class BooksPrefetchManager {
 // Export singleton instance
 export const booksPrefetch = BooksPrefetchManager.getInstance();
 
-// Auto-start prefetch if it should run today
+// Auto-start prefetch if it should run today (with better error handling)
 if (typeof window !== 'undefined') {
   // Check if we should run prefetch on app start
   setTimeout(() => {
-    if (booksPrefetch['shouldRunToday']()) {
-      console.log('[BOOKS PREFETCH] Running prefetch on app start');
-      booksPrefetch['triggerPrefetch']();
+    try {
+      if (booksPrefetch['shouldRunToday']()) {
+        console.log('[BOOKS PREFETCH] Running prefetch on app start');
+        booksPrefetch['triggerPrefetch']().catch(error => {
+          console.warn('[BOOKS PREFETCH] Auto-prefetch failed:', error);
+        });
+      }
+    } catch (error) {
+      console.warn('[BOOKS PREFETCH] Failed to check if prefetch should run:', error);
     }
-  }, 2000); // Wait 2 seconds after app start
+  }, 5000); // Wait 5 seconds after app start to let the app fully load
 }
