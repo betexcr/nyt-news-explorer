@@ -7,7 +7,7 @@ import type {
   Book,
   // _BooksResponse,
   ArchiveArticle,
-  _ArchiveResponse,
+  ArchiveResponse,
 } from "../types/nyt.other";
 export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../types/nyt.other";
 

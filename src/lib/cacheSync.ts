@@ -1,4 +1,4 @@
-import { _queryClient, cacheUtils } from './queryClient';
+import { queryClient, cacheUtils } from './queryClient';
 
 /**
  * Advanced cache synchronization with Redis ETags
