@@ -101,11 +101,13 @@ const TopStoriesPage: React.FC = () => {
       web_url: story.url,
       headline: { main: story.title },
       abstract: story.abstract,
+      snippet: story.abstract, // Add missing snippet property
       byline: { original: story.byline },
-      multimedia: [],
+      multimedia: { url: '' },
       pub_date: story.publishedDate,
       section_name: story.section,
       subsection_name: '',
+      keywords: [], // Add missing keywords property
     };
     if (isFav(story)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };

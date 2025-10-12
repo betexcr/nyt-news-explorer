@@ -76,11 +76,13 @@ const TrendingPage: React.FC = () => {
       web_url: a.url,
       headline: { main: a.title },
       abstract: a.abstract,
+      snippet: a.abstract, // Add missing snippet property
       byline: { original: a.byline },
-      multimedia: [],
+      multimedia: { url: '' },
       pub_date: a.publishedDate,
       section_name: a.section,
       subsection_name: '',
+      keywords: [], // Add missing keywords property
     };
     if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };

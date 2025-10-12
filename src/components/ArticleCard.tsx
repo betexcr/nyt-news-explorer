@@ -52,7 +52,8 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
         pub_date: article.publishedDate,
         byline: { original: article.byline },
         section_name: article.section,
-        multimedia: article.imageUrl ? [{ url: article.imageUrl }] : undefined
+        keywords: [], // Add missing keywords property
+        multimedia: article.imageUrl ? { url: article.imageUrl } : { url: '' }
       };
       addFavorite(nytArticle);
     }

@@ -202,7 +202,7 @@ class UnifiedSearchService {
       if (error instanceof SearchRateLimitError || error instanceof SearchError) {
         throw error;
       }
-      throw new SearchError(`Search failed: ${error.message}`);
+      throw new SearchError(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -217,7 +217,7 @@ class UnifiedSearchService {
     if (params.beginDate) searchParams.begin_date = params.beginDate.replace(/-/g, '');
     if (params.endDate) searchParams.end_date = params.endDate.replace(/-/g, '');
 
-    const data = await this.makeRequest(ENDPOINTS.search, searchParams, params.signal);
+    const data = await this.makeRequest(ENDPOINTS.search, searchParams, params.signal) as any;
     const articles = (data.response?.docs || []).map((article: any, index: number) => 
       this.normalizeArticle(article, 'articles', index)
     );
@@ -237,7 +237,7 @@ class UnifiedSearchService {
       `${ENDPOINTS.mostPopular}/${params.period || '7'}`,
       {},
       params.signal
-    );
+    ) as any;
 
     const articles = (data.results || []).map((article: any, index: number) => 
       this.normalizeArticle(article, 'most-popular', index)
@@ -258,7 +258,7 @@ class UnifiedSearchService {
       `${ENDPOINTS.topStories}/${params.section || 'home'}`,
       {},
       params.signal
-    );
+    ) as any;
 
     const articles = (data.results || []).map((article: any, index: number) => 
       this.normalizeArticle(article, 'top-stories', index)

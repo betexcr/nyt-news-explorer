@@ -1,3 +1,4 @@
+import React from 'react';
 import { unifiedSearchService } from './unifiedSearchService';
 import type { SearchParams } from './unifiedSearchService';
 

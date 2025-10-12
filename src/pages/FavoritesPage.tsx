@@ -45,9 +45,22 @@ const FavoritesPage: React.FC = () => {
         </div>
         <section className="panel" style={{ padding: "1rem 1.25rem" }}>
           <div className="grid results">
-            {favorites.map((article) => (
-              <div key={article.web_url} style={{ position: "relative" }}>
-                <ArticleCard article={article} />
+            {favorites.map((article) => {
+              // Convert Article to UnifiedArticle format
+              const unifiedArticle = {
+                id: article._id || article.web_url,
+                url: article.web_url,
+                title: article.headline?.main || 'No title',
+                abstract: article.snippet || '',
+                byline: article.byline?.original || '',
+                publishedDate: article.pub_date || '',
+                section: article.section_name || '',
+                imageUrl: article.multimedia?.url || '',
+                source: 'articles' as const,
+              };
+              return (
+                <div key={article.web_url} style={{ position: "relative" }}>
+                  <ArticleCard article={unifiedArticle} />
                 <button
                   onClick={() => handleRemoveFavorite(article)}
                   style={{
@@ -71,8 +84,9 @@ const FavoritesPage: React.FC = () => {
                 >
                   ×
                 </button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>
