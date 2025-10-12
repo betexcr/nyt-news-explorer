@@ -13,18 +13,18 @@ async function compressionPlugin(fastify) {
         encodings: ['br', 'gzip', 'deflate'],
         // Brotli configuration (modern browsers)
         brotliOptions: {
-            level: 4, // Balance between compression ratio and speed
+            level: 4,
             windowBits: 22, // Large window for better compression
         },
         // gzip configuration (fallback)
         zlibOptions: {
-            level: 6, // Good balance of compression/speed
+            level: 6,
             windowBits: 15,
             memLevel: 8,
             strategy: 0, // Default strategy
         },
         // Only compress responses above this threshold
-        threshold: 1024, // 1KB
+        threshold: 1024,
         // Compress these content types
         mimeTypes: new Set([
             'application/json',
@@ -36,7 +36,7 @@ async function compressionPlugin(fastify) {
             'text/plain',
             'text/xml',
             'image/svg+xml',
-            'application/problem+json', // RFC 9457 Problem Details
+            'application/problem+json',
             'application/graphql',
             'application/x-yaml',
         ]),

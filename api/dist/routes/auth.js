@@ -82,7 +82,7 @@ export async function authRoutes(fastify) {
             await fastify.redis.setex(codeKey, 600, JSON.stringify({
                 state: query.state,
                 scope: query.scope || 'read:articles write:favorites',
-                userId: null, // Will be set after user authentication
+                userId: null,
                 createdAt: Date.now(),
             }));
             // Redirect to consent page (or directly return code for demo)

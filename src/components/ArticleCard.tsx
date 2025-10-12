@@ -1,44 +1,30 @@
 import React from "react";
 import { createSearchParams } from "react-router-dom";
-import type { Article } from "../types/nyt";
+import type { UnifiedArticle } from "../services/unifiedSearchService";
 import { formatDate } from "../utils/format";
 import { useSearchStore } from "../store/searchStore";
 import ViewTransitionLink from "./ViewTransitionLink";
 import ViewTransitionImage from "./ViewTransitionImage";
 
-function getImageUrl(article: Article): string {
-  const mm = article.multimedia;
-  
-  if (mm) {
-    // Try default first, then thumbnail as fallback
-    if (mm.default && mm.default.url) {
-      const url = mm.default.url; // URLs are already complete
-      return url;
-    }
-    
-    if (mm.thumbnail && mm.thumbnail.url) {
-      const url = mm.thumbnail.url; // URLs are already complete
-      return url;
-    }
-  }
-  return "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
+function getImageUrl(article: UnifiedArticle): string {
+  return article.imageUrl || "https://upload.wikimedia.org/wikipedia/commons/4/40/New_York_Times_logo_variation.jpg";
 }
 
 interface Props {
-  article: Article;
+  article: UnifiedArticle;
 }
 
 const ArticleCard: React.FC<Props> = ({ article }) => {
   const image = getImageUrl(article);
   const { favorites, addFavorite, removeFavorite } = useSearchStore();
-  const isFavorite = favorites?.some(fav => fav.web_url === article.web_url) || false;
+  const isFavorite = favorites?.some(fav => fav.web_url === article.url) || false;
   
   // Generate article ID for view transitions
-  const articleId = article._id || article.web_url?.split('/').pop() || Math.random().toString(36).substr(2, 9);
+  const articleId = article.id || article.url?.split('/').pop() || Math.random().toString(36).substr(2, 9);
   
   const to = {
     pathname: "/detail",
-    search: `?${createSearchParams({ url: article.web_url || '' }).toString()}`,
+    search: `?${createSearchParams({ url: article.url || '' }).toString()}`,
   };
 
   // Store page-specific scroll position (Search page handles its own restoration)
@@ -55,9 +41,20 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
     e.stopPropagation();
     
     if (isFavorite) {
-      removeFavorite(article.web_url);
+      removeFavorite(article.url);
     } else {
-      addFavorite(article);
+      // Convert UnifiedArticle to NytArticle format for favorites
+      const nytArticle = {
+        _id: article.id,
+        headline: { main: article.title },
+        snippet: article.abstract,
+        web_url: article.url,
+        pub_date: article.publishedDate,
+        byline: { original: article.byline },
+        section_name: article.section,
+        multimedia: article.imageUrl ? [{ url: article.imageUrl }] : undefined
+      };
+      addFavorite(nytArticle);
     }
   };
 
@@ -67,7 +64,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
       state={{ article }}
       onClick={onClick}
       style={{ display: "block", textDecoration: "none", color: "inherit", position: "relative" }}
-      aria-label={article.headline?.main || "Article"}
+      aria-label={article.title || "Article"}
       articleId={articleId}
       elementType="container"
     >
@@ -89,16 +86,16 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
           className="title view-transition-article-title"
           style={{ viewTransitionName: `article-title-${articleId}` }}
         >
-          {article.headline?.main || ""}
+          {article.title || ""}
         </h3>
         <div 
           className="meta view-transition-article-meta"
           style={{ viewTransitionName: `article-byline-${articleId}` }}
         >
-          <span>{formatDate(article.pub_date)}</span>
-          {article.section_name ? <span> · {article.section_name}</span> : null}
+          <span>{formatDate(article.publishedDate)}</span>
+          {article.section ? <span> · {article.section}</span> : null}
         </div>
-        {article.section_name && (
+        {article.section && (
           <div 
             className="section-chip"
             style={{ 
@@ -113,10 +110,10 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
               marginTop: "0.5rem",
             }}
           >
-            {article.section_name}
+            {article.section}
           </div>
         )}
-        <p className="lead view-transition-article-content">{article.snippet || ""}</p>
+        <p className="lead view-transition-article-content">{article.abstract || ""}</p>
         
         {/* Favorite Button */}
         <button

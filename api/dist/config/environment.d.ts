@@ -41,6 +41,7 @@ export declare const config: {
         port: number;
         host: string;
         db: number;
+        url?: string | undefined;
         password?: string | undefined;
     };
     database: {

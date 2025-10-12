@@ -12,7 +12,7 @@ async function authPlugin(fastify) {
         sign: {
             issuer: config.security.jwt.issuer,
             audience: config.security.jwt.audience,
-            algorithm: 'HS256', // Use symmetric for internal tokens
+            algorithm: 'HS256',
             expiresIn: config.security.jwt.accessTokenTtl,
         },
         verify: {
@@ -43,7 +43,7 @@ async function authPlugin(fastify) {
             callback();
         },
         // PKCE configuration for enhanced security
-        pkce: 'S256', // Use SHA256 for code challenge
+        pkce: 'S256',
         scope: ['openid', 'email', 'profile'],
     });
     // Register auth utilities

@@ -17,10 +17,10 @@ const configSchema = z.object({
     // Security Configuration (RFC 8725, RFC 9700)
     security: z.object({
         jwt: z.object({
-            secret: z.string().min(32), // At least 256 bits
+            secret: z.string().min(32),
             issuer: z.string().url(),
             audience: z.string(),
-            accessTokenTtl: z.coerce.number().int().positive().default(900), // 15 minutes
+            accessTokenTtl: z.coerce.number().int().positive().default(900),
             refreshTokenTtl: z.coerce.number().int().positive().default(2592000), // 30 days
         }),
         oauth: z.object({
@@ -40,11 +40,12 @@ const configSchema = z.object({
     // Rate Limiting Configuration
     rateLimiting: z.object({
         max: z.coerce.number().int().positive().default(100),
-        windowMs: z.coerce.number().int().positive().default(900000), // 15 minutes
+        windowMs: z.coerce.number().int().positive().default(900000),
         skipSuccessHeaders: z.coerce.boolean().default(false),
     }),
     // Redis Configuration
     redis: z.object({
+        url: z.string().optional(),
         host: z.string().default('localhost'),
         port: z.coerce.number().int().min(1).max(65535).default(6379),
         password: z.string().optional(),
@@ -114,6 +115,7 @@ function parseConfig() {
                 skipSuccessHeaders: process.env.RATE_LIMIT_SKIP_SUCCESS_HEADERS,
             },
             redis: {
+                url: process.env.REDIS_URL,
                 host: process.env.REDIS_HOST,
                 port: process.env.REDIS_PORT,
                 password: process.env.REDIS_PASSWORD,

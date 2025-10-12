@@ -13,28 +13,28 @@ async function circuitBreakerPlugin(fastify) {
     const circuitBreakerConfigs = {
         // External API calls (NYT, etc.)
         external: {
-            timeout: 5000, // 5 seconds
-            errorThresholdPercentage: 50, // Open circuit at 50% error rate
-            resetTimeout: 30000, // 30 seconds before half-open
-            rollingCountTimeout: 10000, // 10 second rolling window
-            rollingCountBuckets: 10, // 10 buckets in rolling window
+            timeout: 5000,
+            errorThresholdPercentage: 50,
+            resetTimeout: 30000,
+            rollingCountTimeout: 10000,
+            rollingCountBuckets: 10,
             name: 'external-api',
         },
         // Database operations
         database: {
-            timeout: 3000, // 3 seconds
-            errorThresholdPercentage: 25, // More sensitive for DB
-            resetTimeout: 15000, // 15 seconds
-            rollingCountTimeout: 5000, // 5 second window
+            timeout: 3000,
+            errorThresholdPercentage: 25,
+            resetTimeout: 15000,
+            rollingCountTimeout: 5000,
             rollingCountBuckets: 5,
             name: 'database',
         },
         // Redis operations
         redis: {
-            timeout: 1000, // 1 second
+            timeout: 1000,
             errorThresholdPercentage: 30,
-            resetTimeout: 5000, // 5 seconds
-            rollingCountTimeout: 2000, // 2 second window
+            resetTimeout: 5000,
+            rollingCountTimeout: 2000,
             rollingCountBuckets: 4,
             name: 'redis',
         },

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getMostPopular, MOST_POPULAR_PERIODS, type MostPopularArticle } from '../api/nyt-apis';
+import React, { useState } from 'react';
+import { useMostPopular } from '../hooks/useUnifiedSearch';
 import { mockTrendingArticles } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
@@ -8,37 +8,48 @@ import '../styles/trending.css';
 import '../styles/controls.css';
 import '../styles/page-header.css';
 import { useSearchStore } from '../store/searchStore';
-import { normalizeMostPopular } from '../utils/normalize';
+import type { UnifiedArticle } from '../services/unifiedSearchService';
+
+const MOST_POPULAR_PERIODS = ['1', '7', '30'] as const;
 
 const TrendingPage: React.FC = () => {
-  const [articles, setArticles] = useState<MostPopularArticle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'1' | '7' | '30'>('7');
-  const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+  
+  // Use unified search hook
+  const {
+    articles,
+    loading,
+    error,
+    search,
+  } = useMostPopular(selectedPeriod, { autoSearch: true });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (USE_MOCK) {
-          setArticles(mockTrendingArticles);
-        } else {
-          const data = await getMostPopular(selectedPeriod, controller.signal);
-          setArticles(data);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch trending articles');
-      } finally {
-        setLoading(false);
-      }
-    })();
-    return () => controller.abort();
-  }, [selectedPeriod, USE_MOCK, refreshTick]);
+  // Handle period changes
+  React.useEffect(() => {
+    if (!USE_MOCK) {
+      search({
+        type: 'most-popular',
+        period: selectedPeriod,
+      });
+    }
+  }, [selectedPeriod, search, USE_MOCK]);
+
+  // Mock data fallback
+  const mockArticles: UnifiedArticle[] = USE_MOCK ? mockTrendingArticles.map((article, index) => ({
+    id: article.id?.toString() || `mock-trending-${index}`,
+    url: article.url || '',
+    title: article.title || 'No Title',
+    abstract: article.abstract || '',
+    byline: article.byline || 'Unknown',
+    publishedDate: article.published_date || new Date().toISOString(),
+    section: article.section || 'General',
+    imageUrl: '/logo.png',
+    source: 'most-popular' as const,
+    rank: index + 1,
+  })) : [];
+
+  const displayArticles = USE_MOCK ? mockArticles : articles;
 
   const getPeriodLabel = (period: string) => {
     switch (period) {
@@ -49,19 +60,8 @@ const TrendingPage: React.FC = () => {
     }
   };
 
-  const getImageUrl = (article: MostPopularArticle): string => {
-    if (article.media && article.media.length > 0) {
-      const media = article.media[0];
-      const mm = media['media-metadata'] || [];
-      // Prefer largest 3x2 image if present, otherwise fallbacks
-      const preferred =
-        mm.find(m => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
-        mm.find(m => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
-        mm.find(m => /^(Standard Thumbnail)$/i.test(m.format)) ||
-        mm[0];
-      if (preferred?.url) return preferred.url;
-    }
-    return '/logo.png';
+  const getImageUrl = (article: UnifiedArticle): string => {
+    return article.imageUrl || '/logo.png';
   };
 
   const getSafeUrl = (url: string | undefined): string | null => {
@@ -70,13 +70,22 @@ const TrendingPage: React.FC = () => {
   };
 
   const { favorites, addFavorite, removeFavorite, viewMode, setViewMode } = useSearchStore();
-  const isFav = (a: MostPopularArticle) => favorites.some(f => f.web_url === a.url);
-  const toggleFav = (a: MostPopularArticle) => {
-    const normalized = normalizeMostPopular(a);
+  const isFav = (a: UnifiedArticle) => favorites.some(f => f.web_url === a.url);
+  const toggleFav = (a: UnifiedArticle) => {
+    const normalized = {
+      web_url: a.url,
+      headline: { main: a.title },
+      abstract: a.abstract,
+      byline: { original: a.byline },
+      multimedia: [],
+      pub_date: a.publishedDate,
+      section_name: a.section,
+      subsection_name: '',
+    };
     if (isFav(a)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
-  if (loading && articles.length === 0) {
+  if (loading && displayArticles.length === 0) {
     return (
       <div className="trending-page">
         <div className="trending-header">
@@ -135,14 +144,14 @@ const TrendingPage: React.FC = () => {
 
       {/* Error messages hidden per request */}
 
-      {loading && articles.length > 0 && (
+      {loading && displayArticles.length > 0 && (
         <div className="loading-overlay">
           <Spinner />
         </div>
       )}
 
       <div className="trending-grid" style={{ display: viewMode === 'list' ? 'block' : undefined, ['--card-min' as any]: `${cardMin}px` }}>
-        {articles.map((article, index) => (
+        {displayArticles.map((article, index) => (
           <article key={article.id} className="trending-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="trending-card-rank">
               <span className="rank-number">#{index + 1}</span>
@@ -170,7 +179,7 @@ const TrendingPage: React.FC = () => {
             <div className="trending-card-content" style={viewMode === 'list' ? { padding: '1rem 1rem 1rem 0' } : undefined}>
               <div className="trending-card-meta">
                 <span className="section">{article.section}</span>
-                <span className="date">{formatDate(article.published_date)}</span>
+                <span className="date">{formatDate(article.publishedDate)}</span>
               </div>
               
               <h2 className="trending-card-title">
@@ -218,7 +227,7 @@ const TrendingPage: React.FC = () => {
         ))}
       </div>
 
-      {!loading && articles.length === 0 && !error && (
+      {!loading && displayArticles.length === 0 && !error && (
         <div className="empty-state">
           <div className="empty-icon">📰</div>
           <h3>No trending articles found</h3>

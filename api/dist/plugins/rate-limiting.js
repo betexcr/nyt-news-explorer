@@ -13,10 +13,10 @@ async function rateLimitingPlugin(fastify) {
     await fastify.register(rateLimit, {
         max: config.rateLimiting.max,
         timeWindow: config.rateLimiting.windowMs,
-        cache: 10000, // Keep 10k rate limit entries in memory
-        allowList: ['127.0.0.1', '::1'], // Allow localhost
-        redis: fastify.redis, // Use Redis for distributed rate limiting
-        skipOnError: false, // Don't skip rate limiting on Redis errors
+        cache: 10000,
+        allowList: ['127.0.0.1', '::1'],
+        redis: fastify.redis,
+        skipOnError: false,
         skipSuccessfulRequests: config.rateLimiting.skipSuccessHeaders,
         // Custom key generator (consider user ID if available)
         keyGenerator: (request) => {
@@ -70,13 +70,13 @@ async function rateLimitingPlugin(fastify) {
         // Authentication endpoints (stricter)
         auth: {
             max: 10,
-            timeWindow: 900000, // 15 minutes
+            timeWindow: 900000,
             keyGenerator: (request) => `auth:${request.ip}`,
         },
         // Search endpoints (moderate)
         search: {
             max: 60,
-            timeWindow: 300000, // 5 minutes
+            timeWindow: 300000,
             keyGenerator: (request) => {
                 const userId = request.user?.id;
                 return userId ? `search:user:${userId}` : `search:ip:${request.ip}`;
@@ -85,7 +85,7 @@ async function rateLimitingPlugin(fastify) {
         // Admin endpoints (very strict)
         admin: {
             max: 20,
-            timeWindow: 3600000, // 1 hour
+            timeWindow: 3600000,
             keyGenerator: (request) => `admin:${request.user?.id || request.ip}`,
         },
     };

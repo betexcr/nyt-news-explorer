@@ -1,31 +1,32 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { NytArticle } from '../types/nyt';
+import type { UnifiedArticle } from '../services/unifiedSearchService';
 import '../styles/table.css';
 
 interface ArticleTableProps {
-  articles: NytArticle[];
+  articles: UnifiedArticle[];
 }
 
 const ArticleTable: React.FC<ArticleTableProps> = ({ articles }) => {
   const navigate = useNavigate();
 
-  const handleRowClick = (article: NytArticle) => {
-    navigate('/detail', { state: { article } });
+  const handleRowClick = (article: UnifiedArticle) => {
+    // Convert UnifiedArticle to NytArticle format for detail page
+    const nytArticle = {
+      _id: article.id,
+      headline: { main: article.title },
+      snippet: article.abstract,
+      web_url: article.url,
+      pub_date: article.publishedDate,
+      byline: { original: article.byline },
+      section_name: article.section,
+      multimedia: article.imageUrl ? [{ url: article.imageUrl }] : undefined
+    };
+    navigate('/detail', { state: { article: nytArticle } });
   };
 
-  const getThumbnailUrl = (article: NytArticle): string | null => {
-    if (article.multimedia) {
-      // Try thumbnail first, then default
-      if (article.multimedia.thumbnail && article.multimedia.thumbnail.url) {
-        return article.multimedia.thumbnail.url; // URLs are already complete
-      }
-      
-      if (article.multimedia.default && article.multimedia.default.url) {
-        return article.multimedia.default.url; // URLs are already complete
-      }
-    }
-    return null;
+  const getThumbnailUrl = (article: UnifiedArticle): string | null => {
+    return article.imageUrl || null;
   };
 
   const formatDate = (dateString: string) => {
@@ -51,7 +52,7 @@ const ArticleTable: React.FC<ArticleTableProps> = ({ articles }) => {
         <tbody>
           {articles.map((article) => (
             <tr 
-              key={article.web_url} 
+              key={article.id} 
               className="table-row"
               onClick={() => handleRowClick(article)}
             >
@@ -73,16 +74,16 @@ const ArticleTable: React.FC<ArticleTableProps> = ({ articles }) => {
                 </div>
               </td>
               <td className="title">
-                {article.headline?.main || 'No title'}
+                {article.title || 'No title'}
               </td>
               <td className="section">
-                {article.section_name || 'No section'}
+                {article.section || 'No section'}
               </td>
               <td className="author">
-                {article.byline?.original || 'No author'}
+                {article.byline || 'No author'}
               </td>
               <td className="date">
-                {formatDate(article.pub_date || '')}
+                {formatDate(article.publishedDate || '')}
               </td>
             </tr>
           ))}

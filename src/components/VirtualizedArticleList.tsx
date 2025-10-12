@@ -2,11 +2,11 @@ import React, { useCallback, useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import ArticleCard from './ArticleCard';
 import Spinner from './Spinner';
-import type { NytArticle } from '../types/nyt';
+import type { UnifiedArticle } from '../services/unifiedSearchService';
 import '../styles/virtualized-list.css';
 
 interface VirtualizedArticleListProps {
-  articles: NytArticle[];
+  articles: UnifiedArticle[];
   height: number;
   itemHeight: number;
   hasMore: boolean;

@@ -26,25 +26,19 @@ export class NytRateLimitError extends NytApiError {
 
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Always use NYT API directly
+// Use our backend API instead of NYT directly for search
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = "/svc/search/v2/articlesearch.json";
-const ABSOLUTE_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+const BACKEND_SEARCH_URL = "/api/articles/search";
 
-// Fallback CORS proxy for development if proxy doesn't work
-const CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/https://api.nytimes.com/svc/search/v2/articlesearch.json";
-
-// Function to get the appropriate API URL with fallback
+// Function to get the appropriate API URL
 function getApiUrl(): string {
-  // In development, CRA proxy forwards /svc to https://api.nytimes.com
-  // In production, we must call NYT directly
-  return isDevelopment ? BASE_URL : ABSOLUTE_URL;
+  // Always use our backend API route which handles caching
+  return BACKEND_SEARCH_URL;
 }
 
-// Function to make API request with fallback
+// Function to make API request to our backend
 async function makeApiRequest(params: Record<string, string | number>, signal?: AbortSignal) {
   try {
-    // Try the primary URL first
     const response = await axios.get(getApiUrl(), { params, signal });
     return response;
   } catch (error: any) {
@@ -60,27 +54,6 @@ async function makeApiRequest(params: Record<string, string | number>, signal?: 
       throw new NytRateLimitError();
     }
     
-    // If it's a CORS error and we're in development, try the proxy
-    if (isDevelopment && error.message?.includes('CORS') && CORS_PROXY_URL) {
-      console.warn('CORS error detected, trying fallback proxy...');
-      try {
-        const proxyResponse = await axios.get(CORS_PROXY_URL, { params, signal });
-        return proxyResponse;
-      } catch (proxyError: any) {
-        // Check for rate limit error in proxy response too - check multiple possible paths
-        const proxyResponseData = proxyError.response?.data;
-        const isProxyRateLimitError = 
-          proxyResponseData?.fault?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-          proxyResponseData?.fault?.fault?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-          proxyResponseData?.fault?.detail?.errorcode === 'policies.ratelimit.QuotaViolation' ||
-          proxyResponseData?.fault?.errorcode === 'policies.ratelimit.QuotaViolation';
-        
-        if (isProxyRateLimitError) {
-          throw new NytRateLimitError();
-        }
-        throw proxyError;
-      }
-    }
     throw error;
   }
 }
@@ -95,7 +68,6 @@ function esc(str: string) {
 
 function baseParams(): Record<string, string> {
   return { 
-    "api-key": API_KEY,
     "fl": "web_url,headline,abstract,byline,multimedia,pub_date,section_name,subsection_name",
   };
 }

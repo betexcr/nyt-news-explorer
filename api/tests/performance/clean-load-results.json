@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-09-30T02:33:35.039Z",
+  "test_type": "clean_load",
+  "target_url": "https://nyt.brainvaultdev.com/",
+  "cache_disabled": true,
+  "iterations": 10,
+  "total_test_time_ms": 11475,
+  "performance": {
+    "page_load_time": {
+      "min": 104.22450000000026,
+      "max": 410.9249,
+      "avg": 140.18369,
+      "med": 110.19180000000051,
+      "p50": 110.04480000000012,
+      "p75": 112.98569999999972,
+      "p90": 120.96839999999975,
+      "p95": 410.9249,
+      "p99": 410.9249
+    },
+    "response_time": {
+      "min": 104.0023000000001,
+      "max": 409.8703,
+      "avg": 139.7744099999999,
+      "med": 109.62609999999995,
+      "p50": 109.6239999999998,
+      "p75": 112.4674,
+      "p90": 120.56539999999995,
+      "p95": 409.8703,
+      "p99": 409.8703
+    }
+  },
+  "reliability": {
+    "success_rate": 100,
+    "error_rate": 0,
+    "total_requests": 10,
+    "successful_requests": 10,
+    "failed_requests": 0
+  },
+  "slo_compliance": {
+    "page_load_under_2s": true,
+    "response_under_1s": true,
+    "error_rate_under_1_percent": true,
+    "overall_passed": true
+  }
+}

@@ -31,7 +31,7 @@ async function securityPlugin(fastify) {
         },
         // HTTP Strict Transport Security (force HTTPS)
         hsts: {
-            maxAge: 31536000, // 1 year
+            maxAge: 31536000,
             includeSubDomains: true,
             preload: true,
         },

@@ -49,10 +49,10 @@ async function createServer() {
                 : undefined,
         },
         trustProxy: true,
-        keepAliveTimeout: 72000, // 72 seconds (AWS ALB timeout is 60s)
-        requestTimeout: 30000, // 30 seconds
+        keepAliveTimeout: 72000,
+        requestTimeout: 30000,
         pluginTimeout: 30000,
-        bodyLimit: 1048576, // 1MB
+        bodyLimit: 1048576,
         // TLS Configuration for production (TLS 1.3)
         ...(config.isProduction &&
             config.security.tls.certPath &&
@@ -64,7 +64,7 @@ async function createServer() {
                 secureProtocol: 'TLSv1_3_method',
                 ciphers: 'TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256',
             },
-            http2: true, // Enable HTTP/2
+            http2: true,
             // HTTP/3 support (experimental)
             ...(config.security.enableHttp3 && {
                 http3: true,

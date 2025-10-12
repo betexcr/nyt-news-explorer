@@ -12,9 +12,9 @@ import { config } from '@/config/environment.js';
 async function healthCheckPlugin(fastify) {
     // Register under-pressure for resource monitoring
     await fastify.register(underPressure, {
-        maxEventLoopDelay: 1000, // 1 second
-        maxHeapUsedBytes: 536870912, // 512MB
-        maxRssBytes: 1073741824, // 1GB
+        maxEventLoopDelay: 1000,
+        maxHeapUsedBytes: 536870912,
+        maxRssBytes: 1073741824,
         maxEventLoopUtilization: 0.98,
         message: 'Service under pressure!',
         retryAfter: 50,
@@ -22,7 +22,7 @@ async function healthCheckPlugin(fastify) {
             // Custom health check logic
             return { status: 'ok' };
         },
-        healthCheckInterval: 5000, // 5 seconds
+        healthCheckInterval: 5000,
         exposeStatusRoute: '/status',
         // Customize response format to Problem Details
         customError: async (request, reply, error) => {

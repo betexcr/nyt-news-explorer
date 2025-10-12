@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getTopStories, TOP_STORIES_SECTIONS, type TopStory } from '../api/nyt-apis';
+import React, { useState } from 'react';
+import { useTopStories } from '../hooks/useUnifiedSearch';
 import { mockTopStories } from '../api/mock-data';
 import { formatDate } from '../utils/format';
 import Spinner from '../components/Spinner';
@@ -8,37 +8,50 @@ import '../styles/top-stories.css';
 import '../styles/controls.css';
 import '../styles/page-header.css';
 import { useSearchStore } from '../store/searchStore';
-import { normalizeTopStory } from '../utils/normalize';
+import type { UnifiedArticle } from '../services/unifiedSearchService';
+
+const TOP_STORIES_SECTIONS = [
+  'home', 'arts', 'automobiles', 'books', 'business', 'fashion', 'food', 'health', 'insider', 'magazine', 'movies', 'nyregion', 'obituaries', 'opinion', 'politics', 'realestate', 'science', 'sports', 'sundayreview', 'technology', 'theater', 't-magazine', 'travel', 'upshot', 'us', 'world'
+] as const;
 
 const TopStoriesPage: React.FC = () => {
-  const [stories, setStories] = useState<TopStory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState<string>('home');
-  const [refreshTick] = useState<number>(0);
   const [cardMin, setCardMin] = useState<number>(300);
   const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+  
+  // Use unified search hook
+  const {
+    articles,
+    loading,
+    error,
+    search,
+  } = useTopStories(selectedSection as any, { autoSearch: true });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (USE_MOCK) {
-          setStories(mockTopStories);
-        } else {
-          const data = await getTopStories(selectedSection, controller.signal);
-          setStories(data);
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch top stories');
-      } finally {
-        setLoading(false);
-      }
-    })();
-    return () => controller.abort();
-  }, [selectedSection, USE_MOCK, refreshTick]);
+  // Handle section changes
+  React.useEffect(() => {
+    if (!USE_MOCK) {
+      search({
+        type: 'top-stories',
+        section: selectedSection as any,
+      });
+    }
+  }, [selectedSection, search, USE_MOCK]);
+
+  // Mock data fallback
+  const mockArticles: UnifiedArticle[] = USE_MOCK ? mockTopStories.map((story, index) => ({
+    id: story.uri || `mock-topstory-${index}`,
+    url: story.url || '',
+    title: story.title || 'No Title',
+    abstract: story.abstract || '',
+    byline: story.byline || 'Unknown',
+    publishedDate: story.published_date || new Date().toISOString(),
+    section: story.section || 'General',
+    imageUrl: '/logo.png',
+    source: 'top-stories' as const,
+    badge: 'Top Story',
+  })) : [];
+
+  const displayStories = USE_MOCK ? mockArticles : articles;
 
   const getSectionLabel = (section: string) => {
     const labels: Record<string, string> = {
@@ -72,15 +85,8 @@ const TopStoriesPage: React.FC = () => {
     return labels[section] || section;
   };
 
-  const getImageUrl = (story: TopStory): string => {
-    if (story.multimedia && story.multimedia.length > 0) {
-      const media = story.multimedia[0];
-      // Prefer legacy xlarge when available, otherwise media.url
-      const legacy = (media as any).legacy;
-      if (legacy?.xlarge) return legacy.xlarge;
-      if (media.url) return media.url;
-    }
-    return '/logo.png';
+  const getImageUrl = (story: UnifiedArticle): string => {
+    return story.imageUrl || '/logo.png';
   };
 
   const getSafeUrl = (url: string | undefined): string | null => {
@@ -89,13 +95,22 @@ const TopStoriesPage: React.FC = () => {
   };
 
   const { favorites, addFavorite, removeFavorite, viewMode, setViewMode } = useSearchStore();
-  const isFav = (story: TopStory) => favorites.some(f => f.web_url === story.url);
-  const toggleFav = (story: TopStory) => {
-    const normalized = normalizeTopStory(story);
+  const isFav = (story: UnifiedArticle) => favorites.some(f => f.web_url === story.url);
+  const toggleFav = (story: UnifiedArticle) => {
+    const normalized = {
+      web_url: story.url,
+      headline: { main: story.title },
+      abstract: story.abstract,
+      byline: { original: story.byline },
+      multimedia: [],
+      pub_date: story.publishedDate,
+      section_name: story.section,
+      subsection_name: '',
+    };
     if (isFav(story)) removeFavorite(normalized.web_url); else addFavorite(normalized);
   };
 
-  if (loading && stories.length === 0) {
+  if (loading && displayStories.length === 0) {
     return (
       <div className="top-stories-page">
         <div className="top-stories-header">
@@ -110,7 +125,7 @@ const TopStoriesPage: React.FC = () => {
   }
 
   return (
-    <div className="top-stories-page">
+    <div className="top-stories-page">b
       <div className="page-header">
         <div>
           <h1 className="page-title">Top Stories</h1>
@@ -154,15 +169,15 @@ const TopStoriesPage: React.FC = () => {
 
       {/* Error messages hidden per request */}
 
-      {loading && stories.length > 0 && (
+      {loading && displayStories.length > 0 && (
         <div className="loading-overlay">
           <Spinner />
         </div>
       )}
 
       <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined, ['--card-min' as any]: `${cardMin}px` }}>
-        {stories.map((story, _index) => (
-          <article key={story.uri} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
+        {displayStories.map((story, index) => (
+          <article key={story.id} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
               <img
                 src={getImageUrl(story)}
@@ -173,7 +188,7 @@ const TopStoriesPage: React.FC = () => {
                 }}
               />
               <div className="story-badge">
-                <span className="badge-text">Top Story</span>
+                <span className="badge-text">{story.badge || 'Top Story'}</span>
               </div>
               <button
                 onClick={() => toggleFav(story)}
@@ -188,7 +203,7 @@ const TopStoriesPage: React.FC = () => {
             <div className="top-story-card-content" style={viewMode === 'list' ? { padding: '1rem 1rem 1rem 0' } : undefined}>
               <div className="top-story-card-meta">
                 <span className="section">{story.section}</span>
-                <span className="date">{formatDate(story.published_date)}</span>
+                <span className="date">{formatDate(story.publishedDate)}</span>
               </div>
               
               <h2 className="top-story-card-title">
@@ -236,7 +251,7 @@ const TopStoriesPage: React.FC = () => {
         ))}
       </div>
 
-      {!loading && stories.length === 0 && !error && (
+      {!loading && displayStories.length === 0 && !error && (
         <div className="empty-state">
           <div className="empty-icon">📰</div>
           <h3>No top stories found</h3>

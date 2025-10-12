@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchStore } from "../store/searchStore";
-import type { MostPopularArticle, TopStory } from "../types/nyt.other";
+import { useMostPopular, useTopStories } from "../hooks/useUnifiedSearch";
+import { cacheWarmupService } from "../services/cacheWarmupService";
+import type { UnifiedArticle } from "../services/unifiedSearchService";
 import { mockTrendingArticles, mockTopStories } from "../api/mock-data";
-import { getMostPopular, getTopStories } from "../api/nyt-apis";
 import { formatDate } from "../utils/format";
 import ViewTransitionLink from "../components/ViewTransitionLink";
 import ViewTransitionImage from "../components/ViewTransitionImage";
@@ -12,71 +13,79 @@ import "../styles/home.css";
 
 const HomePage: React.FC = () => {
   const reset = useSearchStore((state) => state.reset);
-  const [trendingArticles, setTrendingArticles] = useState<MostPopularArticle[]>([]);
-  const [topStories, setTopStories] = useState<TopStory[]>([]);
   
-  // No blocking loading state for Home hero
-  // Keep local error handling but do not surface in UI
-  const [, setError] = useState<string | null>(null);
-  // Prevent duplicate fetches in React 18 StrictMode dev double-invoke
-  const hasFetchedRef = useRef(false);
+  // Use unified search hooks
+  const trendingSearch = useMostPopular('7');
+  const topStoriesSearch = useTopStories('home');
+  
+  // Fallback to mock data if no API key
+  const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+  const [mockData, setMockData] = useState<{
+    trending: UnifiedArticle[];
+    topStories: UnifiedArticle[];
+  } | null>(null);
 
   useEffect(() => {
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
-    const USE_MOCK = !process.env.REACT_APP_NYT_API_KEY;
+    if (USE_MOCK) {
+      // Convert mock data to unified format
+      const trending = mockTrendingArticles.slice(0, 3).map((article, index) => ({
+        id: article.id?.toString() || `mock-trending-${index}`,
+        url: article.url || '',
+        title: article.title || 'No Title',
+        abstract: article.abstract || '',
+        byline: article.byline || 'Unknown',
+        publishedDate: article.published_date || new Date().toISOString(),
+        section: article.section || 'General',
+        imageUrl: '/logo.png', // Will be handled by getImageUrl function
+        source: 'most-popular' as const,
+        rank: index + 1,
+      }));
 
-    const fetchHomeData = async () => {
-      // Clear any previous error
-      setError(null);
-      try {
-        if (USE_MOCK) {
-          setTrendingArticles(mockTrendingArticles.slice(0, 3));
-          setTopStories(mockTopStories.slice(0, 3));
-        } else {
-          const [popular, stories] = await Promise.all([
-            getMostPopular('7'),
-            getTopStories('home'),
-          ]);
-          setTrendingArticles(popular.slice(0, 3));
-          setTopStories(stories.slice(0, 3));
+      const topStories = mockTopStories.slice(0, 3).map((story, index) => ({
+        id: story.uri || `mock-topstory-${index}`,
+        url: story.url || '',
+        title: story.title || 'No Title',
+        abstract: story.abstract || '',
+        byline: story.byline || 'Unknown',
+        publishedDate: story.published_date || new Date().toISOString(),
+        section: story.section || 'General',
+        imageUrl: '/logo.png', // Will be handled by getImageUrl function
+        source: 'top-stories' as const,
+        badge: 'Top Story',
+      }));
+
+      setMockData({ trending, topStories });
+    }
+  }, [USE_MOCK]);
+
+  // Get articles from search results or mock data
+  const trendingArticles = USE_MOCK ? (mockData?.trending || []) : trendingSearch.articles.slice(0, 3);
+  const topStories = USE_MOCK ? (mockData?.topStories || []) : topStoriesSearch.articles.slice(0, 3);
+
+  // Cache warmup for main page optimization
+  useEffect(() => {
+    if (!USE_MOCK) {
+      // Start automatic cache warmup when HomePage mounts
+      const stopWarmup = cacheWarmupService.startAutomaticWarmup();
+      
+      // Also do an immediate warmup for critical data
+      cacheWarmupService.warmupCritical().then((result) => {
+        if (result.success > 0) {
+          console.log(`🎯 Main page cache optimized: ${result.success}/${result.total} critical searches cached`);
         }
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch home data');
-      } finally {
-        // no-op
-      }
-    };
-
-    fetchHomeData();
-    return () => {};
-  }, []);
+      });
+      
+      return stopWarmup;
+    }
+  }, [USE_MOCK]);
 
   const handleHomeClick = () => {
     reset();
   };
 
-  const getImageUrl = (article: MostPopularArticle | TopStory): string => {
-    // Most Popular
-    if ('media' in article && article.media && article.media.length > 0) {
-      const media = article.media[0];
-      const mm = (media as any)['media-metadata'] || [];
-      const preferred =
-        mm.find((m: any) => /^(Large|superJumbo|mediumThreeByTwo440)$/i.test(m.format)) ||
-        mm.find((m: any) => /^(mediumThreeByTwo210|Large Thumbnail)$/i.test(m.format)) ||
-        mm.find((m: any) => /^(Standard Thumbnail)$/i.test(m.format)) ||
-        mm[0];
-      if (preferred?.url) return preferred.url;
-    }
-
-    // Top Stories
-    if ('multimedia' in article && article.multimedia && article.multimedia.length > 0) {
-      const media = article.multimedia[0] as any;
-      if (media?.legacy?.xlarge) return media.legacy.xlarge;
-      if (media?.url) return media.url;
-    }
-
-    return '/logo.png';
+  const getImageUrl = (article: UnifiedArticle): string => {
+    // Use the imageUrl from unified article, fallback to logo
+    return article.imageUrl || '/logo.png';
   };
 
   const getSafeUrl = (url: string | undefined): string | null => {
@@ -160,14 +169,14 @@ const HomePage: React.FC = () => {
                       fallbackSrc="/logo.png"
                     />
                     <div className="trending-badge">
-                      <span>#{index + 1}</span>
+                      <span>#{article.rank || index + 1}</span>
                     </div>
                   </div>
                   
                   <div className="article-content">
                     <div className="article-meta">
                       <span className="section">{article.section}</span>
-                      <span className="date">{formatDate(article.published_date)}</span>
+                      <span className="date">{formatDate(article.publishedDate)}</span>
                     </div>
                     
                     <h3 className="article-title">{article.title}</h3>
@@ -191,7 +200,7 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="articles-grid">
-              {topStories.map((story, _index) => {
+              {topStories.map((story, index) => {
                 const href = getSafeUrl(story.url) || undefined;
                 const handleOpen = () => {
                   if (href) window.open(href, '_blank', 'noopener,noreferrer');
@@ -204,7 +213,7 @@ const HomePage: React.FC = () => {
                 };
                 return (
                 <article
-                  key={story.uri}
+                  key={story.id}
                   className="article-card story-card"
                   role={href ? 'link' : undefined}
                   tabIndex={href ? 0 : -1}
@@ -217,18 +226,18 @@ const HomePage: React.FC = () => {
                       src={getImageUrl(story)}
                       alt={story.title}
                       className="view-transition-article-image"
-                      viewTransitionName={`top-story-image-${_index}`}
+                      viewTransitionName={`top-story-image-${index}`}
                       fallbackSrc="/logo.png"
                     />
                     <div className="story-badge">
-                      <span>Top Story</span>
+                      <span>{story.badge || 'Top Story'}</span>
                     </div>
                   </div>
                   
                   <div className="article-content">
                     <div className="article-meta">
                       <span className="section">{story.section}</span>
-                      <span className="date">{formatDate(story.published_date)}</span>
+                      <span className="date">{formatDate(story.publishedDate)}</span>
                     </div>
                     
                     <h3 className="article-title">{story.title}</h3>

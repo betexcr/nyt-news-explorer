@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useSearchStore } from "../store/searchStore";
-import { searchArticlesAdv, makeSearchController, NytRateLimitError } from "../api/nyt";
+import { useAdvancedSearch } from "../hooks/useUnifiedSearch";
+import { SearchRateLimitError, SearchSection } from "../services/unifiedSearchService";
 import { debounce } from "../utils/debounce";
 import ArticleCard from "../components/ArticleCard";
 import ArticleTable from "../components/ArticleTable";
@@ -54,29 +55,28 @@ const SECTIONS = [
 const SearchPage: React.FC = () => {
   const location = useLocation() as { state?: FromHomeState };
   const containerRef = useRef<HTMLDivElement>(null);
-  const [rateLimitError, setRateLimitError] = useState(false);
-
+  
+  // Use unified search hook
   const {
-    query,
     articles,
-    hasSearched,
-    scrollY,
-    viewMode,
     loading,
     loadingMore,
-    currentPage,
+    error,
+    rateLimitError,
     hasMore,
-    setQuery,
-    setArticles,
-    appendArticles,
-    setHasSearched,
-    setViewMode,
-    setLoading,
-    setLoadingMore,
-    setHasMore,
-    setAdvancedParams,
-    reset,
-  } = useSearchStore();
+    totalCount,
+    cached,
+    search,
+    loadMore,
+    clearError,
+    clearResults,
+  } = useAdvancedSearch({ autoSearch: false });
+
+  // Local state for form management
+  const [query, setQuery] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const { viewMode, setViewMode } = useSearchStore();
 
   
   // Handle state restoration on mount
@@ -198,35 +198,22 @@ const SearchPage: React.FC = () => {
     sort: 'newest' as 'newest' | 'oldest',
     beginDate: '',
     endDate: '',
-    section: '',
+    section: '' as SearchSection | '',
   });
-
-  const runSearch = useMemo(() => makeSearchController(), []);
 
   const debouncedSearch = useMemo(
     () =>
-      debounce((text: string) => {
+      debounce(async (text: string) => {
         if (text.trim()) {
-          setLoading(true);
           setHasSearched(true);
-          setRateLimitError(false);
-          runSearch(text.trim())
-            .then((result) => {
-              setArticles(result);
-              setLoading(false);
-            })
-            .catch((error) => {
-              if (error instanceof NytRateLimitError) {
-                setRateLimitError(true);
-                setArticles([]);
-              } else {
-                setArticles([]);
-              }
-              setLoading(false);
-            });
+          clearError();
+          await search({
+            type: 'articles',
+            query: text.trim(),
+          });
         }
       }, 500),
-    [runSearch, setArticles, setLoading, setHasSearched]
+    [search, clearError]
   );
 
   const handleAdvancedSearch = async (e: React.FormEvent) => {
@@ -234,39 +221,25 @@ const SearchPage: React.FC = () => {
     const text = (query || "").trim();
     if (!text) return;
     
-    setLoading(true);
     setHasSearched(true);
-    setRateLimitError(false);
-    setAdvancedParams({ query: text, ...advancedForm });
+    clearError();
     
-    try {
-      const result = await searchArticlesAdv({
-        q: text,
-        sort: advancedForm.sort,
-        begin: advancedForm.beginDate || undefined,
-        end: advancedForm.endDate || undefined,
-        section: advancedForm.section || undefined,
-        page: 0,
-      });
-      
-      setArticles(result);
-    } catch (error) {
-      if (error instanceof NytRateLimitError) {
-        setRateLimitError(true);
-        setArticles([]);
-      } else {
-        setArticles([]);
-      }
-    } finally {
-      setLoading(false);
-    }
+    await search({
+      type: 'articles',
+      query: text,
+      sort: advancedForm.sort,
+      beginDate: advancedForm.beginDate || undefined,
+      endDate: advancedForm.endDate || undefined,
+      section: advancedForm.section || undefined,
+      page: 0,
+    });
   };
 
   useEffect(() => {
     if (location.state?.fromHome && !hasSearched) {
-      reset();
+      clearResults();
     }
-  }, [location.state?.fromHome, hasSearched, reset]);
+  }, [location.state?.fromHome, hasSearched, clearResults]);
 
   // Disable browser's automatic scroll restoration
   useEffect(() => {
@@ -336,7 +309,7 @@ const SearchPage: React.FC = () => {
     setQuery(v);
     // Clear rate limit error when user starts typing
     if (rateLimitError) {
-      setRateLimitError(false);
+      clearError();
     }
     debouncedSearch(v);
   };
@@ -350,23 +323,13 @@ const SearchPage: React.FC = () => {
     const text = (query || "").trim();
     if (!text) return;
 
-    setLoading(true);
     setHasSearched(true);
-    setRateLimitError(false);
+    clearError();
 
-    try {
-      const result = await runSearch(text);
-      setArticles(result);
-    } catch (error) {
-      if (error instanceof NytRateLimitError) {
-        setRateLimitError(true);
-        setArticles([]);
-      } else {
-        setArticles([]);
-      }
-    } finally {
-      setLoading(false);
-    }
+    await search({
+      type: 'articles',
+      query: text,
+    });
   };
 
   const handleLoadMore = useCallback(async () => {
@@ -375,40 +338,16 @@ const SearchPage: React.FC = () => {
     const text = (query || "").trim();
     if (!text) return;
 
-    setLoadingMore(true);
-
     try {
-      const nextPage = currentPage + 1;
-      const result = await searchArticlesAdv({
-        q: text,
-        page: nextPage,
-        ...advancedForm
-      });
-
-      // For testing: 12 results per page
-      if (result.length > 0) {
-        appendArticles(result);
-        // If we get less than 12 results, we've reached the end
-        if (result.length < 12) {
-          setHasMore(false);
-        }
-      } else {
-        // No more results
-        setHasMore(false);
-      }
+      await loadMore();
     } catch (error) {
-      if (error instanceof NytRateLimitError) {
+      if (error instanceof SearchRateLimitError) {
         // Don't set hasMore to false for rate limit errors
         // User can try again after waiting
         console.warn('Rate limit hit during load more, will retry on next scroll');
-      } else {
-        // Error loading more articles
-        setHasMore(false);
       }
-    } finally {
-      setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, currentPage, query, advancedForm, appendArticles, setHasMore, setLoadingMore]);
+  }, [loadingMore, hasMore, query, loadMore]);
 
   // Add scroll detection for regular grid view
   useEffect(() => {
@@ -461,6 +400,18 @@ const SearchPage: React.FC = () => {
         );
       }
       
+      if (error) {
+        return (
+          <div className="panel empty">
+            <h3>Search Error</h3>
+            <p>{error}</p>
+            <button onClick={clearError} className="button">
+              Try Again
+            </button>
+          </div>
+        );
+      }
+      
       return (
         <div className="panel empty">
           <h3>No results found</h3>
@@ -492,7 +443,7 @@ const SearchPage: React.FC = () => {
     return (
       <div className="grid results" style={{ ['--card-min' as any]: `${cardMin}px` }}>
         {articles.map((a) => (
-          <ArticleCard key={a.web_url} article={a} />
+          <ArticleCard key={a.id} article={a} />
         ))}
         {loadingMore && (
           <div className="loading-more">
@@ -599,7 +550,10 @@ const SearchPage: React.FC = () => {
           {hasSearched && articles && (
             <>
             {articles.length > 0 && (
-              <span className="results-count">Showing {articles.length} results</span>
+              <span className="results-count">
+                Showing {articles.length} of {totalCount} results
+                {cached && <span className="cached-indicator"> (cached)</span>}
+              </span>
             )}
             <div className="results-controls">
               <ViewToggle

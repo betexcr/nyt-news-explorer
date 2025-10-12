@@ -51,6 +51,7 @@ const configSchema = z.object({
 
   // Redis Configuration
   redis: z.object({
+    url: z.string().optional(), // Railway provides REDIS_URL
     host: z.string().default('localhost'),
     port: z.coerce.number().int().min(1).max(65535).default(6379),
     password: z.string().optional(),
@@ -126,6 +127,7 @@ function parseConfig() {
         skipSuccessHeaders: process.env.RATE_LIMIT_SKIP_SUCCESS_HEADERS,
       },
       redis: {
+        url: process.env.REDIS_URL, // Railway provides this
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,

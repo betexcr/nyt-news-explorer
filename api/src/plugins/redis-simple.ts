@@ -4,12 +4,19 @@ import { FastifyInstance } from 'fastify'
 import { config } from '@/config/environment.js'
 
 async function redisPlugin(fastify: FastifyInstance) {
-  // Register Redis with basic configuration
+  // Use REDIS_URL if available (Railway), otherwise use individual config
+  const redisConfig = config.redis.url 
+    ? { url: config.redis.url }
+    : {
+        host: config.redis.host,
+        port: config.redis.port,
+        password: config.redis.password,
+        db: config.redis.db,
+      }
+
+  // Register Redis with configuration
   await fastify.register(redis as any, {
-    host: config.redis.host,
-    port: config.redis.port,
-    password: config.redis.password,
-    db: config.redis.db,
+    ...redisConfig,
     enableReadyCheck: true,
     lazyConnect: true,
   })

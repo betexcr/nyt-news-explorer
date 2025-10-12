@@ -59,7 +59,7 @@ export async function adminRoutes(fastify) {
                 version: process.env.npm_package_version || '1.0.0',
                 environment: process.env.NODE_ENV || 'development',
                 requests: {
-                    total: 0, // Implement request counter
+                    total: 0,
                     ratePerSecond: 0,
                     averageResponseTime: 0,
                 },
@@ -69,7 +69,7 @@ export async function adminRoutes(fastify) {
                     byType: {},
                 },
                 cache: {
-                    hitRate: 0.85, // Example
+                    hitRate: 0.85,
                     size: 0,
                     evictions: 0,
                 },
