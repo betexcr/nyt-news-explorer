@@ -35,7 +35,7 @@ const TopStoriesPage: React.FC = () => {
         section: selectedSection as any,
       });
     }
-  }, [selectedSection, search, USE_MOCK]);
+  }, [selectedSection, USE_MOCK]);
 
   // Mock data fallback
   const mockArticles: UnifiedArticle[] = USE_MOCK ? mockTopStories.map((story, index) => ({
@@ -178,7 +178,7 @@ const TopStoriesPage: React.FC = () => {
       )}
 
       <div className="top-stories-grid" style={{ display: viewMode === 'list' ? 'block' : undefined, ['--card-min' as any]: `${cardMin}px` }}>
-        {displayStories.map((story, index) => (
+        {displayStories.map((story, _index) => (
           <article key={story.id} className="top-story-card" style={viewMode === 'list' ? { display: 'flex', gap: '1rem', alignItems: 'stretch' } : undefined}>
             <div className="top-story-card-image">
               <img

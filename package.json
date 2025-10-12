@@ -35,7 +35,9 @@
   "scripts": {
     "gen:types": "tsx scripts/gen-types.ts",
     "start": "tsx scripts/start.ts",
-    "dev": "npm run start",
+    "dev": "tsx scripts/start-both.ts",
+    "dev:react": "npm run start",
+    "dev:api": "cd api && bun run dev:simple",
     "build": "cross-env GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true react-scripts build && node scripts/copy-sw.js",
     "build:force": "cross-env GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true NODE_ENV=production react-scripts build && node scripts/copy-sw.js",
     "build:cdn": "cross-env GENERATE_SOURCEMAP=false PUBLIC_URL=https://nyt.brainvaultdev.com react-scripts build && node scripts/copy-sw.js",

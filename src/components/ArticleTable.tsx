@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { UnifiedArticle } from '../services/unifiedSearchService';
+import ImageWithRetry from './ImageWithRetry';
 import '../styles/table.css';
 
 interface ArticleTableProps {
@@ -58,20 +59,19 @@ const ArticleTable: React.FC<ArticleTableProps> = ({ articles }) => {
             >
               <td className="image-cell">
                 {getThumbnailUrl(article) ? (
-                  <img 
-                    src={getThumbnailUrl(article)!} 
+                  <ImageWithRetry
+                    src={getThumbnailUrl(article)!}
                     alt="Article thumbnail"
                     className="table-image"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
+                    fallbackSrc="/logo.png"
+                    maxRetries={3}
+                    retryDelay={1000}
                   />
-                ) : null}
-                <div className={`no-image ${getThumbnailUrl(article) ? 'hidden' : ''}`}>
-                  No Image
-                </div>
+                ) : (
+                  <div className="no-image">
+                    No Image
+                  </div>
+                )}
               </td>
               <td className="title">
                 {article.title || 'No title'}

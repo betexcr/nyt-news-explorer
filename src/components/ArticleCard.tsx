@@ -78,7 +78,7 @@ const ArticleCard: React.FC<Props> = ({ article }) => {
       >
         <ViewTransitionImage
           src={image}
-          alt=""
+          alt={article.title || ''}
           className="thumb view-transition-article-image"
           articleId={articleId}
           fallbackSrc="/logo.png"

@@ -6,12 +6,17 @@ import { spawn } from 'child_process';
 import getPort from 'get-port';
 
 async function main(): Promise<void> {
-  const defaultPort = Number(process.env.PORT || 3000);
+  // Always use port 3000 for React app
+  const port = 3000;
   const host = process.env.HOST || '0.0.0.0';
 
-  // Try a small range starting from defaultPort to avoid prompting
-  // Try default port; if taken, pick any available port automatically
-  const port = await getPort({ port: defaultPort, host });
+  // Check if port 3000 is available, if not, show error
+  const isPortAvailable = await getPort({ port, host });
+  if (isPortAvailable !== port) {
+    console.error(`❌ Port ${port} is already in use. Please stop the process using port ${port} and try again.`);
+    console.log(`💡 If you're running the API server, it should use port 3001 instead.`);
+    process.exit(1);
+  }
 
   const child = spawn('react-scripts', ['start'], {
     stdio: 'inherit',

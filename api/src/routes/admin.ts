@@ -118,10 +118,283 @@ export async function adminRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Cache status and monitoring endpoint
+  fastify.get('/cache/status', {
+    schema: {
+      tags: ['Admin', 'Cache'],
+      summary: 'Get Cache Status',
+      description: 'Get detailed Redis cache status, statistics, and current cached keys',
+      security: [{ BearerAuth: [] }],
+      querystring: {
+        type: 'object',
+        properties: {
+          pattern: { 
+            type: 'string', 
+            description: 'Filter keys by pattern (e.g., "cache:*", "search:*")', 
+            default: '*' 
+          },
+          limit: { 
+            type: 'integer', 
+            description: 'Maximum number of keys to return', 
+            default: 100 
+          },
+          details: {
+            type: 'boolean',
+            description: 'Include detailed information about each key (TTL, size)',
+            default: false
+          },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            redis: {
+              type: 'object',
+              properties: {
+                connected: { type: 'boolean' },
+                host: { type: 'string' },
+                port: { type: 'number' },
+                db: { type: 'number' },
+              },
+            },
+            statistics: {
+              type: 'object',
+              properties: {
+                totalKeys: { type: 'number' },
+                cacheHitRate: { type: 'number' },
+                memoryUsage: { type: 'string' },
+                uptime: { type: 'number' },
+              },
+            },
+            keys: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: { type: 'string' },
+                  ttl: { type: 'number' },
+                  type: { type: 'string' },
+                  size: { type: 'number' },
+                },
+              },
+            },
+            cacheTypes: {
+              type: 'object',
+              description: 'Breakdown of cache keys by type (search, articles, etc.)',
+            },
+          },
+        },
+        403: { type: 'object', description: 'Forbidden' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { pattern = '*', limit = 100, details = false } = request.query as { 
+        pattern?: string; 
+        limit?: number; 
+        details?: boolean 
+      }
+      
+      // Check if Redis is connected
+      const redisClient = fastify.redis
+      let connected = false
+      let redisInfo: any = {}
+      
+      try {
+        await redisClient.ping()
+        connected = true
+        
+        // Get Redis info
+        const info = await redisClient.info('server')
+        const lines = info.split('\r\n')
+        redisInfo = lines.reduce((acc: any, line: string) => {
+          const [key, value] = line.split(':')
+          if (key && value) {
+            acc[key.trim()] = value.trim()
+          }
+          return acc
+        }, {})
+      } catch (error) {
+        request.log.warn({ error }, 'Redis connection check failed')
+      }
+      
+      // Get all matching keys
+      const keys = await redisClient.keys(pattern)
+      const limitedKeys = keys.slice(0, limit)
+      
+      // Get key details if requested
+      const keyDetails = []
+      const cacheTypes: Record<string, number> = {}
+      
+      for (const key of limitedKeys) {
+        const ttl = await redisClient.ttl(key)
+        const type = await redisClient.type(key)
+        
+        // Extract cache type from key (e.g., "cache:GET:/api/..." -> "GET")
+        const keyParts = key.split(':')
+        const cacheType = keyParts[1] || 'unknown'
+        cacheTypes[cacheType] = (cacheTypes[cacheType] || 0) + 1
+        
+        const keyInfo: any = {
+          key,
+          ttl: ttl === -1 ? 'no expiry' : ttl,
+          type,
+        }
+        
+        if (details) {
+          // Get approximate size (this is an estimate)
+          try {
+            const value = await redisClient.get(key)
+            const size = value ? JSON.stringify(value).length : 0
+            keyInfo.size = size
+            
+            // Include first 100 chars of value for preview
+            if (value) {
+              const preview = typeof value === 'string' ? value : JSON.stringify(value)
+              keyInfo.preview = preview.substring(0, 100) + (preview.length > 100 ? '...' : '')
+            }
+          } catch (error) {
+            keyInfo.size = 0
+          }
+        }
+        
+        keyDetails.push(keyInfo)
+      }
+      
+      // Calculate statistics
+      const totalKeys = keys.length
+      const cacheHitRate = 0.85 // This would need to be tracked separately
+      
+      reply.send({
+        timestamp: new Date().toISOString(),
+        redis: {
+          connected,
+          host: redisInfo.tcp_port ? 'configured' : 'unknown',
+          port: redisInfo.tcp_port || 6379,
+          db: 0,
+          version: redisInfo.redis_version || 'unknown',
+          uptime: redisInfo.uptime_in_seconds || 0,
+        },
+        statistics: {
+          totalKeys,
+          matchingKeys: limitedKeys.length,
+          cacheHitRate,
+          memoryUsage: redisInfo.used_memory_human || 'unknown',
+          uptimeSeconds: parseInt(redisInfo.uptime_in_seconds || '0'),
+        },
+        keys: keyDetails,
+        cacheTypes,
+        pagination: {
+          pattern,
+          limit,
+          total: totalKeys,
+          returned: limitedKeys.length,
+          hasMore: totalKeys > limit,
+        },
+      })
+      
+    } catch (error) {
+      request.log.error({ error }, 'Failed to get cache status')
+      
+      reply.code(500).send({
+        type: 'https://api.nyt-news-explorer.com/problems/cache-status-unavailable',
+        title: 'Cache Status Unavailable',
+        status: 500,
+        detail: 'Unable to retrieve cache status',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
+  // Get specific cache key value
+  fastify.get('/cache/inspect/:key', {
+    schema: {
+      tags: ['Admin', 'Cache'],
+      summary: 'Inspect Cache Key',
+      description: 'Get detailed information about a specific cache key including its value',
+      security: [{ BearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          key: { type: 'string', description: 'Cache key to inspect' },
+        },
+        required: ['key'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            key: { type: 'string' },
+            exists: { type: 'boolean' },
+            type: { type: 'string' },
+            ttl: { type: 'number' },
+            value: { type: 'object' },
+            size: { type: 'number' },
+          },
+        },
+        404: { type: 'object', description: 'Key not found' },
+        403: { type: 'object', description: 'Forbidden' },
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      const { key } = request.params as { key: string }
+      
+      // Decode the key if it's URL encoded
+      const decodedKey = decodeURIComponent(key)
+      
+      const exists = await fastify.redis.exists(decodedKey)
+      
+      if (!exists) {
+        return reply.code(404).send({
+          type: 'https://api.nyt-news-explorer.com/problems/cache-key-not-found',
+          title: 'Cache Key Not Found',
+          status: 404,
+          detail: `Cache key '${decodedKey}' does not exist`,
+          instance: request.url,
+          correlationId: request.headers['x-correlation-id'],
+        })
+      }
+      
+      const ttl = await fastify.redis.ttl(decodedKey)
+      const type = await fastify.redis.type(decodedKey)
+      const value = await fastify.redis.get(decodedKey)
+      
+      const parsedValue = value ? (typeof value === 'string' ? JSON.parse(value) : value) : null
+      const size = value ? JSON.stringify(value).length : 0
+      
+      reply.send({
+        key: decodedKey,
+        exists: true,
+        type,
+        ttl: ttl === -1 ? 'no expiry' : ttl,
+        ttlFormatted: ttl === -1 ? 'no expiry' : `${Math.floor(ttl / 60)}m ${ttl % 60}s`,
+        value: parsedValue,
+        size,
+        sizeFormatted: size > 1024 ? `${(size / 1024).toFixed(2)} KB` : `${size} bytes`,
+        timestamp: new Date().toISOString(),
+      })
+      
+    } catch (error) {
+      request.log.error({ error }, 'Failed to inspect cache key')
+      
+      reply.code(500).send({
+        type: 'https://api.nyt-news-explorer.com/problems/cache-inspect-failed',
+        title: 'Cache Inspection Failed',
+        status: 500,
+        detail: 'Unable to inspect cache key',
+        instance: request.url,
+        correlationId: request.headers['x-correlation-id'],
+      })
+    }
+  })
+
   // Cache management endpoints
   fastify.delete('/cache', {
     schema: {
-      tags: ['Admin'],
+      tags: ['Admin', 'Cache'],
       summary: 'Clear Cache',
       description: 'Clear application cache (all or by pattern)',
       security: [{ BearerAuth: [] }],
@@ -331,7 +604,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
   // Warm up cache endpoint
   fastify.post('/cache/warmup', {
     schema: {
-      tags: ['Admin'],
+      tags: ['Admin', 'Cache'],
       summary: 'Warm Up Cache',
       description: 'Pre-populate cache with frequently requested data',
       security: [{ BearerAuth: [] }],

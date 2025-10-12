@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { unifiedSearchService, SearchParams, SearchResult, UnifiedArticle, SearchError, SearchRateLimitError, SearchSection } from '../services/unifiedSearchService';
+import { unifiedSearchService, SearchParams, SearchResult as _SearchResult, UnifiedArticle, SearchError, SearchRateLimitError, SearchSection } from '../services/unifiedSearchService';
 
 // Hook options
 export interface UseUnifiedSearchOptions {
@@ -31,23 +31,13 @@ export interface UseUnifiedSearchReturn {
   preloadCommon: () => Promise<void>;
 }
 
-// Debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout;
-  return ((...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  }) as T;
-}
-
 export function useUnifiedSearch(
   initialParams?: Partial<SearchParams>,
   options: UseUnifiedSearchOptions = {}
 ): UseUnifiedSearchReturn {
   const {
     autoSearch = false,
-    debounceMs = 500,
-    cacheResults = true,
+    cacheResults: _cacheResults = true,
   } = options;
 
   // State
@@ -154,12 +144,6 @@ export function useUnifiedSearch(
     }
   }, [clearError]);
 
-  // Debounced search
-  const debouncedSearch = useCallback(
-    debounce((params: SearchParams) => performSearch(params, false), debounceMs),
-    [performSearch, debounceMs]
-  );
-
   // Public search function
   const search = useCallback(async (params: SearchParams) => {
     clearResults();
@@ -177,7 +161,7 @@ export function useUnifiedSearch(
     if (autoSearch && initialParams) {
       search(initialParams as SearchParams);
     }
-  }, [autoSearch, initialParams, search]);
+  }, [autoSearch, initialParams]);
 
   // Cleanup on unmount
   useEffect(() => {

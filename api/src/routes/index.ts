@@ -4,6 +4,7 @@ import { articlesRoutes } from './articles.js'
 import { favoritesRoutes } from './favorites.js'
 import { adminRoutes } from './admin.js'
 import { graphqlRoutes } from './graphql.js'
+import { proxyRoutes } from './proxy.js'
 
 /**
  * Register all API routes with proper prefixes and middleware
@@ -16,6 +17,9 @@ export async function registerRoutes(fastify: FastifyInstance) {
     
     // Public article routes (with optional authentication for personalization)
     await fastify.register(articlesRoutes, { prefix: '/articles' })
+    
+    // Image proxy routes (public, no authentication required)
+    await fastify.register(proxyRoutes, { prefix: '/proxy' })
     
     // Protected user routes (authentication required)
     await fastify.register(async function (fastify) {

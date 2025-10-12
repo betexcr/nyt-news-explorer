@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { getBackendApiUrl } from '../config/api';
-import type { NytArticle } from '../types/nyt';
-import type { MostPopularArticle } from '../types/nyt.other';
-import type { TopStory } from '../types/nyt.other';
+import type { NytArticle as _NytArticle } from '../types/nyt';
+import type { MostPopularArticle as _MostPopularArticle } from '../types/nyt.other';
+import type { TopStory as _TopStory } from '../types/nyt.other';
 
 // Unified search types
 export type SearchType = 'articles' | 'most-popular' | 'top-stories' | 'archive';
@@ -274,7 +274,7 @@ class UnifiedSearchService {
   }
 
   // Archive search
-  private async searchArchive(params: SearchParams): Promise<SearchResult> {
+  private async searchArchive(_params: SearchParams): Promise<SearchResult> {
     // Archive search would need year/month params
     throw new SearchError('Archive search not yet implemented');
   }

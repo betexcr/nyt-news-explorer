@@ -2,7 +2,7 @@
 export const API_CONFIG = {
   // Backend API Configuration
   BACKEND: {
-    BASE_URL: process.env.REACT_APP_API_URL || "Service Domain created: =��� https://nyt-news-explorer-production.up.railway.app",
+    BASE_URL: process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : 'https://nyt.brainvaultdev.com'),
     ENDPOINTS: {
       SEARCH: "/api/articles/search",
       MOST_POPULAR: "/api/articles/most-popular",

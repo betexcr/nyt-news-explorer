@@ -75,7 +75,7 @@ const SearchPage: React.FC = () => {
   // Local state for form management
   const [query, setQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [scrollY, _setScrollY] = useState(0);
   const { viewMode, setViewMode } = useSearchStore();
 
   

@@ -224,15 +224,24 @@ curl -X POST http://localhost:3000/api/v1/admin/circuit-breakers/external/open
 curl -X POST http://localhost:3000/api/v1/admin/circuit-breakers/external/reset
 ```
 
-### Performance Metrics
+### Performance Metrics & Redis Monitoring
 ```bash
 # System metrics
 curl http://localhost:3000/api/v1/admin/metrics
+
+# Redis cache status (comprehensive monitoring)
+curl http://localhost:3000/api/v1/admin/cache/status
+curl "http://localhost:3000/api/v1/admin/cache/status?pattern=cache:*search*&details=true"
+
+# Inspect specific cache key
+curl http://localhost:3000/api/v1/admin/cache/inspect/cache:GET:%2Fapi%2Fv1%2Farticles%2Fsearch
 
 # Cache management
 curl -X DELETE http://localhost:3000/api/v1/admin/cache?pattern=search:*
 curl -X POST http://localhost:3000/api/v1/admin/cache/warmup
 ```
+
+📖 **See [Redis Monitoring Guide](./docs/REDIS_MONITORING.md) for complete documentation**
 
 ## 🧪 Testing
 

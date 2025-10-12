@@ -33,7 +33,7 @@ const TrendingPage: React.FC = () => {
         period: selectedPeriod,
       });
     }
-  }, [selectedPeriod, search, USE_MOCK]);
+  }, [selectedPeriod, USE_MOCK]);
 
   // Mock data fallback
   const mockArticles: UnifiedArticle[] = USE_MOCK ? mockTrendingArticles.map((article, index) => ({

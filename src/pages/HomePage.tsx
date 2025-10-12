@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    const USE_MOCK = true; // Use mock data when API key is not available
+    const USE_MOCK = false; // Use real API data from localhost:3001
 
     // Preload critical home images
     preloadHomeImages();

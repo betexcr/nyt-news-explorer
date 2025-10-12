@@ -1,4 +1,4 @@
-import { ckey } from '../lib/redis';
+import { ckey as _ckey } from '../lib/redis';
 
 export type CacheStatus = 'HIT' | 'MISS' | 'STALE' | 'REVAL';
 

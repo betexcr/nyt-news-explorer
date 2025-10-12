@@ -14,7 +14,7 @@ const configSchema = z.object({
   
   // Server Configuration
   server: z.object({
-    port: z.coerce.number().int().min(1024).max(65535).default(3000),
+    port: z.coerce.number().int().min(1024).max(65535).default(3001),
     host: z.string().default('0.0.0.0'),
   }),
 
@@ -82,7 +82,7 @@ const configSchema = z.object({
 
   // CORS Configuration
   cors: z.object({
-    origin: z.string().transform(val => val.split(',')).default('http://localhost:3000,https://nyt.brainvaultdev.com,https://app.nyt-news-explorer.com'),
+    origin: z.string().transform(val => val.split(',')).default('http://localhost:3000,http://localhost:3001,https://nyt.brainvaultdev.com,https://app.nyt-news-explorer.com'),
     credentials: z.coerce.boolean().default(true),
   }),
 })
