@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nyt-news-api
+    env: node
+    buildCommand: npm install
+    startCommand: node server-minimal.js
+    envVars:
+      - key: REDIS_URL
+        value: rediss://default:AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ@hardy-jackass-16664.upstash.io:6379
+      - key: CORS_ORIGIN
+        value: https://nyt.brainvaultdev.com

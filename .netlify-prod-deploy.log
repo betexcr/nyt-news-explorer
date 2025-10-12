@@ -1,0 +1,259 @@
+​
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+​
+❯ Version
+  @netlify/build 35.1.6
+​
+❯ Flags
+  accountId: 68cd571a07e11805def0c1da
+​
+❯ Current directory
+  /Users/albertomunoz/Documents/Code/nyt-news-explorer
+​
+❯ Config file
+  /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify.toml
+​
+❯ Context
+  production
+​
+❯ Loading plugins
+   - @netlify/plugin-lighthouse@6.0.1 from netlify.toml
+​
+build.command from netlify.toml                               
+────────────────────────────────────────────────────────────────
+​
+$ bun run build
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src/components/ViewTransitionsProvider.tsx
+  Line 30:53:  React Hook useMemo has a missing dependency: 'start'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  471.01 kB  build/static/js/main.e922d47d.js
+  32.08 kB   build/static/css/main.bf911378.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+​
+(build.command completed in 17.2s)
+​
+Functions bundling                                            
+────────────────────────────────────────────────────────────────
+​
+Packaging Functions from netlify/edge-functions directory:
+ - api-cache.ts
+ - image-optimizer.ts
+ - performance-monitor.ts
+​
+​
+(Functions bundling completed in 147ms)
+​
+Edge Functions bundling                                       
+────────────────────────────────────────────────────────────────
+​
+Packaging Edge Functions from netlify/edge-functions directory:
+ - api-cache
+ - image-optimizer
+ - performance-monitor
+​
+(Edge Functions bundling completed in 668ms)
+
+Deploying to Netlify
+────────────────────────────────────────────────────────────────
+
+Deploy path:        /Users/albertomunoz/Documents/Code/nyt-news-explorer/build
+Functions path:     /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify/edge-functions
+Configuration path: /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify.toml
+
+Generating Lighthouse report. This may take a minute…
+Running Lighthouse on /
+Lighthouse scores for /
+- Performance: 38
+- Accessibility: 92
+- Best Practices: 83
+- SEO: 98
+- PWA: 70
+​
+Plugin "@netlify/plugin-lighthouse" failed                    
+────────────────────────────────────────────────────────────────
+​
+  Error message
+  Error: Failed with error:
+​​
+  Error for url 'https://68cd92dcd8fe6ae544051424--elaborate-cheesecake-8e7cf6.netlify.app':
+  Expected category Performance to be greater or equal to 0.8 but got 0.38
+​
+  Plugin details
+  Package:        @netlify/plugin-lighthouse
+  Version:        6.0.1
+  Repository:     git+https://github.com/netlify/netlify-plugin-lighthouse.git
+  npm link:       https://www.npmjs.com/package/@netlify/plugin-lighthouse
+  Report issues:  https://github.com/netlify/netlify-plugin-lighthouse/issues
+​
+  Error location
+  In "onSuccess" event in "@netlify/plugin-lighthouse" from netlify.toml
+​
+  Resolved config
+  build:
+    command: bun run build
+    commandOrigin: config
+    edge_functions: /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify/edge-functions
+    environment:
+      - NODE_VERSION
+      - GENERATE_SOURCEMAP
+      - NODE_ENV
+    processing:
+      css:
+        bundle: true
+        minify: true
+      html:
+        pretty_urls: true
+      images:
+        compress: true
+      js:
+        bundle: true
+        minify: true
+      skip_processing: false
+    publish: /Users/albertomunoz/Documents/Code/nyt-news-explorer/build
+    publishOrigin: config
+  functionsDirectory: /Users/albertomunoz/Documents/Code/nyt-news-explorer/netlify/edge-functions
+  headers:
+    - for: /*
+      values:
+        Permissions-Policy: camera=(), microphone=(), geolocation=()
+        Referrer-Policy: strict-origin-when-cross-origin
+        Strict-Transport-Security: max-age=31536000; includeSubDomains
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+        X-XSS-Protection: 1; mode=block
+    - for: /static/*
+      values:
+        Cache-Control: public, max-age=31536000, immutable, public, max-age=31536000,
+          immutable, public, max-age=31536000, immutable, public, max-age=3600,
+          public, max-age=31536000, public, max-age=31536000, public,
+          max-age=31536000, public, max-age=31536000, public, max-age=31536000,
+          public, max-age=31536000, public, max-age=31536000, public,
+          max-age=31536000, public, max-age=31536000, public, max-age=31536000,
+          public, max-age=3600, must-revalidate
+        Content-Type: application/javascript, text/css, application/json, font/woff,
+          font/woff2, font/ttf, font/eot, image/svg+xml
+        Vary: Accept-Encoding, Accept-Encoding, Accept-Encoding, Accept-Encoding,
+          Accept-Encoding, Accept-Encoding, Accept-Encoding, Accept-Encoding,
+          Accept-Encoding, Accept-Encoding, Accept-Encoding, Accept-Encoding,
+          Accept-Encoding, Accept-Encoding
+    - for: /.netlify/*
+      values:
+        Cache-Control: public, max-age=0, must-revalidate
+    - for: /*
+      values:
+        Permissions-Policy: camera=(), microphone=(), geolocation=()
+        Referrer-Policy: strict-origin-when-cross-origin
+        X-Content-Type-Options: nosniff
+        X-Frame-Options: DENY
+        X-XSS-Protection: 1; mode=block
+    - for: /static/*
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+        Vary: Accept-Encoding
+    - for: "*.jpg"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.jpeg"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.png"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.webp"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.avif"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.svg"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.woff"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.woff2"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.ttf"
+      values:
+        Cache-Control: public, max-age=31536000
+        Vary: Accept-Encoding
+    - for: "*.css"
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+        Vary: Accept-Encoding
+    - for: "*.js"
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+        Vary: Accept-Encoding
+    - for: "*.html"
+      values:
+        Cache-Control: public, max-age=3600, must-revalidate
+        Vary: Accept-Encoding
+    - for: /api/*
+      values:
+        Cache-Control: public, max-age=300, s-maxage=300
+        Vary: Accept-Encoding
+  headersOrigin: config
+  plugins:
+    - inputs: {}
+      origin: config
+      package: "@netlify/plugin-lighthouse"
+  redirects:
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+​
+Netlify Build Complete                                        
+────────────────────────────────────────────────────────────────
+​
+(Netlify Build completed in 43.8s)
+
+🚀 Deploy complete
+────────────────────────────────────────────────────────────────
+
+╭────────────────────── ⬥  Production deploy is live ⬥  ───────────────────────╮
+│                                                                              │
+│                         Deployed to production URL:                          │
+│               https://elaborate-cheesecake-8e7cf6.netlify.app                │
+│                                                                              │
+│   Unique deploy URL: https://68cd92dcd8fe6ae544051424--elaborate-cheesecak   │
+│                             e-8e7cf6.netlify.app                             │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Build logs:         https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/deploys/68cd92dcd8fe6ae544051424
+Function logs:      https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/logs/functions
+Edge function Logs: https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6/logs/edge-functions

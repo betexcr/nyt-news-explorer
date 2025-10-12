@@ -44,7 +44,16 @@ export async function registerRoutes(fastify: FastifyInstance) {
   
   // API info endpoint
   fastify.get('/api', async (request, reply) => {
-    reply.send({
+    const cacheKey = 'meta:api-info'
+    const cached = await fastify.cache.get(cacheKey)
+    if (cached) {
+      return reply
+        .header('etag', cached.etag)
+        .header('x-cache', 'HIT')
+        .send(cached.payload)
+    }
+
+    const payload = {
       name: 'NYT News Explorer API',
       version: '1.0.0',
       description: 'High-performance, secure Node.js API following modern best practices',
@@ -88,6 +97,17 @@ export async function registerRoutes(fastify: FastifyInstance) {
         admin: '/api/v1/admin',
       },
       timestamp: new Date().toISOString(),
-    })
+    }
+
+    const bodyString = JSON.stringify(payload)
+    const etag = '"' + (await import('crypto')).createHash('md5').update(bodyString).digest('hex') + '"'
+
+    await fastify.cache.set(cacheKey, { etag, payload }, 60)
+
+    return reply
+      .header('etag', etag)
+      .header('cache-control', 'public, max-age=60, stale-while-revalidate=120')
+      .header('x-cache', 'MISS')
+      .send(payload)
   })
 }

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server-minimal.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server-minimal.js"
+    }
+  ],
+  "env": {
+    "REDIS_URL": "rediss://default:AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ@hardy-jackass-16664.upstash.io:6379"
+  }
+}

@@ -17,7 +17,7 @@ async function securityPlugin(fastify: FastifyInstance) {
   await fastify.register(sensible)
 
   // Security headers via helmet
-  await fastify.register(helmet, {
+  await fastify.register(helmet as any, {
     // Content Security Policy
     contentSecurityPolicy: {
       directives: {
@@ -119,7 +119,7 @@ async function securityPlugin(fastify: FastifyInstance) {
       for (const [key, value] of Object.entries(request.query)) {
         if (typeof value === 'string') {
           // Basic XSS prevention
-          request.query[key] = value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          (request.query as any)[key] = value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
         }
       }
     }

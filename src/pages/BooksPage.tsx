@@ -1,62 +1,128 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { getBestSellers, getBooksListByDate, BOOKS_LISTS } from '../api/nyt-apis';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useBestSellers, useBooksListByDate } from '../hooks/useApiCache';
+import { BOOKS_LISTS } from '../api/nyt-apis';
 import type { Book } from '../types/nyt.other';
 import { mockBooks } from '../api/mock-data';
+import { booksPrefetch } from '../lib/booksPrefetch';
+import { useErrorReporter } from '../utils/errorReporter';
 import '../styles/books.css';
 
 const DEFAULT_LIST = 'hardcover-fiction';
 
 const BooksPage: React.FC = () => {
   const [listName, setListName] = useState<string>(DEFAULT_LIST);
-  const [books, setBooks] = useState<Book[]>([]);
   const [date, setDate] = useState<string>('current'); // YYYY-MM-DD or 'current'
-  const [loading, setLoading] = useState<boolean>(false);
-  const [, setError] = useState<string | null>(null);
+  const [prefetchStats, setPrefetchStats] = useState<any>(null);
+  const { reportApiError } = useErrorReporter();
 
   const listOptions = useMemo(() => BOOKS_LISTS, []);
 
+  // Update prefetch stats periodically
   useEffect(() => {
-    let cancelled = false;
-    const USE_KEY = !!process.env.REACT_APP_NYT_API_KEY;
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        if (!USE_KEY) {
-          if (!cancelled) setBooks(mockBooks);
-          return;
-        }
-        const results = date === 'current'
-          ? await getBestSellers(listName)
-          : await getBooksListByDate(listName, date);
-        if (!cancelled) setBooks(results);
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message || 'Failed to load books');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    const updateStats = () => {
+      setPrefetchStats(booksPrefetch.getStats());
     };
-    load();
-    return () => { cancelled = true; };
-  }, [listName, date]);
+
+    updateStats();
+    const interval = setInterval(updateStats, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Use advanced caching hooks
+  const isCurrent = date === 'current';
+  
+  const currentBooksQuery = useBestSellers(listName, isCurrent);
+  const datedBooksQuery = useBooksListByDate(listName, date, !isCurrent);
+
+  // Get the appropriate query based on date selection
+  const activeQuery = isCurrent ? currentBooksQuery : datedBooksQuery;
+  
+  // Fallback to mock data if API is not available
+  const USE_API = process.env.NODE_ENV === 'production' || !!process.env.REACT_APP_NYT_API_KEY;
+  
+  // Check if we have prefetched data for instant loading
+  const prefetchedBooks = isCurrent ? booksPrefetch.getCachedBooks(listName) : null;
+  const isPrefetched = isCurrent && booksPrefetch.isCategoryCached(listName);
+  
+  // Debug logging
+  console.log(`[BOOKS PAGE] Current list: ${listName}`);
+  console.log(`[BOOKS PAGE] Is current: ${isCurrent}`);
+  console.log(`[BOOKS PAGE] Prefetched books:`, prefetchedBooks?.length || 0);
+  console.log(`[BOOKS PAGE] Active query data:`, activeQuery.data?.length || 0);
+  console.log(`[BOOKS PAGE] Is prefetched: ${isPrefetched}`);
+  console.log(`[BOOKS PAGE] Active query loading:`, activeQuery.isLoading);
+  console.log(`[BOOKS PAGE] Active query error:`, activeQuery.error);
+  
+  // Prioritize active query data over prefetched data to ensure fresh results
+  // Only use prefetched data if active query is loading and we have prefetched data
+  const books = USE_API ? (
+    (activeQuery.data && activeQuery.data.length > 0) ? activeQuery.data :
+    (activeQuery.isLoading && prefetchedBooks) ? prefetchedBooks :
+    activeQuery.data || prefetchedBooks || []
+  ) : mockBooks;
+  
+  const loading = USE_API ? (
+    activeQuery.isLoading && !prefetchedBooks
+  ) : false;
+  const error = USE_API ? activeQuery.error : null;
+
+  // Report API errors to error catcher
+  useEffect(() => {
+    if (error) {
+      reportApiError(error, `books/${listName}`);
+    }
+  }, [error, listName, reportApiError]);
+
+  // Handle invalid category selection
+  const handleListChange = (newListName: string) => {
+    // Validate that the selected list is in our valid categories
+    if (BOOKS_LISTS.includes(newListName as any)) {
+      setListName(newListName);
+    } else {
+      console.warn(`[BOOKS PAGE] Invalid category selected: ${newListName}, falling back to default`);
+      setListName(DEFAULT_LIST);
+      reportApiError(
+        new Error(`Invalid book category: ${newListName}`), 
+        'books/validation'
+      );
+    }
+  };
+
+  // Force refresh when list name changes to ensure fresh data
+  useEffect(() => {
+    if (isCurrent) {
+      // Invalidate the query to force fresh data when switching categories
+      currentBooksQuery.refetch();
+    }
+  }, [listName, isCurrent]); // Removed currentBooksQuery from dependencies to prevent infinite loop
 
   return (
     <div className="books-page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">Books</h1>
-          <p className="page-subtitle">NYT Best Sellers lists</p>
-        </div>
-      </header>
+              <header className="page-header">
+                <div>
+                  <h1 className="page-title">Books</h1>
+                  <p className="page-subtitle">NYT Best Sellers lists</p>
+                  {isCurrent && prefetchStats && (
+                    <div className="prefetch-status">
+                      <span className={`prefetch-indicator ${isPrefetched ? 'cached' : 'loading'}`}>
+                        {isPrefetched ? '⚡ Instant' : '⏳ Loading...'}
+                      </span>
+                      <span className="prefetch-stats">
+                        {prefetchStats.successful}/{prefetchStats.totalCategories} categories cached
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </header>
 
       <div className="books-controls" role="toolbar" aria-label="Books controls">
         <label className="list-select">
           List
-          <select
-            aria-label="Select best sellers list"
-            value={listName}
-            onChange={(e) => setListName(e.target.value)}
-          >
+            <select
+              aria-label="Select best sellers list"
+              value={listName}
+              onChange={(e) => handleListChange(e.target.value)}
+            >
             {listOptions.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
@@ -80,6 +146,18 @@ const BooksPage: React.FC = () => {
         >
           Reload
         </button>
+        <button
+          type="button"
+          className="retry-button"
+          onClick={() => {
+            booksPrefetch.clearBooksCache();
+            // Force refresh by updating state
+            setListName(prev => prev + '');
+          }}
+          aria-label="Clear cache and reload"
+        >
+          Clear Cache
+        </button>
       </div>
 
       {loading ? (
@@ -89,7 +167,7 @@ const BooksPage: React.FC = () => {
           {books.length === 0 ? (
             <div className="empty-state">No books found.</div>
           ) : (
-            books.slice(0, 24).map((b) => (
+                    books.slice(0, 24).map((b: Book) => (
               <article key={b.book_uri} className="book-card">
                 <div className="book-media">
                   {b.book_image ? (

@@ -1,86 +1,88 @@
 import { FastifyInstance } from 'fastify'
+import { articlesRoutes } from './articles-simple.js'
 
 /**
- * Register simplified routes for initial testing
+ * Register simplified routes for testing
  */
 export async function registerRoutes(fastify: FastifyInstance) {
-  // Basic health check
-  fastify.get('/api/v1/health', async (request, reply) => {
-    reply.send({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-    })
-  })
-
-  // Simple authentication test endpoint
-  fastify.get('/api/v1/protected', {
-    preHandler: (fastify as any).authenticate,
-  }, async (request, reply) => {
-    reply.send({
-      message: 'This is a protected endpoint',
-      user: request.user,
-      timestamp: new Date().toISOString(),
-    })
-  })
-
-  // Simple login endpoint for testing
-  fastify.post('/api/v1/auth/login', async (request, reply) => {
-    const { email, password } = (request.body as any) || {}
-
-    // Strict validation for tests
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if ((request.body as any)?.__malformed) {
-      reply.code(400).send({ error: 'Invalid JSON body' })
-      return
-    }
-
-    if (!email || !password || !emailRegex.test(email)) {
-      reply.code(401).send({ error: 'Invalid credentials' })
-      return
-    }
-
-    try {
-      const token = fastify.jwt.sign({
-        id: '123',
-        email,
-        roles: ['user'],
-      })
-      
-      reply.send({
-        accessToken: token,
-        user: { id: '123', email, roles: ['user'] },
-      })
-    } catch {
-      reply.code(401).send({ error: 'Invalid credentials' })
-    }
-  })
-
-  // Simple articles endpoint
-  fastify.get('/api/v1/articles/search', async (request, reply) => {
-    const { q = 'technology' } = request.query as any
+  // API version prefix
+  await fastify.register(async function (fastify) {
+    // Public article routes
+    await fastify.register(articlesRoutes, { prefix: '/articles' })
     
-    // Mock response for testing
-    reply.send({
-      status: 'OK',
-      response: {
-        docs: [
-          {
-            _id: 'test-1',
-            web_url: 'https://www.nytimes.com/test-1',
-            headline: { main: `Test article about ${q}` },
-            abstract: `This is a test article about ${q}`,
-            pub_date: new Date().toISOString(),
-          },
-        ],
-        meta: { hits: 1, offset: 0 },
-      },
-    })
-  })
+  }, { prefix: '/api/v1' })
 
   // Root redirect to docs
   fastify.get('/', async (request, reply) => {
     reply.redirect(302, '/docs')
+  })
+  
+  // API info endpoint
+  fastify.get('/api', async (request, reply) => {
+    const cacheKey = 'meta:api-info'
+    const cached = await fastify.cache.get(cacheKey)
+    if (cached) {
+      return reply
+        .header('etag', cached.etag)
+        .header('x-cache', 'HIT')
+        .send(cached.payload)
+    }
+
+    const payload = {
+      name: 'NYT News Explorer API',
+      version: '1.0.0',
+      description: 'High-performance, secure Node.js API following modern best practices',
+      documentation: '/docs',
+      openapi: '/openapi.json',
+      health: '/health',
+      features: {
+        security: [
+          'OAuth 2.0 with PKCE (RFC 9700)',
+          'JWT hardening (RFC 8725)',
+          'OWASP API Security Top 10 compliance',
+          'Rate limiting with jitter',
+          'Security headers (helmet)',
+        ],
+        performance: [
+          'HTTP/3 and TLS 1.3 support',
+          'Brotli compression',
+          'ETag caching',
+          'Redis distributed caching',
+          'Circuit breakers',
+        ],
+        observability: [
+          'OpenTelemetry integration',
+          'W3C Trace Context',
+          'Structured logging',
+          'Health checks',
+          'Metrics collection',
+        ],
+        standards: [
+          'Problem Details (RFC 9457)',
+          'RESTful design',
+          'OpenAPI 3.0',
+          'GraphQL support',
+        ],
+      },
+      endpoints: {
+        authentication: '/api/v1/auth',
+        articles: '/api/v1/articles',
+        favorites: '/api/v1/favorites',
+        graphql: '/api/v1/graphql',
+        admin: '/api/v1/admin',
+      },
+      timestamp: new Date().toISOString(),
+    }
+
+    const bodyString = JSON.stringify(payload)
+    const etag = '"' + (await import('crypto')).createHash('md5').update(bodyString).digest('hex') + '"'
+
+    await fastify.cache.set(cacheKey, { etag, payload }, 60)
+
+    return reply
+      .header('etag', etag)
+      .header('cache-control', 'public, max-age=60, stale-while-revalidate=120')
+      .header('x-cache', 'MISS')
+      .send(payload)
   })
 }

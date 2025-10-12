@@ -1,0 +1,121 @@
+{
+  "id": "3c133c92-2a98-47ae-b241-7ee4201c67e6",
+  "site_id": "3c133c92-2a98-47ae-b241-7ee4201c67e6",
+  "plan": "nf_team_dev",
+  "ssl_plan": null,
+  "premium": false,
+  "claimed": true,
+  "name": "elaborate-cheesecake-8e7cf6",
+  "custom_domain": null,
+  "branch_deploy_custom_domain": null,
+  "deploy_preview_custom_domain": null,
+  "domain_aliases": [],
+  "sso_login": false,
+  "sso_login_context": "all",
+  "notification_email": null,
+  "url": "http://elaborate-cheesecake-8e7cf6.netlify.app",
+  "admin_url": "https://app.netlify.com/projects/elaborate-cheesecake-8e7cf6",
+  "deploy_id": "",
+  "build_id": "",
+  "deploy_url": "http://68cd5b589644b213dd027df4--elaborate-cheesecake-8e7cf6.netlify.app",
+  "state": "current",
+  "screenshot_url": null,
+  "created_at": "2025-09-19T13:32:07.577Z",
+  "updated_at": "2025-09-19T13:32:07.601Z",
+  "user_id": "68cd571a07e11805def0c1d7",
+  "error_message": null,
+  "ssl": false,
+  "ssl_url": "https://elaborate-cheesecake-8e7cf6.netlify.app",
+  "force_ssl": null,
+  "ssl_status": null,
+  "max_domain_aliases": 100,
+  "build_settings": {},
+  "dev_server_settings": {},
+  "processing_settings": {
+    "html": {
+      "pretty_urls": true
+    },
+    "ignore_html_forms": true
+  },
+  "prerender": null,
+  "prerender_headers": null,
+  "deploy_hook": null,
+  "published_deploy": null,
+  "managed_dns": true,
+  "jwt_secret": null,
+  "jwt_roles_path": "app_metadata.authorization.roles",
+  "account_id": "68cd571a07e11805def0c1da",
+  "account_slug": "albmunmu",
+  "account_name": "albmunmu’s team",
+  "account_type": "Free",
+  "capabilities": {
+    "cdn_tier": "reg",
+    "deploy_diagnostics": false,
+    "dev_server_enabled": true
+  },
+  "dns_zone_id": null,
+  "identity_instance_id": null,
+  "primary_create_project": null,
+  "use_functions": null,
+  "use_edge_handlers": null,
+  "use_forms": null,
+  "parent_user_id": null,
+  "automatic_tls_provisioning": null,
+  "disabled": null,
+  "disabled_reason": null,
+  "lifecycle_state": "active",
+  "id_domain": "3c133c92-2a98-47ae-b241-7ee4201c67e6.netlify.app",
+  "use_lm": null,
+  "build_image": "noble",
+  "automatic_tls_provisioning_expired": false,
+  "analytics_instance_id": null,
+  "functions_region": "us-east-2",
+  "functions_timeout": null,
+  "plugins": [],
+  "account_subdomain": null,
+  "cdp_enabled_contexts": [
+    "deploy-preview"
+  ],
+  "deploy_retention_in_days": 90,
+  "build_timelimit": null,
+  "password_context": "all",
+  "hud_enabled": false,
+  "labels": [],
+  "traffic_rules_config_per_scope": {},
+  "visual_editor_active": null,
+  "description": null,
+  "description_hidden": null,
+  "dev_server_resources": null,
+  "created_via": null,
+  "deploy_origin": {},
+  "session_id": null,
+  "quick_setup_in_progress": true,
+  "has_zip_build": false,
+  "cover_url": null,
+  "feature_flags": null,
+  "versions": {
+    "go": {
+      "active": null,
+      "default": "1.19.x"
+    },
+    "node": {
+      "active": null,
+      "default": "22"
+    },
+    "python": {
+      "active": null,
+      "default": "3.13"
+    },
+    "ruby": {
+      "active": null,
+      "default": "2.7.2"
+    },
+    "yarn": {
+      "active": null,
+      "default": "1.22.19"
+    }
+  },
+  "has_password": false,
+  "default_domain": "elaborate-cheesecake-8e7cf6.netlify.app",
+  "use_envelope": true
+}

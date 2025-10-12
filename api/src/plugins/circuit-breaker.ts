@@ -113,7 +113,7 @@ async function circuitBreakerPlugin(fastify: FastifyInstance) {
         const jitter = Math.random() * 100
         await new Promise(resolve => setTimeout(resolve, jitter))
         
-        return await breaker.fire(operation)
+        return await breaker.fire(operation) as T
       } catch (error) {
         // Try fallback if available
         if (fallback) {
@@ -148,7 +148,7 @@ async function circuitBreakerPlugin(fastify: FastifyInstance) {
         name: breakerName,
         state: breaker.opened ? 'open' : breaker.halfOpen ? 'half-open' : 'closed',
         stats: breaker.stats,
-        options: breaker.options,
+        options: (breaker as any).options,
       }
     },
 
@@ -188,7 +188,7 @@ async function circuitBreakerPlugin(fastify: FastifyInstance) {
   // Health check endpoint for circuit breakers
   fastify.get('/health/circuit-breakers', async (request, reply) => {
     const status = fastify.circuitBreaker.getAllStatus()
-    const healthyBreakers = Object.values(status).filter(s => s.state === 'closed').length
+    const healthyBreakers = Object.values(status).filter((s: any) => s.state === 'closed').length
     const totalBreakers = Object.keys(status).length
     
     const isHealthy = healthyBreakers === totalBreakers

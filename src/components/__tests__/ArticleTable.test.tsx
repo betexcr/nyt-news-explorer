@@ -40,7 +40,7 @@ describe('ArticleTable', () => {
     section_name: 'Test Section 2',
     byline: { original: 'By Test Author 2' },
     pub_date: '2023-01-02T00:00:00Z',
-    multimedia: null,
+    multimedia: {},
     keywords: [
       { name: 'subject', value: 'Test Subject 2', rank: 1 },
     ],
@@ -90,7 +90,7 @@ describe('ArticleTable', () => {
     section_name: undefined,
     byline: { original: 'By Test Author 5' },
     pub_date: '2023-01-05T00:00:00Z',
-    multimedia: null,
+    multimedia: {},
     keywords: [
       { name: 'subject', value: 'Test Subject 5', rank: 1 },
     ],

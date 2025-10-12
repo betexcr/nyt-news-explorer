@@ -14,29 +14,32 @@ export type { MostPopularArticle, TopStory, Book, ArchiveArticle } from "../type
 // Base configuration
 const API_KEY: string = process.env.REACT_APP_NYT_API_KEY ?? "";
 
-// Use NYT API directly for now (backend API will be implemented in another branch)
+// Use local proxy in development, online API in production
 const isDevelopment = process.env.NODE_ENV === 'development';
-const BASE_URL = "https://api.nytimes.com/svc";
+const API_URL = isDevelopment 
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:3001')
+  : (process.env.REACT_APP_API_URL || 'https://nyt.brainvaultdev.com');
+const BASE_URL = `${API_URL}/api/v1`;
 
-// API endpoints - all using direct NYT API
+// API endpoints - using online API server
 const ENDPOINTS = {
   // Article Search API
-  ARTICLE_SEARCH: `${BASE_URL}/search/v2/articlesearch.json`,
+  ARTICLE_SEARCH: `${BASE_URL}/articles/search`,
   
   // Most Popular API
-  MOST_POPULAR: `${BASE_URL}/mostpopular/v2`,
+  MOST_POPULAR: `${BASE_URL}/articles/most-popular`,
   
   // Top Stories API
-  TOP_STORIES: `${BASE_URL}/topstories/v2`,
+  TOP_STORIES: `${BASE_URL}/articles/top-stories`,
   
   // Movie Reviews API
   MOVIE_REVIEWS: `${BASE_URL}/movies/v2/reviews`,
   
-  // Books API
-  BOOKS: `${BASE_URL}/books/v3`,
+      // Books API
+      BOOKS: `${BASE_URL}/articles/books/best-sellers`,
   
   // Archive API
-  ARCHIVE: `${BASE_URL}/archive/v1`,
+  ARCHIVE: `${BASE_URL}/articles/archive`,
   
   // Semantic API
   SEMANTIC: `${BASE_URL}/semantic/v2`,
@@ -44,9 +47,8 @@ const ENDPOINTS = {
 
 // Base parameters for all API calls
 function baseParams(): Record<string, string> {
-  return { 
-    "api-key": API_KEY,
-  };
+  // Online API doesn't need api-key in params, it's handled server-side
+  return {};
 }
 
 // Error handling utility
@@ -72,12 +74,26 @@ async function makeApiRequest<T>(
     const response: AxiosResponse<T> = await axios.get(url, {
       params: { ...baseParams(), ...params },
       signal,
-      timeout: options?.timeoutMs,
+      timeout: options?.timeoutMs || 10000, // Default 10 second timeout
+      headers: {
+        'User-Agent': 'NYT-News-Explorer/1.0',
+        'Accept': 'application/json',
+      },
     });
     return response.data;
   } catch (error: any) {
     if (error.name === 'AbortError') {
       throw new NytApiError('Request was cancelled', 0, 'ABORTED');
+    }
+    
+    // Handle network errors more gracefully
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      throw new NytApiError('Network connection failed', 0, 'ERR_NETWORK');
+    }
+    
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      throw new NytApiError('Request timeout', 408, 'TIMEOUT');
     }
     
     // If it's a CORS error and we're in development, try with the full URL
@@ -88,7 +104,11 @@ async function makeApiRequest<T>(
         const response: AxiosResponse<T> = await axios.get(fullUrl, {
           params: { ...baseParams(), ...params },
           signal,
-          timeout: options?.timeoutMs,
+          timeout: options?.timeoutMs || 10000,
+          headers: {
+            'User-Agent': 'NYT-News-Explorer/1.0',
+            'Accept': 'application/json',
+          },
         });
         return response.data;
       } catch (fallbackError: any) {
@@ -132,7 +152,7 @@ export async function getMostPopular(
   period: '1' | '7' | '30' = '7',
   signal?: AbortSignal
 ): Promise<MostPopularArticle[]> {
-  const url = `${ENDPOINTS.MOST_POPULAR}/viewed/${period}.json`;
+  const url = `${ENDPOINTS.MOST_POPULAR}/${period}`;
   const response = await makeApiRequest<MostPopularResponse>(url, {}, signal);
   return response.results;
 }
@@ -142,7 +162,7 @@ export async function getTopStories(
   section: string = 'home',
   signal?: AbortSignal
 ): Promise<TopStory[]> {
-  const url = `${ENDPOINTS.TOP_STORIES}/${section}.json`;
+  const url = `${ENDPOINTS.TOP_STORIES}/${section}`;
   const response = await makeApiRequest<TopStoriesResponse>(url, {}, signal);
   return response.results;
 }
@@ -183,6 +203,29 @@ export async function searchArticlesByDay(
   return docs as unknown as ArchiveArticle[];
 }
 
+// New Article Search API function for general search (uses local API in production)
+export async function searchArticles(
+  query: string,
+  page: number = 0,
+  sort: 'newest' | 'oldest' | 'relevance' = 'relevance',
+  beginDate?: string,
+  endDate?: string,
+  signal?: AbortSignal
+): Promise<any> {
+  const url = ENDPOINTS.ARTICLE_SEARCH;
+  const params: Record<string, any> = {
+    q: query,
+    page: page.toString(),
+    sort,
+  };
+  
+  if (beginDate) params.begin_date = beginDate;
+  if (endDate) params.end_date = endDate;
+  
+  const data = await makeApiRequest<any>(url, params, signal, { timeoutMs: 15000 });
+  return data;
+}
+
 // Movie Reviews API
 export async function getMovieReviews(
   type: 'all' | 'picks' = 'all',
@@ -198,12 +241,13 @@ export async function getBestSellers(
   list: string = 'hardcover-fiction',
   signal?: AbortSignal
 ): Promise<Book[]> {
-  const url = `${ENDPOINTS.BOOKS}/lists/current/${list}.json`;
+  const url = `${ENDPOINTS.BOOKS}/${list}`;
   const data = await makeApiRequest<any>(url, {}, signal);
   // Handle both our local type and the real NYT response shape
   const results = data?.results;
   if (Array.isArray(results)) return results as Book[];
   if (results && Array.isArray(results.books)) return results.books as Book[];
+  if (Array.isArray(data)) return data as Book[]; // For our local API
   return [] as Book[];
 }
 
@@ -222,10 +266,13 @@ export async function getBooksListByDate(
   date: string, // 'current' or 'YYYY-MM-DD'
   signal?: AbortSignal
 ): Promise<Book[]> {
-  const url = `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`;
+  const url = isDevelopment 
+    ? `${ENDPOINTS.BOOKS}/lists/${encodeURIComponent(date)}/${encodeURIComponent(list)}.json`
+    : `${ENDPOINTS.BOOKS}/list/${encodeURIComponent(date)}/${encodeURIComponent(list)}`;
   const data = await makeApiRequest<any>(url, {}, signal);
   const results = data?.results;
   if (results && Array.isArray(results.books)) return results.books as Book[];
+  if (Array.isArray(data)) return data as Book[]; // For our local API
   return [] as Book[];
 }
 
@@ -233,12 +280,30 @@ export async function getBooksListByDate(
 export async function getArchive(
   year: number,
   month: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  options?: { page?: number; limit?: number; dayStart?: number; dayEnd?: number }
 ): Promise<ArchiveArticle[]> {
-  const url = `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`;
-  const params = { 'api-key': API_KEY };
-  const response = await makeApiRequest<ArchiveResponse>(url, params, signal, { timeoutMs: 20000 });
-  return response.response.docs;
+  const { page = 0, limit = 50, dayStart, dayEnd } = options || {};
+  const url = isDevelopment 
+    ? `${ENDPOINTS.ARCHIVE}/${year}/${month}.json`
+    : `${ENDPOINTS.ARCHIVE}/${year}/${month}`;
+  
+  const params = isDevelopment 
+    ? { 'api-key': API_KEY }
+    : { page, limit, ...(dayStart && { dayStart }), ...(dayEnd && { dayEnd }) };
+    
+  const response = await makeApiRequest<any>(url, params, signal, { timeoutMs: 20000 });
+  
+  // Handle both old and new response formats
+  if (response.articles) {
+    // New format with pagination
+    return response.articles as ArchiveArticle[];
+  } else if (response.response?.docs) {
+    // Old NYT API format
+    return response.response.docs as ArchiveArticle[];
+  }
+  
+  return [];
 }
 
 // Available sections for Top Stories
@@ -274,31 +339,23 @@ export const TOP_STORIES_SECTIONS = [
 // Available periods for Most Popular
 export const MOST_POPULAR_PERIODS = ['1', '7', '30'] as const;
 
-// Available lists for Books
+// Available lists for Books (verified working categories)
 export const BOOKS_LISTS = [
   'hardcover-fiction',
   'hardcover-nonfiction',
   'trade-fiction-paperback',
   'mass-market-paperback',
   'paperback-nonfiction',
-  'e-book-fiction',
-  'e-book-nonfiction',
   'combined-print-and-e-book-fiction',
   'combined-print-and-e-book-nonfiction',
   'advice-how-to-and-miscellaneous',
-  'childrens-middle-grade-hardcover',
-  'childrens-picture-books',
   'young-adult-hardcover',
   'series-books',
-  'audio-fiction',
-  'audio-nonfiction',
   'business-books',
-  'celebrities',
   'crime-and-punishment',
   'culture',
   'education',
   'food-and-fitness',
-  'games-and-activities',
   'graphic-books-and-manga',
   'hardcover-advice',
   'health',

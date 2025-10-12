@@ -7,7 +7,7 @@ echo "🚀 Starting robust deployment..."
 
 # Build the app
 echo "📦 Building React app..."
-bun run build
+npm run build
 
 # Verify build files
 echo "🔍 Verifying build files..."

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useEffect, useRef } from "react";
+import React, { createContext, useContext, useMemo, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 type Ctx = {
@@ -20,14 +20,21 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
   const enabled =
     typeof document !== "undefined" &&
     "startViewTransition" in document &&
+    typeof document.startViewTransition === "function" &&
     !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const start = (cb: () => void) => {
+  const start = useCallback((cb: () => void) => {
     if (!enabled) return cb();
-    (document as any).startViewTransition(() => cb());
-  };
+    try {
+      (document as any).startViewTransition(() => cb());
+    } catch {
+      // Fallback for browsers that don't support View Transitions
+      console.warn('View Transitions not supported, using fallback');
+      cb();
+    }
+  }, [enabled]);
 
-  const value = useMemo(() => ({ start, enabled }), [enabled]);
+  const value = useMemo(() => ({ start, enabled }), [start, enabled]);
 
   useEffect(() => {
     // Handle automatic route transitions
@@ -35,20 +42,38 @@ export function ViewTransitionsProvider({ children }: ViewTransitionsProviderPro
     
     isNavigatingRef.current = true;
     
-    // Start view transition for route changes
-    const transition = document.startViewTransition(() => {
-      return new Promise<void>((resolve) => {
-        // Small delay to ensure DOM updates are complete
-        setTimeout(resolve, 50);
-      });
-    });
+    try {
+      // Check if startViewTransition exists and is a function
+      if (typeof document !== "undefined" && 
+          "startViewTransition" in document && 
+          typeof (document as any).startViewTransition === "function") {
+        
+        // Start view transition for route changes
+        const transition = (document as any).startViewTransition(() => {
+          return new Promise<void>((resolve) => {
+            // Small delay to ensure DOM updates are complete
+            setTimeout(resolve, 50);
+          });
+        });
 
-    // Handle transition completion
-    transition.finished.then(() => {
+        // Handle transition completion
+        if (transition && transition.finished) {
+          transition.finished.then(() => {
+            isNavigatingRef.current = false;
+          }).catch(() => {
+            isNavigatingRef.current = false;
+          });
+        } else {
+          isNavigatingRef.current = false;
+        }
+      } else {
+        isNavigatingRef.current = false;
+      }
+    } catch {
+      // Fallback for browsers that don't support View Transitions
+      console.warn('View Transitions not supported, using fallback');
       isNavigatingRef.current = false;
-    }).catch(() => {
-      isNavigatingRef.current = false;
-    });
+    }
   }, [location.pathname, navigationType, enabled]);
 
   return <VTContext.Provider value={value}>{children}</VTContext.Provider>;

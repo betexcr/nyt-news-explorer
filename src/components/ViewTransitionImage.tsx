@@ -42,6 +42,22 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
     setImageSrc(src);
     setIsLoaded(false);
     setHasError(false);
+    
+    // Check if image is already cached and loaded
+    const img = new Image();
+    img.onload = () => {
+      setIsLoaded(true);
+    };
+    img.onerror = () => {
+      // If external image fails, try fallback
+      if (fallbackSrc && src !== fallbackSrc) {
+        setImageSrc(fallbackSrc);
+        setIsLoaded(true);
+      } else {
+        setHasError(true);
+      }
+    };
+    img.src = src;
   }, [src]);
 
   const handleLoad = () => {
@@ -52,7 +68,8 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
   const handleError = () => {
     if (imageSrc !== fallbackSrc) {
       setImageSrc(fallbackSrc);
-      setHasError(true);
+      setHasError(false); // Don't mark as error when using fallback
+      setIsLoaded(true); // Mark as loaded when fallback is used
     }
     onError?.();
   };
@@ -87,13 +104,18 @@ const ViewTransitionImage: React.FC<ViewTransitionImageProps> = ({
       onError={handleError}
       onClick={handleClick}
       fetchPriority={priority}
-      sizes={sizes}
+      sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
       srcSet={srcSet}
+      loading={priority === 'high' ? 'eager' : 'lazy'}
+      decoding="async"
       style={{
         viewTransitionName: getViewTransitionName(),
-        opacity: isLoaded ? 1 : 0,
+        opacity: isLoaded ? 1 : 0.3,
         transition: 'opacity var(--vt-duration) var(--vt-ease)',
         cursor: lightboxEnabled ? 'zoom-in' : 'default',
+        // Mobile performance optimizations
+        willChange: 'opacity',
+        transform: 'translateZ(0)', // Force hardware acceleration
       }}
     />
   );

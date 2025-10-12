@@ -14,17 +14,30 @@ import { config } from '@/config/environment.js'
  */
 async function cachingPlugin(fastify: FastifyInstance) {
   // Register Redis for distributed caching
-  await fastify.register(redis, {
-    host: config.redis.host,
-    port: config.redis.port,
-    password: config.redis.password,
-    db: config.redis.db,
-    retryDelayOnFailover: 100,
-    enableReadyCheck: true,
-    maxRetriesPerRequest: 3,
-    lazyConnect: true,
-    family: 4, // IPv4
-  })
+  const redisUrl = config.redis.url || ''
+  const useUrl = redisUrl.length > 0
+  const isTls = useUrl ? redisUrl.startsWith('rediss://') : false
+  await fastify.register(redis as any, useUrl
+    ? {
+        url: redisUrl,
+        retryDelayOnFailover: 100,
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        tls: isTls ? {} : undefined,
+      }
+    : {
+        host: config.redis.host,
+        port: config.redis.port,
+        password: config.redis.password,
+        db: config.redis.db,
+        retryDelayOnFailover: 100,
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
+        family: 4, // IPv4
+      }
+  )
 
   // ETag generation utility
   const generateETag = (content: string | Buffer): string => {
@@ -38,7 +51,7 @@ async function cachingPlugin(fastify: FastifyInstance) {
   const generateCacheKey = (request: FastifyRequest): string => {
     const url = request.url
     const method = request.method
-    const userId = request.user?.id || 'anonymous'
+    const userId = (request.user as any)?.id || 'anonymous'
     const acceptHeader = request.headers.accept || ''
     
     return `cache:${method}:${url}:${userId}:${createHash('md5').update(acceptHeader).digest('hex')}`

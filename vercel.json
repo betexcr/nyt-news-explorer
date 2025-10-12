@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "UPSTASH_REDIS_REST_URL": "https://hardy-jackass-16664.upstash.io",
+    "UPSTASH_REDIS_REST_TOKEN": "AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ",
+    "REDIS_URL": "rediss://default:AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ@hardy-jackass-16664.upstash.io:6379",
+    "REDIS_TOKEN": "AUEYAAIncDIzZGVmMmQ1ZTVmMTg0MzI1Yjk3ZmEwMDBiZWRkNTg4YnAyMTY2NjQ",
+    "CORS_ORIGIN": "https://nyt.brainvaultdev.com",
+    "NYT_API_KEY": "ykBBKwfsn0sIyA4A2RUaw0wnp4eWDVK7",
+    "BUILD_ID": "vercel-caching-v1",
+    "ADMIN_API_KEY": "nyt-admin-secure-key-2024"
+  },
+  "headers": [
+    {
+      "source": "/(.*\\.js)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-cache-warm",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

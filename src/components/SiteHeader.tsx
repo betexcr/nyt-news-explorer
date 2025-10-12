@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { useSearchStore } from "../store/searchStore";
 import ViewTransitionLink from "./ViewTransitionLink";
+import { clearAllCache } from "../utils/cache";
 
 export const SiteHeader: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,12 +19,23 @@ export const SiteHeader: React.FC = () => {
     setIsOptionsOpen(!isOptionsOpen);
   };
 
-  const handleClearCache = () => {
-    reset();
-    sessionStorage.clear();
-    localStorage.clear();
-    setIsOptionsOpen(false);
-    setIsMenuOpen(false);
+  const handleClearCache = async () => {
+    if (window.confirm('Are you sure you want to clear all cache data? This will reload the page.')) {
+      setIsOptionsOpen(false);
+      setIsMenuOpen(false);
+      
+      try {
+        // Use comprehensive cache clearing
+        await clearAllCache();
+      } catch (error) {
+        console.error('Failed to clear cache:', error);
+        // Fallback to basic clearing
+        reset();
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.reload();
+      }
+    }
   };
 
   // Close dropdowns when clicking outside

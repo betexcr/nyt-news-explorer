@@ -1,5 +1,13 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+
+// Mock swagger-ui-react before importing SwaggerUI
+jest.mock('swagger-ui-react', () => {
+  return function MockSwaggerUI({ spec }: { spec: any }) {
+    return <div data-testid="swagger-ui">Mock SwaggerUI with spec: {JSON.stringify(spec)}</div>;
+  };
+});
+
 import SwaggerUIComponent from '../SwaggerUI';
 
 // Mock fetch
