@@ -25,35 +25,34 @@ interface PrefetchStats {
 
 // Configuration for books prefetching
 const PREFETCH_CONFIG: PrefetchConfig = {
-  enabled: true,
-  maxRetries: 2, // Reduced from 3 to avoid overwhelming the API
-  retryDelay: 2000, // Increased delay between retries
-  batchSize: 3, // Reduced batch size to be more gentle on the API
+  enabled: false, // Disabled by default to avoid API errors - enable manually if needed
+  maxRetries: 2,
+  retryDelay: 2000,
+  batchSize: 3,
 };
 
-// Popular book categories to prefetch (verified working categories)
+// Popular book categories to prefetch (ONLY verified NYT API list names)
+// Valid list names can be found at: https://developer.nytimes.com/docs/books-product/1/routes/lists/names.json/get
 const POPULAR_BOOK_CATEGORIES = [
+  // Core Fiction Lists
   'hardcover-fiction',
-  'hardcover-nonfiction', 
   'trade-fiction-paperback',
+  'combined-print-and-e-book-fiction',
+  
+  // Core Nonfiction Lists
+  'hardcover-nonfiction',
   'paperback-nonfiction',
+  'combined-print-and-e-book-nonfiction',
+  
+  // Specialty Lists (verified)
   'advice-how-to-and-miscellaneous',
   'series-books',
   'young-adult-hardcover',
-  'combined-print-and-e-book-fiction',
-  'combined-print-and-e-book-nonfiction',
-  'mass-market-paperback',
-  'graphic-books-and-manga',
-  'business-books',
-  'science',
-  'sports',
-  'travel',
-  'food-and-fitness',
-  'relationships',
-  'education',
-  'crime-and-punishment',
-  'health',
-  'humor',
+  
+  // Note: Many category names were invalid and have been removed:
+  // - science, sports, travel, food-and-fitness, relationships, 
+  // - education, crime-and-punishment, health, humor
+  // These are not actual NYT Books API list names
 ];
 
 class BooksPrefetchManager {
